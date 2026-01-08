@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>明日方舟肉鸽伤害计算器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4a4a7a;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #8a2be2;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+        }
+
+        .subtitle {
+            color: #a0a0c0;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+        }
+
+        .section {
+            background-color: #2a2a3e;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .section-title {
+            color: #8a2be2;
+            border-bottom: 1px solid #4a4a7a;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .operator-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .operator-card {
+            background-color: #3a3a4e;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .operator-card:hover {
+            background-color: #4a4a5e;
+            transform: translateY(-3px);
+        }
+
+        .operator-card.selected {
+            border-color: #8a2be2;
+            background-color: #3a2a4e;
+        }
+
+        .operator-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .operator-stats {
+            font-size: 0.9rem;
+            color: #b0b0d0;
+        }
+
+        .relics-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .relics-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .relics-container::-webkit-scrollbar-track {
+            background: #2a2a3e;
+            border-radius: 4px;
+        }
+
+        .relics-container::-webkit-scrollbar-thumb {
+            background: #5a5a7a;
+            border-radius: 4px;
+        }
+
+        .relic-category {
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .relic-category-header {
+            background-color: #3a3a4e;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        .relic-category-header:hover {
+            background-color: #4a4a5e;
+        }
+
+        .relic-category-header.active {
+            background-color: #4a3a5e;
+        }
+
+        .relic-category-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            color: #8a2be2;
+        }
+
+        .relic-category-count {
+            background-color: #8a2be2;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .relic-category-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .relic-category-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .relic-category-content {
+            background-color: #2a2a3e;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .relic-category-content.expanded {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .relic-category-content.expanded::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .relic-category-content.expanded::-webkit-scrollbar-track {
+            background: #2a2a3e;
+        }
+
+        .relic-category-content.expanded::-webkit-scrollbar-thumb {
+            background: #5a5a7a;
+            border-radius: 3px;
+        }
+
+        .relic-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            padding: 15px;
+        }
+
+        .relic-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #3a3a4e;
+            padding: 10px 15px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .relic-item:hover {
+            background-color: #4a4a5e;
+        }
+
+        .relic-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .relic-count {
+            width: 60px;
+            padding: 5px;
+            background-color: #2a2a3e;
+            border: 1px solid #5a5a7a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            text-align: center;
+        }
+
+        .relic-count:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .relic-value {
+            color: #8a2be2;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .enemy-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            margin-bottom: 8px;
+            color: #b0b0d0;
+        }
+
+        .input-group input, .input-group select {
+            padding: 10px;
+            background-color: #3a3a4e;
+            border: 1px solid #5a5a7a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #8a2be2;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .calculate-btn {
+            background-color: #8a2be2;
+            color: white;
+            flex: 2;
+        }
+
+        .calculate-btn:hover {
+            background-color: #9a3bf2;
+            transform: translateY(-2px);
+        }
+
+        .reset-btn {
+            background-color: #4a4a6a;
+            color: white;
+            flex: 1;
+        }
+
+        .reset-btn:hover {
+            background-color: #5a5a7a;
+        }
+
+        .results {
+            background-color: #2a2a3e;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-title {
+            color: #8a2be2;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .result-content {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .result-box {
+            background-color: #3a3a4e;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 250px;
+            text-align: center;
+        }
+
+        .result-label {
+            color: #b0b0d0;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            color: #8a2be2;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .special-result {
+            background-color: #3a2a4e;
+            border-left: 5px solid #8a2be2;
+        }
+
+        .hint {
+            color: #a0a0c0;
+            font-style: italic;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .relic-search {
+            margin-bottom: 15px;
+        }
+
+        .relic-search input {
+            width: 100%;
+            padding: 10px 15px;
+            background-color: #3a3a4e;
+            border: 1px solid #5a5a7a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .relic-search input:focus {
+            outline: none;
+            border-color: #8a2be2;
+        }
+
+        .no-relics-message {
+            text-align: center;
+            padding: 20px;
+            color: #a0a0c0;
+            font-style: italic;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .section {
+                width: 100%;
+            }
+
+            .operator-selection {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .relic-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>明日方舟肉鸽伤害计算器</h1>
+        <p class="subtitle">基于C语言版本转换的交互式网页计算器 - 选择干员、配置藏品、输入敌人属性计算伤害</p>
+    </header>
+
+    <div class="main-content">
+        <div class="section">
+            <h2 class="section-title">选择干员</h2>
+            <div class="operator-selection" id="operatorSelection">
+                <!-- 干员将通过JavaScript动态生成 -->
+            </div>
+
+            <div id="specialOptions" class="hidden">
+                <!-- 特殊选项（如拉普兰德暖机层数）将在这里显示 -->
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">选择藏品</h2>
+            <div class="relic-search">
+                <input type="text" id="relicSearch" placeholder="搜索藏品名称...">
+            </div>
+            <div class="relics-container" id="relicsContainer">
+                <!-- 藏品将通过JavaScript动态生成 -->
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">敌人属性</h2>
+            <div class="enemy-inputs" id="enemyInputs">
+                <!-- 敌人属性输入框将根据干员类型动态显示 -->
+            </div>
+
+            <div class="buttons">
+                <button class="calculate-btn" id="calculateBtn">计算伤害</button>
+                <button class="reset-btn" id="resetBtn">重置选择</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="results hidden" id="resultsContainer">
+        <h2 class="result-title">计算结果</h2>
+        <div class="result-content">
+            <div class="result-box">
+                <div class="result-label">总伤害</div>
+                <div class="result-value" id="totalDamage">0</div>
+            </div>
+            <div class="result-box special-result hidden" id="specialDamageBox">
+                <div class="result-label">拉普兰德本体伤害</div>
+                <div class="result-value" id="specialDamage">0</div>
+            </div>
+        </div>
+        <p class="hint" id="calculationHint"></p>
+    </div>
+</div>
+
+<script>
+    // 干员数据
+    const operators = [
+        {
+            id: 0,
+            name: "维什戴尔2",
+            atk: 874,
+            skillDuration: [12.5, 12.5, 12.5, 12.5, 12.5, 12.5],
+            skillMul: [
+                [0.35, 0, 1.25, 1],
+                [0.35, 0, 0.625, 1],
+                [0.35, 0, 1, 1],
+                [0.35, 0, 0.5, 1],
+                [0.35, 0, 1.85, 1],
+                [0.35, 0, 1.85, 1]
+            ],
+            atkSpeed: 100.0,
+            atkInterval: 1.4,
+            atkCount: [1, 2, 4, 8, 0.2775, 1.11],
+            damageType: [true, false, false], // 物理，法术，元素
+            ignoreDef: [0, 0, 0]
+        },
+        {
+            id: 1,
+            name: "寒芒克洛丝2",
+            atk: 608,
+            skillDuration: [30, 30, 0, 0],
+            skillMul: [
+                [0, 0, 1, 1],
+                [0, 0, 0.75, 1],
+                [0, 0, 1, -1],
+                [0, 0, 0.75, -1]
+            ],
+            atkSpeed: 100,
+            atkInterval: 0.625,
+            atkCount: [4, 0.8, 32, 6.4],
+            damageType: [true, false, false],
+            ignoreDef: [0, 0, 0]
+        },
+        {
+            id: 2,
+            name: "逻各斯3",
+            atk: 855,
+            skillDuration: [30, 30, 30],
+            skillMul: [
+                [3, 0, 1, 1],
+                [3, 0, 0.6, 1],
+                [3, 0, 0.6, 1]
+            ],
+            atkSpeed: 100,
+            atkInterval: 1.6,
+            atkCount: [1, 1, 1],
+            damageType: [false, true, true],
+            ignoreDef: [0, 10, 0]
+        },
+        {
+            id: 3,
+            name: "能天使3",
+            atk: 700,
+            skillDuration: [15],
+            skillMul: [[0.1, 0, 1.1, 1]],
+            atkSpeed: 123,
+            atkInterval: 0.78,
+            atkCount: [5],
+            damageType: [true, false, false],
+            ignoreDef: [250, 0, 0]
+        },
+        {
+            id: 4,
+            name: "荒芜拉普兰德3",
+            atk: 460,
+            skillDuration: [16, 24, 0, 40],
+            skillMul: [
+                [0.8, 0, 1.1, 1],
+                [0.8, 0, 1.21, 1],
+                [0.8, 0, 1.2, 1],
+                [0.8, 0, 1, 1]
+            ],
+            atkSpeed: 110,
+            atkInterval: 1.3,
+            atkCount: [3, 3, 40, 1],
+            damageType: [false, true, false],
+            ignoreDef: [0, 0, 0],
+            specialOption: "暖机层数"
+        },
+        {
+            id: 5,
+            name: "号角3",
+            atk: 1136,
+            skillDuration: [12, 12],
+            skillMul: [
+                [1.01, 0, 1, 1],
+                [1.71, 0, 1, 1]
+            ],
+            atkSpeed: 100,
+            atkInterval: 1,
+            atkCount: [1, 1],
+            damageType: [true, false, false],
+            ignoreDef: [0, 0, 0]
+        }
+    ];
+
+    // 攻速藏品数据
+    const atkSpeedRelics = [
+        { id: 0, name: "折戟-破釜沉舟", value: 30, needsCount: false },
+        { id: 1, name: "残弩-神速", value: 70, needsCount: false },
+        { id: 2, name: "断杖-织法者", value: 25, needsCount: false },
+        { id: 3, name: "医者-妙手", value: 50, needsCount: false },
+        { id: 4, name: "锈刃-研磨", value: 30, needsCount: false },
+        { id: 5, name: "凉拌海草", value: 7, needsCount: false },
+        { id: 6, name: "咖啡平原咖啡糖", value: 8, needsCount: false },
+        { id: 7, name: "古旧乐谱残章", value: 6, needsCount: false },
+        { id: 8, name: "私人巫术终端", value: 35, needsCount: false },
+        { id: 9, name: "火海", value: 35, needsCount: false },
+        { id: 10, name: "异族", value: 15, needsCount: false },
+        { id: 11, name: "死斗", value: 100, needsCount: false },
+        { id: 12, name: "疗养体验卡", value: 40, needsCount: false },
+        { id: 13, name: "疗养特供卡", value: 70, needsCount: false },
+        { id: 14, name: "断杖-波纹之手", value: 20, needsCount: false },
+        { id: 15, name: "国王的新枪", value: 50, needsCount: false },
+        { id: 16, name: "魔王的旗帜", value: 30, needsCount: false },
+        { id: 17, name: "丝契之谜", value: 50, needsCount: false },
+        { id: 18, name: "背誓", value: 50, needsCount: false },
+        { id: 19, name: "眼熟的雕像", value: -15, needsCount: false },
+        { id: 20, name: "滚动先祖", value: 30, needsCount: false },
+        { id: 21, name: "远程协议-克敌", value: 6, needsCount: true }, // 需要读取数量
+        { id: 22, name: "破坏协议-压制", value: 6, needsCount: true }, // 需要读取数量
+        { id: 23, name: "Friston.P", value: 5, needsCount: true }, // 需要读取数量
+        { id: 24, name: "投币玩具", value: 3, needsCount: true, divideBy5: true }, // 需要读取数量并除以5
+        { id: 25, name: "骑士戒律·新编", value: 5, needsCount: true, divideBy5: true }, // 需要读取数量并除以5
+        { id: 26, name: "金酒之杯", value: 7, needsCount: true, divideBy5: true } // 需要读取数量并除以5
+    ];
+
+    // 面板乘算藏品数据
+    const mulAddRelics = [
+        { id: 0, name: "皇帝的恩宠", value: 0.15, needsCount: false },
+        { id: 1, name: "贵族刺剑", value: 0.25, needsCount: false },
+        { id: 2, name: "老近卫军之锋", value: 0.35, needsCount: false },
+        { id: 3, name: "显圣吊坠", value: 0.15, needsCount: false },
+        { id: 4, name: "银餐叉", value: 0.25, needsCount: false },
+        { id: 5, name: "损坏的左轮弹巢", value: 0.35, needsCount: false },
+        { id: 6, name: "钝爪-百战", value: 0.5, needsCount: false },
+        { id: 7, name: "折戟-锋刃", value: 0.25, needsCount: false },
+        { id: 8, name: "折戟-破釜沉舟", value: 0.4, needsCount: false },
+        { id: 9, name: "铁卫-侵略", value: 0.6, needsCount: false },
+        { id: 10, name: "残弩-百步穿杨", value: 0.2, needsCount: false },
+        { id: 11, name: "残弩-交叉火力", value: 0.4, needsCount: false },
+        { id: 12, name: "断杖-织法者", value: 0.25, needsCount: false },
+        { id: 13, name: "橙味风暴", value: 0.07, needsCount: false },
+        { id: 14, name: "尖叫樱桃", value: 0.08, needsCount: false },
+        { id: 15, name: "皮特水果什锦", value: 0.07, needsCount: false },
+        { id: 16, name: "解约协议", value: 0.07, needsCount: false },
+        { id: 17, name: "空羽兽", value: 0.3, needsCount: false },
+        { id: 18, name: "几丁质刺刀", value: 1, needsCount: false },
+        { id: 19, name: "死仇时代的恨意", value: 0.2, needsCount: false },
+        { id: 20, name: "无惧之刃", value: 0.5, needsCount: false },
+        { id: 21, name: "抢夺", value: 0.1, needsCount: false },
+        { id: 22, name: "侵略", value: 0.2, needsCount: false },
+        { id: 23, name: "兴亡", value: 0.3, needsCount: false },
+        { id: 24, name: "矛头分队", value: 0.2, needsCount: false },
+        { id: 25, name: "历史重构", value: 0.2, needsCount: false },
+        { id: 26, name: "统帅肖像(1普通，3关底)", value: 0.1, needsCount: true }, // 序号>=26的需要数量
+        { id: 27, name: "突击协议-利刃", value: 0.08, needsCount: true },
+        { id: 28, name: "堡垒协议-方阵", value: 0.08, needsCount: true },
+        { id: 29, name: "远程协议-遥击", value: 0.08, needsCount: true },
+        { id: 30, name: "破坏协议-消除", value: 0.08, needsCount: true },
+        { id: 31, name: "老蒲扇", value: 0.1, needsCount: true },
+        { id: 32, name: "生命熔炉之薪", value: 0.05, needsCount: true },
+        { id: 33, name: "束灵骨", value: 0.03, needsCount: true },
+        { id: 34, name: "圆石祭坛", value: 0.05, needsCount: true },
+        { id: 35, name: "佣兵的饰物", value: 0.05, needsCount: true },
+        { id: 36, name: "生还者合约", value: 0.2, needsCount: true }
+    ];
+
+    // 倍率乘算叠加藏品数据
+    const globalMulAddRelics = [
+        { id: 0, name: "荣耀绶带", value: 1, needsCount: false },
+        { id: 1, name: "古乔治营养原浆", value: 0.3, needsCount: false },
+        { id: 2, name: "锈刃-遗世独立", value: 0.7, needsCount: false },
+        { id: 3, name: "支柱-援护", value: 0.2, needsCount: false },
+        { id: 4, name: "轰鸣之手", value: 1.5, needsCount: false },
+        { id: 5, name: "诸王的冠冕(1一件，3三件)", value: 0.5, needsCount: true }, // 序号>=5的需要数量
+        { id: 6, name: "岩角号", value: 0.2, needsCount: true },
+        { id: 7, name: "久居之手", value: 0.25, needsCount: true },
+        { id: 8, name: "掠食之手", value: 0.1, needsCount: true },
+        { id: 9, name: "折戟-裂岩", value: 0.08, needsCount: true }
+    ];
+
+    // 倍率乘算叠乘藏品数据
+    const globalMulMulRelics = [
+        { id: 0, name: "宁静之谜", value: 0.75, needsCount: false }
+    ];
+
+    // 脆弱乘算藏品数据
+    const globalFragileRelics = [
+        { id: 0, name: "锈蚀刀片", value: 0.15, needsCount: false },
+        { id: 1, name: "赶车夫的长鞭", value: 0.25, needsCount: false },
+        { id: 2, name: "复仇者", value: 0.35, needsCount: false },
+        { id: 3, name: "灾难之源", value: 0.2, needsCount: false },
+        { id: 4, name: "讴歌者面纱", value: 0.1, needsCount: false },
+        { id: 5, name: "制式防爆用具", value: 0.2, needsCount: false },
+        { id: 6, name: "皇帝的收藏", value: 0.3, needsCount: false },
+        { id: 7, name: "璀璨悲泣", value: 0.4, needsCount: false },
+        { id: 8, name: "Scout的狙击镜", value: 1, needsCount: false },
+        { id: 9, name: "断杖-苦难巫咒", value: 0.7, needsCount: false },
+        { id: 10, name: "文明的存续", value: 1.5, needsCount: false },
+        { id: 11, name: "文学的开端", value: 0.5, needsCount: false },
+        { id: 12, name: "奴隶诱捕器", value: 0.5, needsCount: false },
+        { id: 13, name: "断杖-波纹", value: 0.12, needsCount: true } // 只有这个需要数量
+    ];
+
+    // 藏品类别信息
+    const relicCategories = [
+        {
+            id: 'atkSpeed',
+            name: '攻速藏品',
+            icon: '⚡',
+            description: '增加攻击速度',
+            relics: atkSpeedRelics,
+            isPercent: false
+        },
+        {
+            id: 'mulAdd',
+            name: '面板乘算藏品',
+            icon: '📈',
+            description: '增加面板攻击力',
+            relics: mulAddRelics,
+            isPercent: true
+        },
+        {
+            id: 'globalMulAdd',
+            name: '倍率乘算叠加藏品',
+            icon: '➕',
+            description: '增加技能倍率（叠加）',
+            relics: globalMulAddRelics,
+            isPercent: true
+        },
+        {
+            id: 'globalMulMul',
+            name: '倍率乘算叠乘藏品',
+            icon: '✖️',
+            description: '增加技能倍率（叠乘）',
+            relics: globalMulMulRelics,
+            isPercent: true
+        },
+        {
+            id: 'fragile',
+            name: '脆弱乘算藏品',
+            icon: '🎯',
+            description: '增加脆弱效果',
+            relics: globalFragileRelics,
+            isPercent: true
+        }
+    ];
+
+    // 全局状态
+    let selectedOperator = null;
+    let selectedRelics = {
+        atkSpeed: {},
+        mulAdd: {},
+        globalMulAdd: {},
+        globalMulMul: {},
+        fragile: {}
+    };
+
+    // 拉普兰德暖机层数
+    let laplandStackCount = 0;
+
+    // 元素脆弱值
+    let elementFragile = 0;
+
+    // 敌人是否为领袖
+    let isBoss = false;
+
+    // DOM元素
+    const operatorSelectionEl = document.getElementById('operatorSelection');
+    const specialOptionsEl = document.getElementById('specialOptions');
+    const relicsContainerEl = document.getElementById('relicsContainer');
+    const enemyInputsEl = document.getElementById('enemyInputs');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const resultsContainerEl = document.getElementById('resultsContainer');
+    const totalDamageEl = document.getElementById('totalDamage');
+    const specialDamageBoxEl = document.getElementById('specialDamageBox');
+    const specialDamageEl = document.getElementById('specialDamage');
+    const calculationHintEl = document.getElementById('calculationHint');
+    const relicSearchEl = document.getElementById('relicSearch');
+
+    // 初始化干员选择
+    function initOperatorSelection() {
+        operators.forEach(op => {
+            const operatorCard = document.createElement('div');
+            operatorCard.className = 'operator-card';
+            operatorCard.dataset.id = op.id;
+
+            const operatorName = document.createElement('div');
+            operatorName.className = 'operator-name';
+            operatorName.textContent = op.name;
+
+            const operatorStats = document.createElement('div');
+            operatorStats.className = 'operator-stats';
+
+            // 显示伤害类型
+            const damageTypes = [];
+            if (op.damageType[0]) damageTypes.push("物理");
+            if (op.damageType[1]) damageTypes.push("法术");
+            if (op.damageType[2]) damageTypes.push("元素");
+
+            operatorStats.textContent = `攻击力: ${op.atk} | 类型: ${damageTypes.join('/')}`;
+
+            operatorCard.appendChild(operatorName);
+            operatorCard.appendChild(operatorStats);
+
+            operatorCard.addEventListener('click', () => selectOperator(op.id));
+
+            operatorSelectionEl.appendChild(operatorCard);
+        });
+    }
+
+    // 选择干员
+    function selectOperator(operatorId) {
+        // 移除之前选中的干员
+        document.querySelectorAll('.operator-card.selected').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        // 标记当前选中的干员
+        const selectedCard = document.querySelector(`.operator-card[data-id="${operatorId}"]`);
+        selectedCard.classList.add('selected');
+
+        selectedOperator = operators.find(op => op.id === operatorId);
+
+        // 显示特殊选项（如果有）
+        showSpecialOptions();
+
+        // 更新敌人输入框
+        updateEnemyInputs();
+
+        // 重置结果
+        resultsContainerEl.classList.add('hidden');
+    }
+
+    // 显示特殊选项
+    function showSpecialOptions() {
+        specialOptionsEl.innerHTML = '';
+        specialOptionsEl.classList.add('hidden');
+
+        if (selectedOperator.id === 4) { // 拉普兰德
+            specialOptionsEl.classList.remove('hidden');
+
+            const title = document.createElement('h3');
+            title.textContent = '拉普兰德天赋暖机层数:';
+            specialOptionsEl.appendChild(title);
+
+            const options = document.createElement('div');
+            options.style.display = 'flex';
+            options.style.gap = '10px';
+            options.style.marginTop = '10px';
+            options.style.flexWrap = 'wrap';
+
+            const stacks = [
+                { value: 0, label: '0层' },
+                { value: 1, label: '1层 (伤害上限提高10%)' },
+                { value: 3, label: '3层 (浮游单元+1)' }
+            ];
+
+            stacks.forEach(stack => {
+                const button = document.createElement('button');
+                button.textContent = stack.label;
+                button.style.padding = '8px 15px';
+                button.style.backgroundColor = laplandStackCount === stack.value ? '#8a2be2' : '#4a4a6a';
+                button.style.border = 'none';
+                button.style.borderRadius = '4px';
+                button.style.color = 'white';
+                button.style.cursor = 'pointer';
+
+                button.addEventListener('click', () => {
+                    laplandStackCount = stack.value;
+
+                    // 更新UI
+                    document.querySelectorAll('#specialOptions button').forEach(btn => {
+                        btn.style.backgroundColor = '#4a4a6a';
+                    });
+                    button.style.backgroundColor = '#8a2be2';
+
+                    // 更新干员属性
+                    if (laplandStackCount >= 1) {
+                        selectedOperator.skillMul[0][2] = 1.21;
+                    } else {
+                        selectedOperator.skillMul[0][2] = 1.1;
+                    }
+
+                    if (laplandStackCount === 3) {
+                        selectedOperator.atkCount[0] = 4;
+                        selectedOperator.atkCount[1] = 4;
+                    } else {
+                        selectedOperator.atkCount[0] = 3;
+                        selectedOperator.atkCount[1] = 3;
+                    }
+                });
+
+                options.appendChild(button);
+            });
+
+            specialOptionsEl.appendChild(options);
+        }
+    }
+
+    // 初始化藏品选择
+    function initRelicsSelection() {
+        // 清空容器
+        relicsContainerEl.innerHTML = '';
+
+        // 创建搜索框事件监听
+        relicSearchEl.addEventListener('input', filterRelics);
+
+        // 创建每个藏品类别的折叠面板
+        relicCategories.forEach(category => {
+            createRelicCategory(category);
+        });
+    }
+
+    // 创建藏品类别折叠面板
+    function createRelicCategory(category) {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'relic-category';
+        categoryDiv.dataset.categoryId = category.id;
+
+        // 创建类别标题
+        const header = document.createElement('div');
+        header.className = 'relic-category-header';
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'relic-category-title';
+
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'relic-category-icon';
+        iconSpan.textContent = category.icon;
+        titleDiv.appendChild(iconSpan);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = category.name;
+        titleDiv.appendChild(nameSpan);
+
+        const countSpan = document.createElement('span');
+        countSpan.className = 'relic-category-count';
+        countSpan.textContent = '0';
+        countSpan.id = `${category.id}-count`;
+        titleDiv.appendChild(countSpan);
+
+        header.appendChild(titleDiv);
+
+        const arrowIcon = document.createElement('span');
+        arrowIcon.className = 'relic-category-icon';
+        arrowIcon.textContent = '▼';
+        header.appendChild(arrowIcon);
+
+        // 创建内容区域
+        const content = document.createElement('div');
+        content.className = 'relic-category-content';
+        content.id = `${category.id}-content`;
+
+        // 创建藏品列表容器
+        const relicList = document.createElement('div');
+        relicList.className = 'relic-list';
+        relicList.id = `${category.id}-list`;
+
+        // 创建藏品列表
+        createRelicList(category.id, category.relics, relicList, category.isPercent);
+
+        content.appendChild(relicList);
+
+        categoryDiv.appendChild(header);
+        categoryDiv.appendChild(content);
+        relicsContainerEl.appendChild(categoryDiv);
+
+        // 添加点击事件来展开/折叠
+        header.addEventListener('click', () => {
+            header.classList.toggle('active');
+            content.classList.toggle('expanded');
+            arrowIcon.classList.toggle('rotated');
+        });
+    }
+
+    // 创建藏品列表
+    function createRelicList(categoryId, relics, container, isPercent) {
+        // 清空容器
+        container.innerHTML = '';
+
+        relics.forEach(relic => {
+            const relicItem = document.createElement('div');
+            relicItem.className = 'relic-item';
+            relicItem.dataset.relicId = relic.id;
+            relicItem.dataset.category = categoryId;
+            relicItem.dataset.relicName = relic.name.toLowerCase();
+
+            const relicInfo = document.createElement('div');
+            relicInfo.className = 'relic-info';
+
+            const relicName = document.createElement('span');
+            relicName.textContent = relic.name;
+
+            relicInfo.appendChild(relicName);
+
+            const relicValue = document.createElement('div');
+            relicValue.className = 'relic-value';
+
+            // 根据是否为百分比显示数值
+            if (isPercent) {
+                relicValue.textContent = `${(relic.value * 100).toFixed(relic.value < 0 ? 1 : 0)}%`;
+            } else {
+                relicValue.textContent = relic.value > 0 ? `+${relic.value}` : `${relic.value}`;
+            }
+
+            relicItem.appendChild(relicInfo);
+            relicItem.appendChild(relicValue);
+
+            // 创建控制区域
+            const controlWrapper = document.createElement('div');
+            controlWrapper.className = 'checkbox-wrapper';
+
+            if (relic.needsCount) {
+                // 需要数量的藏品：显示数字输入框
+                const countInput = document.createElement('input');
+                countInput.type = 'number';
+                countInput.className = 'relic-count';
+                countInput.min = 0;
+                countInput.value = selectedRelics[categoryId][relic.id] || 0;
+                countInput.dataset.id = relic.id;
+                countInput.dataset.category = categoryId;
+                countInput.dataset.divideBy5 = relic.divideBy5 || false;
+
+                countInput.addEventListener('change', (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    const category = e.target.dataset.category;
+                    const count = parseInt(e.target.value) || 0;
+
+                    if (count < 0) {
+                        e.target.value = 0;
+                        delete selectedRelics[category][id];
+                    } else if (count > 0) {
+                        selectedRelics[category][id] = count;
+                    } else {
+                        delete selectedRelics[category][id];
+                    }
+
+                    // 更新类别计数
+                    updateCategoryCount(category);
+                });
+
+                controlWrapper.appendChild(countInput);
+            } else {
+                // 不需要数量的藏品：显示复选框
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.dataset.id = relic.id;
+                checkbox.dataset.category = categoryId;
+                checkbox.checked = !!selectedRelics[categoryId][relic.id];
+
+                checkbox.addEventListener('change', (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    const category = e.target.dataset.category;
+
+                    if (e.target.checked) {
+                        selectedRelics[category][id] = 1;
+                    } else {
+                        delete selectedRelics[category][id];
+                    }
+
+                    // 更新类别计数
+                    updateCategoryCount(category);
+                });
+
+                controlWrapper.appendChild(checkbox);
+            }
+
+            relicItem.appendChild(controlWrapper);
+            container.appendChild(relicItem);
+        });
+
+        // 更新类别计数
+        updateCategoryCount(categoryId);
+    }
+
+    // 更新类别计数
+    function updateCategoryCount(categoryId) {
+        const count = Object.keys(selectedRelics[categoryId]).length;
+        const countElement = document.getElementById(`${categoryId}-count`);
+        if (countElement) {
+            countElement.textContent = count;
+
+            // 如果计数为0，使用灰色背景
+            if (count === 0) {
+                countElement.style.backgroundColor = '#5a5a7a';
+            } else {
+                countElement.style.backgroundColor = '#8a2be2';
+            }
+        }
+    }
+
+    // 过滤藏品
+    function filterRelics() {
+        const searchTerm = relicSearchEl.value.toLowerCase().trim();
+
+        relicCategories.forEach(category => {
+            const relicList = document.getElementById(`${category.id}-list`);
+            const relics = relicList.querySelectorAll('.relic-item');
+            let visibleCount = 0;
+
+            relics.forEach(relicItem => {
+                const relicName = relicItem.dataset.relicName;
+
+                if (searchTerm === '' || relicName.includes(searchTerm)) {
+                    relicItem.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    relicItem.style.display = 'none';
+                }
+            });
+
+            // 如果没有匹配的藏品，显示提示信息
+            const content = document.getElementById(`${category.id}-content`);
+            let noResultsMsg = content.querySelector('.no-relics-message');
+
+            if (visibleCount === 0 && searchTerm !== '') {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('div');
+                    noResultsMsg.className = 'no-relics-message';
+                    noResultsMsg.textContent = `在"${category.name}"中没有找到匹配的藏品`;
+                    content.appendChild(noResultsMsg);
+                }
+            } else if (noResultsMsg) {
+                noResultsMsg.remove();
+            }
+
+            // 自动展开有匹配结果的类别
+            const header = content.previousElementSibling;
+            if (visibleCount > 0 && searchTerm !== '') {
+                header.classList.add('active');
+                content.classList.add('expanded');
+                header.querySelector('.relic-category-icon:last-child').classList.add('rotated');
+            } else if (searchTerm === '') {
+                // 搜索框为空时，保持原来的展开状态
+                // 这里不做任何操作，保持用户的手动展开/折叠状态
+            }
+        });
+    }
+
+    // 更新敌人输入框
+    function updateEnemyInputs() {
+        enemyInputsEl.innerHTML = '';
+
+        if (!selectedOperator) return;
+
+        // 元素伤害需要选择敌人类型
+        if (selectedOperator.damageType[2]) {
+            const bossGroup = document.createElement('div');
+            bossGroup.className = 'input-group';
+
+            const bossLabel = document.createElement('label');
+            bossLabel.textContent = '敌方类型:';
+            bossGroup.appendChild(bossLabel);
+
+            const bossSelect = document.createElement('select');
+            bossSelect.id = 'bossSelect';
+
+            const nonBossOption = document.createElement('option');
+            nonBossOption.value = '0';
+            nonBossOption.textContent = '非领袖';
+            bossSelect.appendChild(nonBossOption);
+
+            const bossOption = document.createElement('option');
+            bossOption.value = '1';
+            bossOption.textContent = '领袖';
+            bossSelect.appendChild(bossOption);
+
+            bossSelect.addEventListener('change', (e) => {
+                isBoss = e.target.value === '1';
+            });
+
+            bossGroup.appendChild(bossSelect);
+            enemyInputsEl.appendChild(bossGroup);
+        }
+
+        // 物理伤害需要输入防御力
+        if (selectedOperator.damageType[0]) {
+            const defGroup = document.createElement('div');
+            defGroup.className = 'input-group';
+
+            const defLabel = document.createElement('label');
+            defLabel.textContent = '敌方防御力:';
+            defGroup.appendChild(defLabel);
+
+            const defInput = document.createElement('input');
+            defInput.type = 'number';
+            defInput.id = 'defInput';
+            defInput.min = 0;
+            defInput.value = 500;
+            defGroup.appendChild(defInput);
+
+            enemyInputsEl.appendChild(defGroup);
+        }
+
+        // 法术伤害需要输入法抗
+        if (selectedOperator.damageType[1]) {
+            const resGroup = document.createElement('div');
+            resGroup.className = 'input-group';
+
+            const resLabel = document.createElement('label');
+            resLabel.textContent = '敌方法术抗性:';
+            resGroup.appendChild(resLabel);
+
+            const resInput = document.createElement('input');
+            resInput.type = 'number';
+            resInput.id = 'resInput';
+            resInput.min = 0;
+            resInput.max = 100;
+            resInput.value = 20;
+            resGroup.appendChild(resInput);
+
+            enemyInputsEl.appendChild(resGroup);
+        }
+    }
+
+    // 计算总伤害
+    function calculateDamage() {
+        if (!selectedOperator) {
+            alert('请先选择干员！');
+            return;
+        }
+
+        // 重置结果
+        totalDamageEl.textContent = '0';
+        specialDamageBoxEl.classList.add('hidden');
+
+        // 计算攻速加成
+        let atkSpeed = selectedOperator.atkSpeed;
+
+        // 添加攻速藏品（按照原C程序逻辑处理）
+        Object.keys(selectedRelics.atkSpeed).forEach(id => {
+            const relic = atkSpeedRelics.find(r => r.id === parseInt(id));
+            if (relic) {
+                let times = selectedRelics.atkSpeed[id];
+
+                // 特殊处理：序号>=24的藏品，数量除以5
+                if (relic.id >= 24 && relic.divideBy5) {
+                    times = times / 5;
+                }
+
+                atkSpeed += relic.value * times;
+            }
+        });
+
+        // 初始化伤害数组
+        let Atk = Array.from({ length: 6 }, () => Array(20).fill(1.0));
+
+        // 添加干员技能倍率
+        for (let j = 0; j < 6; j++) {
+            if (selectedOperator.skillMul[j]) {
+                Atk[j][0] += selectedOperator.skillMul[j][0];
+                Atk[j][1] += selectedOperator.skillMul[j][1];
+
+                if (selectedOperator.skillMul[j][2] !== 0) {
+                    Atk[j][2] *= selectedOperator.skillMul[j][2];
+                }
+
+                if (selectedOperator.skillMul[j][3] !== 0) {
+                    Atk[j][3] *= selectedOperator.skillMul[j][3];
+                }
+            }
+        }
+
+        // 添加面板乘算藏品（按照原C程序逻辑处理）
+        Object.keys(selectedRelics.mulAdd).forEach(id => {
+            const relic = mulAddRelics.find(r => r.id === parseInt(id));
+            if (relic) {
+                let value = relic.value;
+                let times = selectedRelics.mulAdd[id];
+
+                // 特殊处理：序号>=26的藏品需要读取数量
+                if (relic.id >= 26) {
+                    value = value * times;
+                }
+
+                for (let i = 0; i < 6; i++) {
+                    Atk[i][0] += value;
+                }
+            }
+        });
+
+        // 添加倍率乘算叠加藏品（按照原C程序逻辑处理）
+        Object.keys(selectedRelics.globalMulAdd).forEach(id => {
+            const relic = globalMulAddRelics.find(r => r.id === parseInt(id));
+            if (relic) {
+                let value = relic.value;
+
+                // 特殊处理：序号>=5的藏品需要读取数量
+                if (relic.id >= 5) {
+                    const times = selectedRelics.globalMulAdd[id];
+                    value = value * times;
+                }
+
+                for (let i = 0; i < 6; i++) {
+                    Atk[i][1] += value;
+                }
+            }
+        });
+
+        // 添加倍率乘算叠乘藏品
+        Object.keys(selectedRelics.globalMulMul).forEach(id => {
+            const relic = globalMulMulRelics.find(r => r.id === parseInt(id));
+            if (relic) {
+                for (let i = 0; i < 6; i++) {
+                    Atk[i][2] *= relic.value;
+                }
+            }
+        });
+
+        // 重置元素脆弱值
+        elementFragile = 0;
+
+        // 添加脆弱乘算藏品（按照原C程序逻辑处理）
+        Object.keys(selectedRelics.fragile).forEach(id => {
+            const relic = globalFragileRelics.find(r => r.id === parseInt(id));
+            if (relic) {
+                const count = selectedRelics.fragile[id];
+
+                switch (relic.id) {
+                    case 0:
+                    case 1:
+                    case 2:
+                        for (let i = 0; i < 6; i++) {
+                            Atk[i][4] += relic.value;
+                        }
+                        break;
+                    case 3:
+                        elementFragile += 0.5;
+                        break;
+                    case 4:
+                        elementFragile += 0.5;
+                        break;
+                    case 5:
+                    case 6:
+                    case 7:
+                        for (let i = 0; i < 6; i++) {
+                            Atk[i][5] += relic.value;
+                        }
+                        break;
+                    case 8:
+                        for (let i = 0; i < 6; i++) {
+                            Atk[i][6] += relic.value;
+                        }
+                        break;
+                    case 9:
+                        for (let i = 0; i < 6; i++) {
+                            Atk[i][7] += relic.value;
+                        }
+                        break;
+                    case 10:
+                        for (let i = 0; i < 6; i++) {
+                            Atk[i][8] += relic.value;
+                        }
+                        break;
+                    case 11:
+                        for (let i = 0; i < 6; i++) {
+                            Atk[i][9] += relic.value;
+                        }
+                        break;
+                    case 12:
+                        for (let i = 0; i < 6; i++) {
+                            Atk[i][10] += relic.value;
+                        }
+                        break;
+                    case 13:  // 断杖-波纹需要读取数量
+                        for (let i = 0; i < 6; i++) {
+                            Atk[i][11] += relic.value * count;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        // 计算伤害
+        let totalDamage = 0;
+        let specialDamage = 0;
+        let hintText = '';
+
+        if (selectedOperator.damageType[0]) {
+            // 物理伤害计算
+            const defInput = document.getElementById('defInput');
+            if (!defInput || defInput.value === '') {
+                alert('请输入敌方防御力！');
+                return;
+            }
+
+            let def = parseFloat(defInput.value);
+            def = def - selectedOperator.ignoreDef[0] > 0 ? def - selectedOperator.ignoreDef[0] : 0;
+
+            for (let i = 0; i < 6; i++) {
+                if (!selectedOperator.skillMul[i]) continue;
+
+                let skillDamage = selectedOperator.atk;
+
+                // 应用乘算
+                for (let j = 0; j < 3; j++) {
+                    skillDamage *= Atk[i][j];
+                }
+
+                // 计算防御减免
+                skillDamage = skillDamage - def > skillDamage * 0.05 ? skillDamage - def : skillDamage * 0.05;
+
+                // 应用脆弱乘算
+                for (let j = 3; j < 20; j++) {
+                    skillDamage *= Atk[i][j];
+                }
+
+                // 计算攻击次数
+                const atkCount = selectedOperator.skillDuration[i] === 0 ? 1 :
+                    selectedOperator.skillDuration[i] / (selectedOperator.atkInterval * 100.0 / atkSpeed);
+
+                skillDamage *= atkCount * selectedOperator.atkCount[i];
+                totalDamage += skillDamage;
+            }
+
+            hintText = `计算完成，攻速: ${atkSpeed.toFixed(1)}`;
+        }
+
+        if (selectedOperator.damageType[1]) {
+            // 法术伤害计算
+            const resInput = document.getElementById('resInput');
+            if (!resInput || resInput.value === '') {
+                alert('请输入敌方法术抗性！');
+                return;
+            }
+
+            let res = parseFloat(resInput.value);
+            res = res - selectedOperator.ignoreDef[1] > 0 ? res - selectedOperator.ignoreDef[1] : 0;
+
+            // 逻各斯特判
+            if (selectedOperator.id === 2) {
+                totalDamage = handleLogosSpecialCase(res, Atk, atkSpeed);
+                hintText = `模拟计算完成，攻速: ${atkSpeed.toFixed(1)}，模拟次数: 100,000`;
+            } else {
+                for (let i = 0; i < 6; i++) {
+                    if (!selectedOperator.skillMul[i]) continue;
+
+                    let skillDamage = selectedOperator.atk;
+
+                    // 应用所有乘算
+                    for (let j = 0; j < 20; j++) {
+                        skillDamage *= Atk[i][j];
+                    }
+
+                    // 计算法抗减免
+                    skillDamage = skillDamage * (100 - res) / 100.0 > skillDamage * 0.05 ?
+                        skillDamage * (100 - res) / 100.0 : skillDamage * 0.05;
+
+                    // 计算攻击次数
+                    const atkCount = selectedOperator.skillDuration[i] === 0 ? 1 :
+                        selectedOperator.skillDuration[i] / (selectedOperator.atkInterval * 100.0 / atkSpeed);
+
+                    skillDamage *= atkCount * selectedOperator.atkCount[i];
+                    totalDamage += skillDamage;
+                }
+
+                // 拉普兰德的特殊处理
+                if (selectedOperator.id === 4) {
+                    specialDamage = totalDamage;
+
+                    // 重新计算总伤害（排除第四个技能）
+                    totalDamage = 0;
+                    for (let i = 0; i < 3; i++) {
+                        if (!selectedOperator.skillMul[i]) continue;
+
+                        let skillDamage = selectedOperator.atk;
+
+                        for (let j = 0; j < 20; j++) {
+                            skillDamage *= Atk[i][j];
+                        }
+
+                        skillDamage = skillDamage * (100 - res) / 100.0 > skillDamage * 0.05 ?
+                            skillDamage * (100 - res) / 100.0 : skillDamage * 0.05;
+
+                        const atkCount = selectedOperator.skillDuration[i] === 0 ? 1 :
+                            selectedOperator.skillDuration[i] / (selectedOperator.atkInterval * 100.0 / atkSpeed);
+
+                        skillDamage *= atkCount * selectedOperator.atkCount[i];
+                        totalDamage += skillDamage;
+                    }
+                    specialDamage -= totalDamage;
+                }
+
+                hintText = `计算完成，攻速: ${atkSpeed.toFixed(1)}`;
+            }
+        }
+
+        // 显示结果
+        totalDamageEl.textContent = totalDamage.toFixed(2);
+
+        if (selectedOperator.id === 4) {
+            specialDamageBoxEl.classList.remove('hidden');
+            specialDamageEl.textContent = specialDamage.toFixed(2);
+        }
+
+        calculationHintEl.textContent = hintText;
+        resultsContainerEl.classList.remove('hidden');
+    }
+
+    // 逻各斯特殊处理
+    function handleLogosSpecialCase(res, Atk, atkSpeed) {
+        // 简化版的逻各斯计算
+        const TRY = 100000;
+        let totalDamage = 0;
+
+        // 计算三个技能的伤害
+        let sum = [0, 0, 0];
+
+        for (let i = 0; i < 2; i++) {
+            sum[i] = selectedOperator.atk;
+            for (let j = 0; j < 3; j++) {
+                sum[i] *= Atk[i][j];
+            }
+            sum[i] += 150;
+            sum[i] = sum[i] * (100 - res) / 100.0 > sum[i] * 0.05 ?
+                sum[i] * (100 - res) / 100.0 : sum[i] * 0.05;
+            for (let j = 3; j < 20; j++) {
+                sum[i] *= Atk[i][j];
+            }
+        }
+
+        sum[2] = selectedOperator.atk;
+        for (let j = 0; j < 20; j++) {
+            sum[2] *= Atk[2][j];
+        }
+
+        const atkCount = Math.round(30 / (selectedOperator.atkInterval * 100.0 / atkSpeed));
+        const elementBurstDuration = Math.floor(atkCount / 2);
+
+        // 模拟多次取平均
+        for (let tryCount = 0; tryCount < TRY; tryCount++) {
+            let tryDamage = 0;
+            let apoptosisDamage = 0;
+            let elementBurstTimer = 0;
+
+            for (let i = 0; i < atkCount; i++) {
+                let dph = 0;
+                const randomMod = Math.floor(Math.random() * 5);
+
+                if (randomMod < 3) {
+                    dph = sum[0] + sum[1];
+                } else {
+                    dph = sum[0];
+                }
+
+                if (apoptosisDamage < 1000 + (isBoss ? 1000 : 0)) {
+                    apoptosisDamage += dph * 0.08 * (1 + elementFragile);
+                } else {
+                    // 凋亡爆发期
+                    if (elementBurstTimer === 0) {
+                        tryDamage += 12000;
+                    }
+
+                    if (randomMod < 3) {
+                        dph += sum[2];
+                    }
+
+                    elementBurstTimer++;
+                    if (elementBurstTimer === elementBurstDuration) {
+                        elementBurstTimer = 0;
+                        apoptosisDamage = 0;
+                    }
+                }
+
+                tryDamage += dph;
+            }
+
+            totalDamage += tryDamage;
+        }
+
+        return totalDamage / TRY;
+    }
+
+    // 重置选择
+    function resetSelection() {
+        // 重置干员选择
+        selectedOperator = null;
+        document.querySelectorAll('.operator-card.selected').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        // 重置藏品选择
+        selectedRelics = {
+            atkSpeed: {},
+            mulAdd: {},
+            globalMulAdd: {},
+            globalMulMul: {},
+            fragile: {}
+        };
+
+        // 重置输入框
+        document.querySelectorAll('.relic-count').forEach(input => {
+            input.value = 0;
+        });
+
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+
+        // 重置类别计数
+        relicCategories.forEach(category => {
+            updateCategoryCount(category.id);
+        });
+
+        // 重置搜索框
+        relicSearchEl.value = '';
+        filterRelics();
+
+        // 重置特殊选项
+        laplandStackCount = 0;
+        elementFragile = 0;
+        isBoss = false;
+
+        specialOptionsEl.classList.add('hidden');
+        specialOptionsEl.innerHTML = '';
+
+        // 重置敌人输入
+        enemyInputsEl.innerHTML = '';
+
+        // 隐藏结果
+        resultsContainerEl.classList.add('hidden');
+
+        // 折叠所有藏品类别
+        document.querySelectorAll('.relic-category-header').forEach(header => {
+            header.classList.remove('active');
+            const content = header.nextElementSibling;
+            content.classList.remove('expanded');
+            header.querySelector('.relic-category-icon:last-child').classList.remove('rotated');
+        });
+
+        alert('已重置所有选择！');
+    }
+
+    // 初始化应用
+    function initApp() {
+        initOperatorSelection();
+        initRelicsSelection();
+
+        // 绑定事件
+        calculateBtn.addEventListener('click', calculateDamage);
+        resetBtn.addEventListener('click', resetSelection);
+
+        // 默认选择第一个干员
+        if (operators.length > 0) {
+            selectOperator(0);
+        }
+
+        // 默认展开第一个藏品类别
+        setTimeout(() => {
+            const firstCategory = document.querySelector('.relic-category-header');
+            if (firstCategory) {
+                firstCategory.click();
+            }
+        }, 100);
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>
