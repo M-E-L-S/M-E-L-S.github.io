@@ -1,0 +1,102 @@
+# CLion IDE
+.idea/
+*.iml
+*.iws
+
+# CMake
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+compile_commands.json
+CMakeUserPresets.json
+
+# Build directories
+build/
+out/
+bin/
+lib/
+obj/
+Debug/
+Release/
+x64/
+x86/
+.vs/
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Dependency files
+*.d
+
+# Logs
+*.log
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# HTML/CSS/JS
+# Uncomment if needed
+# *.css.map
+# *.js.map
+
+# User-specific files
+.vscode/
+*.code-workspace
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+
+# Profiling data
+*.profraw
+*.profdata
+
+# Database files
+*.sqlite3
+
+# Test outputs
+*_test
+*_benchmark
+
+# Package managers
+# Uncomment if using
+# node_modules/
+# package-lock.json
+# yarn.lock
+
+# Environment files
+.env
+.env.local

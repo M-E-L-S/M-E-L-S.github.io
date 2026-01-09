@@ -439,7 +439,7 @@
 <div class="container">
     <header>
         <h1>明日方舟肉鸽伤害计算器</h1>
-        <p class="subtitle">基于C语言版本转换的交互式网页计算器 - 选择干员、配置藏品、输入敌人属性计算伤害</p>
+        <p class="subtitle">交互式网页计算器 - 选择干员、配置藏品、输入敌人属性计算伤害</p>
     </header>
 
     <div class="main-content">
@@ -716,23 +716,23 @@
         },
         {
             id: 'mulAdd',
-            name: '面板乘算藏品',
-            icon: '📈',
-            description: '增加面板攻击力',
+            name: '局外藏品',
+            icon: '➕',
+            description: '乘算叠加攻击力',
             relics: mulAddRelics,
             isPercent: true
         },
         {
             id: 'globalMulAdd',
-            name: '倍率乘算叠加藏品',
+            name: '局内藏品',
             icon: '➕',
-            description: '增加技能倍率（叠加）',
+            description: '乘算叠加攻击力',
             relics: globalMulAddRelics,
             isPercent: true
         },
         {
             id: 'globalMulMul',
-            name: '倍率乘算叠乘藏品',
+            name: '全局乘算叠乘藏品',
             icon: '✖️',
             description: '增加技能倍率（叠乘）',
             relics: globalMulMulRelics,
@@ -742,7 +742,7 @@
             id: 'fragile',
             name: '脆弱乘算藏品',
             icon: '🎯',
-            description: '增加脆弱效果',
+            description: '脆弱易伤效果',
             relics: globalFragileRelics,
             isPercent: true
         }
@@ -1190,7 +1190,7 @@
             defInput.type = 'number';
             defInput.id = 'defInput';
             defInput.min = 0;
-            defInput.value = 500;
+            defInput.value = 0;
             defGroup.appendChild(defInput);
 
             enemyInputsEl.appendChild(defGroup);
@@ -1210,7 +1210,7 @@
             resInput.id = 'resInput';
             resInput.min = 0;
             resInput.max = 100;
-            resInput.value = 20;
+            resInput.value = 0;
             resGroup.appendChild(resInput);
 
             enemyInputsEl.appendChild(resGroup);
@@ -1330,10 +1330,8 @@
                         break;
                     case 3:
                         elementFragile += 0.5;
-                        break;
                     case 4:
                         elementFragile += 0.5;
-                        break;
                     case 5:
                     case 6:
                     case 7:
@@ -1393,6 +1391,8 @@
             let def = parseFloat(defInput.value);
             def = def - selectedOperator.ignoreDef[0] > 0 ? def - selectedOperator.ignoreDef[0] : 0;
 
+            let NumOfMul = 1;
+
             for (let i = 0; i < 6; i++) {
                 if (!selectedOperator.skillMul[i]) continue;
 
@@ -1408,6 +1408,7 @@
 
                 // 应用脆弱乘算
                 for (let j = 3; j < 20; j++) {
+                    if(i === 0 && j !== 3) NumOfMul *= Atk[i][j];
                     skillDamage *= Atk[i][j];
                 }
 
@@ -1419,7 +1420,7 @@
                 totalDamage += skillDamage;
             }
 
-            hintText = `计算完成，攻速: ${atkSpeed.toFixed(1)}`;
+            hintText = `计算完成，攻速: ${atkSpeed.toFixed(1)}，局外倍率: ${((Atk[0][0] - selectedOperator.skillMul[0][0]) * 100).toFixed(1)}%，局内倍率: ${((Atk[0][1] - selectedOperator.skillMul[0][1]) * 100).toFixed(1)}%，乘算叠乘： ${((Atk[0][2] / selectedOperator.skillMul[0][2]) * 100).toFixed(1)}%，脆弱: ${((NumOfMul / selectedOperator.skillMul[0][3]) * 100).toFixed(1)}%`;
         }
 
         if (selectedOperator.damageType[1]) {
@@ -1433,6 +1434,8 @@
             let res = parseFloat(resInput.value);
             res = res - selectedOperator.ignoreDef[1] > 0 ? res - selectedOperator.ignoreDef[1] : 0;
 
+            let NumOfMul = 1;
+
             // 逻各斯特判
             if (selectedOperator.id === 2) {
                 totalDamage = handleLogosSpecialCase(res, Atk, atkSpeed);
@@ -1445,6 +1448,7 @@
 
                     // 应用所有乘算
                     for (let j = 0; j < 20; j++) {
+                        if(j >= 4 && i === 0) NumOfMul *= Atk[i][j];
                         skillDamage *= Atk[i][j];
                     }
 
@@ -1487,7 +1491,7 @@
                     specialDamage -= totalDamage;
                 }
 
-                hintText = `计算完成，攻速: ${atkSpeed.toFixed(1)}`;
+                hintText = `计算完成，攻速: ${atkSpeed.toFixed(1)}，局外倍率: ${((Atk[0][0] - selectedOperator.skillMul[0][0]) * 100).toFixed(1)}%，局内倍率: ${((Atk[0][1] - selectedOperator.skillMul[0][1]) * 100).toFixed(1)}%，乘算叠乘： ${((Atk[0][2] / selectedOperator.skillMul[0][2]) * 100).toFixed(1)}%，脆弱: ${((NumOfMul) * 100).toFixed(1)}%`;
             }
         }
 

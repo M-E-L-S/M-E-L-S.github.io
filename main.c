@@ -270,7 +270,7 @@ int main(void){
             scanf("%lf",&def);
             def = def - OperatorList[OperatorIndex].ignoreDef[0] > 0 ? def - OperatorList[OperatorIndex].ignoreDef[0] : 0;
 
-            //计算总伤和DPS
+            //计算总伤
             double sum[6] = {0};
             Sum = 0;
             for(int i=0;i<6;i++){
@@ -279,10 +279,12 @@ int main(void){
                     sum[i] *= Atk[i][j];
                 }
                 sum[i] = sum[i]-def > sum[i] * 0.05 ? sum[i] - def : sum[i] * 0.05;
+                //保底伤害
                 for(int j=3;j<MAX;j++){
                     sum[i] *= Atk[i][j];
                 }
                 const double atkCount = OperatorList[OperatorIndex].skillDuration[i] == 0 ? 1 : OperatorList[OperatorIndex].skillDuration[i] / (OperatorList[OperatorIndex].atkInterval * 100.0 / AtkSpeed);
+                //特判零值，按连击处理
                 sum[i] *=  atkCount * OperatorList[OperatorIndex].atkCount[i];
                 Sum += sum[i];
             }
@@ -296,7 +298,7 @@ int main(void){
             scanf("%lf",&res);
             res = res - OperatorList[OperatorIndex].ignoreDef[1] > 0 ? res - OperatorList[OperatorIndex].ignoreDef[1] : 0;
 
-            //计算总伤和DPS
+            //计算总伤
             double sum[6] = {0};
             Sum = 0;
             if(OperatorIndex == 2){HandleSpecialCase(res);}
