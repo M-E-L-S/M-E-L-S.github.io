@@ -1439,7 +1439,11 @@
             // 逻各斯特判
             if (selectedOperator.id === 2) {
                 totalDamage = handleLogosSpecialCase(res, Atk, atkSpeed);
-                hintText = `模拟计算完成，攻速: ${atkSpeed.toFixed(1)}，模拟次数: 100,000`;
+                for (let j = 4; j < 20; j++) {
+                    NumOfMul *= Atk[0][j];
+                }
+                hintText = `计算完成，攻速: ${atkSpeed.toFixed(1)}，局外倍率: ${((Atk[0][0] - selectedOperator.skillMul[0][0]) * 100).toFixed(1)}%，局内倍率: ${((Atk[0][1] - selectedOperator.skillMul[0][1]) * 100).toFixed(1)}%，乘算叠乘： ${((Atk[0][2] / selectedOperator.skillMul[0][2]) * 100).toFixed(1)}%，脆弱: ${((NumOfMul) * 100).toFixed(1)}%`;
+                hintText += `模拟次数: 100,000`;
             } else {
                 for (let i = 0; i < 6; i++) {
                     if (!selectedOperator.skillMul[i]) continue;
