@@ -9,6 +9,7 @@
 #define ADD_MUL_RELIC_CNT 10
 #define MUL_MUL_RELIC_CNT 1
 #define FRAGILE_RELIC_CNT 14
+//c没有基于范围的数组遍历导致的，考虑升级到C++
 #define TRY 10000000
 
 double AtkSpeed, Atk[6][MAX], Sum;//面版乘算，倍率乘算叠加，倍率乘算叠乘，脆弱乘算叠乘

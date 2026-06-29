@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第五届仙术杯分数计算器 - 岁的界园志异</title>
+    <style>
+        body {
+            background: #505050;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .calculator {
+            background: #e0e0e0;
+            max-width: 1400px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .global-header {
+            grid-column: 1 / -1;
+            background: #d4e1f9;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid #4a90e2;
+        }
+        .global-header h1 {
+            margin: 0;
+            font-size: 22px;
+            color: #333;
+        }
+        .double-column {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .category {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #d0d0d0;
+            break-inside: avoid;
+        }
+        h2 {
+            color: #444;
+            font-size: 16px;
+            margin: 0 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #ddd;
+        }
+        .sub-category {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 4px 0;
+            width: 100%;
+        }
+        .sub-category label, .clickable-label {
+            flex: 1;
+            font-size: 15px;
+            color: #333;
+            margin-right: 10px;
+            min-width: 120px;
+        }
+        input {
+            width: 60px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            background: white;
+        }
+        input[readonly] {
+            background: #e9e9e9;
+            color: #888;
+        }
+        #total {
+            grid-column: 1 / -1;
+            background: #d8d8d8;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 26px;
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: center;
+        }
+        button.action-btn {
+            grid-column: 1 / -1;
+            width: 200px;
+            padding: 12px;
+            margin: 15px auto;
+            display: block;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button.action-btn:hover {
+            background: #45a049;
+        }
+        .clickable-label {
+            cursor: pointer;
+            transition: background 0.2s;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: none;
+            border: none;
+            text-align: left;
+            font: inherit;
+            color: inherit;
+        }
+        .clickable-label:hover {
+            background: rgba(0,0,0,0.1);
+        }
+        .score-display {
+            font-size: 12px;
+            color: #1565c0;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+
+        /* 开关样式 */
+        .score-multiplier {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+            margin-right: 10px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+        input:checked + .slider {
+            background-color: #d32f2f;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        .slider.round {
+            border-radius: 34px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        @media (max-width: 1200px) {
+            .calculator {
+                grid-template-columns: 1fr;
+            }
+            .double-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="calculator">
+    <div class="global-header">
+        <h1>仙术杯 - 岁的界园志异</h1>
+        <div class="score-multiplier">
+            <label class="switch">
+                <input type="checkbox" id="n18Toggle" onchange="toggleN18()">
+                <span class="slider round"></span>
+            </label>
+            <span>开启 N18 模式</span>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>开局分队 (通关时结算)</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">天师府<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="-100" data-n18-score="-100" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">职业队<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="100" data-n18-score="300" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">花团锦簇 / 棋行险着<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="150" data-n18-score="350" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">高台/地面/司岁台/指挥/特勤/后勤/矛头/高规格/岁影回音/知学<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="300" data-n18-score="500" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>临时招募 & 隐藏击杀</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">临时招募 6星<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="50" data-n18-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">临时招募 5星<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">临时招募 4星<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="20" data-n18-score="20" min="0" value="0">
+        </div>
+        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">任意作战击杀：小八界<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">任意作战击杀：鸭/熊<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="20" data-n18-score="20" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">任意作战击杀：鼠/狗<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="10" data-n18-score="10" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>不期而遇作战 & 彩蛋</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">以逸待劳（仅限普通）<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="20" data-n18-score="20" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">硕果累累<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="25" data-n18-score="25" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">劫罚<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">生百相<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="40" data-n18-score="40" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">易易鸭鸭（紧急）<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="90" data-n18-score="90" min="0" value="0">
+        </div>
+        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">硅基伥的宴席（紧急）<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="100" data-n18-score="100" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">彻底失控（紧急/暂定考据）<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="0" data-n18-score="0" min="0" value="0">
+        </div>
+    </div>
+
+        <div class="category">
+            <h2>紧急作战加分 (重复作战只计算一次)</h2>
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">险路恶敌: 夕娥忆/仁·义·武/求道<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
+            </div>
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层: 青山不语/砺锋/邙山镇地方志/离域检查/往事喑哑<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="50" data-n18-score="50" min="0" value="0">
+            </div>
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">Ⅵ层: 炎灼/人镇/借力打力<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="60" data-n18-score="60" min="0" value="0">
+            </div>
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">Ⅵ层: 越山海<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="100" data-n18-score="100" min="0" value="0">
+            </div>
+        </div>
+
+        <div class="category">
+            <h2>结局加分</h2>
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">昔字如烟 / 往昔难忆<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="50" data-n18-score="100" min="0" value="0">
+            </div>
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">谋岁者<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
+            </div>
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">末狩<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="150" data-n18-score="150" min="0" value="0">
+            </div>
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">定乾坤<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
+            </div>
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">止变<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="250" data-n18-score="250" min="0" value="0">
+            </div>
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">役群兽 / 定本源<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
+            </div>
+
+            <div style="margin-left: 20px; border-left: 2px solid #ccc; padding-left: 10px;">
+                <div class="sub-category">
+                    <button class="clickable-label" onclick="incrementCounter(this)">↳ 击杀“朔壳”<span class="score-display"></span></button>
+                    <input type="number" class="score-input" data-normal-score="200" data-n18-score="300" min="0" value="0">
+                </div>
+                <div class="sub-category">
+                    <button class="clickable-label" onclick="incrementCounter(this)">↳ 携带“忘生珍珑”和“云与漆”<span class="score-display"></span></button>
+                    <input type="number" class="score-input" data-normal-score="100" data-n18-score="200" min="0" value="0">
+                </div>
+                <div class="sub-category">
+                    <button class="clickable-label" onclick="incrementCounter(this)">↳ 未投出通宝“法与律”<span class="score-display"></span></button>
+                    <input type="number" class="score-input" data-normal-score="100" data-n18-score="200" min="0" value="0">
+                </div>
+            </div>
+        </div>
+
+    <div class="category">
+        <h2>负面及特定藏品加分</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">炭面/鸣镝吹筒/剑锤/一串钱伥<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="10" data-n18-score="10" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">国王/魔王/手系列藏品<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="10" data-n18-score="10" min="0" value="0">
+        </div>
+        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
+        <h2 style="font-size:14px; border:none; color:#d32f2f;">以下藏品仅限 N18 模式加分</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">无封长盒<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="0" data-n18-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">忘生珍珑<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="0" data-n18-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">云与漆<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="0" data-n18-score="70" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">不息<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="0" data-n18-score="75" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">不赦<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="0" data-n18-score="75" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">局内结算分<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="1" data-n18-score="1" min="0" value="0">
+        </div>
+    </div>
+
+    <div id="total">总分: 0</div>
+
+    <button class="action-btn" id="printBtn">打印本局成绩单</button>
+    <div id="score-report" style="grid-column: 1 / -1; margin-top: 10px; padding: 15px; background-color: #f5f5f5; border-radius: 8px; display: none;"></div>
+</div>
+
+<script>
+    // 初始化时，将 data-score 设置为 normal-score，并显示分数
+    function initializeScores() {
+        document.querySelectorAll('input.score-input').forEach(input => {
+            input.dataset.score = input.dataset.normalScore;
+            input.addEventListener('input', calculate);
+            updateScoreDisplay(input);
+        });
+        calculate();
+    }
+
+    // 切换 N18 模式
+    function toggleN18() {
+        const isN18 = document.getElementById('n18Toggle').checked;
+        document.querySelectorAll('input.score-input').forEach(input => {
+            if (isN18) {
+                input.dataset.score = input.dataset.n18Score;
+            } else {
+                input.dataset.score = input.dataset.normalScore;
+            }
+            updateScoreDisplay(input);
+        });
+        calculate();
+    }
+
+    // 更新标签旁边的分值提示
+    function updateScoreDisplay(input) {
+        const displaySpan = input.parentElement.querySelector('.score-display');
+        if(displaySpan) {
+            const score = parseInt(input.dataset.score);
+            if (score > 0) displaySpan.textContent = `(+${score})`;
+            else if (score < 0) displaySpan.textContent = `(${score})`;
+            else displaySpan.textContent = `(0)`;
+        }
+    }
+
+    // 点击计数功能
+    function incrementCounter(button) {
+        const input = button.parentElement.querySelector('input[type="number"]');
+        if (input) {
+            input.value = parseInt(input.value || 0) + 1;
+            input.dispatchEvent(new Event('input'));
+        }
+    }
+
+    // 计算总分
+    function calculate() {
+        let total = 0;
+        document.querySelectorAll('input.score-input').forEach(input => {
+            const count = parseInt(input.value) || 0;
+            const score = parseInt(input.dataset.score) || 0;
+            total += count * score;
+        });
+
+        const totalElement = document.getElementById('total');
+        totalElement.textContent = `总分: ${total}`;
+        totalElement.style.color = total >= 0 ? '#2a611e' : '#d32f2f';
+    }
+
+    // 打印成绩单
+    document.getElementById('printBtn').addEventListener('click', function() {
+        const reportDiv = document.getElementById('score-report');
+        const isN18 = document.getElementById('n18Toggle').checked;
+        let reportHTML = `<h3 style="margin-top:0;">成绩单 (模式: ${isN18 ? 'N18' : '普通'})</h3><table style="width:100%;border-collapse:collapse;">`;
+        reportHTML += '<tr><th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">项目</th>' +
+            '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">次数</th>' +
+            '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">单次分数</th>' +
+            '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">小计</th></tr>';
+
+        document.querySelectorAll('.category').forEach(category => {
+            let sectionHasItems = false;
+            let sectionHTML = `<tr><td colspan="4" style="padding:8px;font-weight:bold;background-color:#e0e0e0;">${category.querySelector('h2').textContent.split('(')[0]}</td></tr>`;
+
+            category.querySelectorAll('.sub-category').forEach(subCategory => {
+                const input = subCategory.querySelector('input[type="number"]');
+                const labelElement = subCategory.querySelector('.clickable-label');
+                if(!input || !labelElement) return;
+
+                const value = parseInt(input.value) || 0;
+                if(value > 0) {
+                    sectionHasItems = true;
+                    // 清理标签中带的括号分数显示
+                    const rawName = labelElement.textContent.replace(/\([+-]?\d+\)/, '').trim();
+                    const score = parseInt(input.dataset.score);
+                    const subTotal = value * score;
+
+                    sectionHTML += `<tr>
+                        <td style="padding:8px;border-bottom:1px solid #eee;">${rawName}</td>
+                        <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${value}</td>
+                        <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${score}</td>
+                        <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${subTotal}</td>
+                    </tr>`;
+                }
+            });
+            if(sectionHasItems) {
+                reportHTML += sectionHTML;
+            }
+        });
+
+        const totalScore = document.getElementById('total').textContent.replace('总分: ', '');
+        reportHTML += `<tr>
+            <td colspan="3" style="padding:8px;font-weight:bold;text-align:right;border-top:2px solid #ddd;">最终结算</td>
+            <td style="text-align:right;padding:8px;font-weight:bold;border-top:2px solid #ddd;color:${parseInt(totalScore)>=0?'#2a611e':'#d32f2f'}">${totalScore}</td>
+        </tr>`;
+
+        reportHTML += '</table>';
+        reportDiv.innerHTML = reportHTML;
+        reportDiv.style.display = 'block';
+    });
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', initializeScores);
+</script>
+</body>
+</html>
