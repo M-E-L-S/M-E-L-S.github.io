@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
+    <meta charset="UTF-8">
     <title>仙术杯分数计算器</title>
     <style>
         /* 保持原有所有样式 */
@@ -46,7 +47,7 @@
         .sub-category {
             display: flex;
             align-items: center;
-	    justify-content: space-between;
+            justify-content: space-between;
             margin: 8px 0;
             padding: 4px 0;
             width: 100%;
@@ -133,655 +134,686 @@
             color: #444;
         }
 
+        /* 开关样式 */
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .score-multiplier {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            width: 100%;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* ========================================================
+           响应式媒体查询深度修复与优化
+           ======================================================== */
         @media (max-width: 1200px) {
             .calculator {
                 grid-template-columns: 1fr;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                padding: 20px;
             }
             .double-column {
                 grid-template-columns: 1fr;
             }
+            .category {
+                box-sizing: border-box;
+            }
         }
-	/* 开关样式 */
-.category-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
 
-.score-multiplier {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-    margin-right: 10px;
-    flex-shrink: 0;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    width: 100%;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-}
-
-input:checked + .slider {
-    background-color: #2196F3;
-}
-
-input:checked + .slider:before {
-    transform: translateX(26px);
-}
-
-.slider.round {
-    border-radius: 34px;
-}
-
-.slider.round:before {
-    border-radius: 50%;
-}
+        /* 针对 600px 以下的手机窄屏进行精准适配 */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .calculator {
+                padding: 12px;
+                gap: 12px;
+            }
+            .category {
+                padding: 12px;
+            }
+            h2 {
+                font-size: 15px;
+                margin-bottom: 10px;
+            }
+            .sub-category {
+                flex-wrap: wrap; /* 核心改动：允许内容过宽时弹性换行 */
+                gap: 6px;
+            }
+            .sub-category label, .clickable-label {
+                font-size: 14px;
+                min-width: auto;
+                margin-right: 5px;
+                flex: 1; /* 自动分配剩余空间，文本过长会自动在内部换行，不撑开容器 */
+            }
+            /* 手机端让多选项组（如包含多个input的区域）自动掉到文本下方，独占一横行 */
+            .sub-options {
+                width: 100%;
+                margin-top: 2px;
+            }
+            .option-header {
+                justify-content: flex-start;
+                gap: 5px;
+            }
+            .option-inputs {
+                display: flex;
+                gap: 5px;
+            }
+            /* 关键点：稍微缩减手机端的按钮和输入框固定宽度(70px -> 58px)，确保4个并排绝对不会挤爆屏幕 */
+            input, .option-header button, .option-header span {
+                width: 58px !important;
+                font-size: 13px;
+                padding: 5px;
+            }
+            /* 成绩单成绩报告区域防溢出滚动 */
+            #score-report {
+                overflow-x: auto;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            #score-report table {
+                min-width: 450px; /* 保证表格在手机上可横向滑动阅览，数据不挤压错位 */
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="calculator">
-        <!-- 开局分队扣分 -->
-        <div class="category">
-            <h2>开局分队（扣分）</h2>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">蓝图测绘（-50/次）</button>
-                <input type="number" data-score="-50" min="0" value="0">
-            </div>
+<div class="calculator">
+    <div class="category">
+        <h2>开局分队（扣分）</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">蓝图测绘（-50/次）</button>
+            <input type="number" data-score="-50" min="0" value="0">
         </div>
+    </div>
 
-        <!-- 开局分队加分 -->
-        <div class="category">
-            <h2>开局分队（加分）</h2>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">魂灵护送（+50/次）</button>
-                <input type="number" data-score="50" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">点刺成锭（+50/次）</button>
-                <input type="number" data-score="50" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">拟态学者（+50/次）</button>
-                <input type="number" data-score="50" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">非职业分队（+400/次）</button>
-                <input type="number" data-score="400" min="0" value="0">
-            </div>
+    <div class="category">
+        <h2>开局分队（加分）</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">魂灵护送（+50/次）</button>
+            <input type="number" data-score="50" min="0" value="0">
         </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">点刺成锭（+50/次）</button>
+            <input type="number" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">拟态学者（+50/次）</button>
+            <input type="number" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">非职业分队（+400/次）</button>
+            <input type="number" data-score="400" min="0" value="0">
+        </div>
+    </div>
 
-        <!-- 道中加分 -->
+    <div class="category">
+        <h2>道中加分</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">临时招募4星（+20/次）</button>
+            <input type="number" data-score="20" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">临时招募5星（+30/次）</button>
+            <input type="number" data-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">临时招募6星（+50/次）</button>
+            <input type="number" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">鸭/熊事件（+20/次）</button>
+            <input type="number" data-score="20" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">狗/鼠事件（+10/次）</button>
+            <input type="number" data-score="10" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="double-column">
         <div class="category">
-            <h2>道中加分</h2>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">临时招募4星（+20/次）</button>
-                <input type="number" data-score="20" min="0" value="0">
+            <div class="category-header">
+                <h2>紧急作战加分</h2>
+                <div class="score-multiplier">
+                    <label class="switch">
+                        <input type="checkbox" id="multiplierToggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span>死仇</span>
+                </div>
             </div>
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">临时招募5星（+30/次）</button>
-                <input type="number" data-score="30" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">临时招募6星（+50/次）</button>
-                <input type="number" data-score="50" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">鸭/熊事件（+20/次）</button>
-                <input type="number" data-score="20" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">狗/鼠事件（+10/次）</button>
+                <button class="clickable-label" onclick="incrementCounter(this)">公害/夺路而跳/冰川期（+10/次）</button>
                 <input type="number" data-score="10" min="0" value="0">
             </div>
-        </div>
 
-        <!-- 特殊双列区块 -->
-        <div class="double-column">
-            <!-- 紧急作战加分 -->
-            <div class="category">
-		<div class="category-header">
-		<h2>紧急作战加分</h2>
-		<div class="score-multiplier">
-        <label class="switch">
-            <input type="checkbox" id="multiplierToggle">
-            <span class="slider round"></span>
-        </label>
-        <span>死仇</span>
-    </div>
-</div>
-                <!-- 公害/夺路而跳/冰川期 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">公害/夺路而跳/冰川期（+10/次）</button>
-                    <input type="number" data-score="10" min="0" value="0">
-                </div>
-                
-                <!-- 卡兹瀑布 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">卡兹瀑布（+20/次）</button>
-                    <input type="number" data-score="20" min="0" value="0">
-                </div>
-
-                <!-- 溃乱魔典/火力小队 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">溃乱魔典/火力小队（+10/次）</button>
-                    <input type="number" data-score="10" min="0" value="0">
-                </div>
-
-                <!-- 现代战争法则/幽灵城 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">现代战争法则/幽灵城（+10/次）</button>
-                    <input type="number" data-score="10" min="0" value="0">
-                </div>
-
-                <!-- 猩红甬道 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">猩红甬道（+20/次）</button>
-                    <input type="number" data-score="20" min="0" value="0">
-                </div>
-
-                <!-- 神出鬼没 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">神出鬼没（+40/次）</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">无漏</button>
-                                <button onclick="incrementCounter(this, 2)">普通</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="40" min="0" value="0">
-                                <input type="number" data-score="20" min="0" value="0">
-                                <input type="number" data-score="-20" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 混沌 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">混沌（+40/次）</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">普通</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="40" min="0" value="0">
-                                <input type="number" data-score="-20" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 争议频发 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">争议频发（+60/次）</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">无漏</button>
-                                <button onclick="incrementCounter(this, 2)">普通</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="60" min="0" value="0">
-                                <input type="number" data-score="10" min="0" value="0">
-                                <input type="number" data-score="-20" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 寄人城池下/计划耕种/巫咒同盟 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">寄人城池下/计划耕种/巫咒同盟（+10/次）</button>
-                    <input type="number" data-score="10" min="0" value="0">
-                </div>
-
-                <!-- 无罪净土/浮空城接弦战 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">无罪净土/浮空城接弦战（+10/次）</button>
-                    <input type="number" data-score="10" min="0" value="0">
-                </div>
-
-                <!-- 建制 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">建制（+60/次）</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">无漏</button>
-                                <button onclick="incrementCounter(this, 2)">普通</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="60" min="0" value="0">
-                                <input type="number" data-score="20" min="0" value="0">
-                                <input type="number" data-score="-20" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 莱茵卫士 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">莱茵卫士（+80/次）</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">普通</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="80" min="0" value="0">
-                                <input type="number" data-score="-20" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 谋求共识/神圣的渴求 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">谋求共识/神圣的渴求（+60/次）</button>
-                    <input type="number" data-score="60" min="0" value="0">
-                </div>
-
-                <!-- 外道 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">外道（+80/次）</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">普通</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="80" min="0" value="0">
-                                <input type="number" data-score="-20" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 洞天福地 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">洞天福地（+100/次）</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">普通</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="100" min="0" value="0">
-                                <input type="number" data-score="-40" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 结局加分 -->
-            <div class="category">
-                <h2>结局加分</h2>
-                <!-- 紧急授课 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">紧急授课</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">混乱</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="0" min="0" value="0">
-                                <input type="number" data-score="50" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 思维矫正 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">思维矫正</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">混乱</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="150" min="0" value="0">
-                                <input type="number" data-score="50" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 朝谒 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">朝谒</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">混乱</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="90" min="0" value="0">
-                                <input type="number" data-score="10" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 魂灵朝谒 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">魂灵朝谒</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">混乱</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="240" min="0" value="0">
-                                <input type="number" data-score="10" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 圣城 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">圣城</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">混乱</button>
-                                <button onclick="incrementCounter(this, 2)">滚动</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="150" min="0" value="0">
-                                <input type="number" data-score="50" min="0" value="0">
-                                <input type="number" data-score="50" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 授法一面奎隆 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">授法一面奎隆</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="200" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 授法二面奎隆 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">授法二面奎隆</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="150" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 授法 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">授法</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">混乱</button>
-                                <button onclick="incrementCounter(this, 2)">滚动</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="150" min="0" value="0">
-                                <input type="number" data-score="50" min="0" value="0">
-                                <input type="number" data-score="50" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 不容拒绝系列 -->
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝一面"圣卫铳骑"</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="50" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝一面"奎隆"</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="100" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝二面"特雷西斯"</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="50" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝二面"曼弗雷德"</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="100" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝三面菈玛莲、歌利亚、凯尔希</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="50" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝</button>
-                    <div class="sub-options">
-                        <div class="option-group">
-                            <div class="option-header">
-                                <button onclick="incrementCounter(this, 0)">基础</button>
-                                <button onclick="incrementCounter(this, 1)">无漏</button>
-                                <button onclick="incrementCounter(this, 2)">混乱</button>
-                                <button onclick="incrementCounter(this, 3)">滚动</button>
-                            </div>
-                            <div class="option-inputs">
-                                <input type="number" data-score="150" min="0" value="0">
-                                <input type="number" data-score="50" min="0" value="0">
-                                <input type="number" data-score="100" min="0" value="0">
-                                <input type="number" data-score="100" min="0" value="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 其他常规三列区块 -->
-        <!-- 抢商店 -->
-        <div class="category">
-            <h2>抢商店</h2>
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">物权纠纷（+100/次）</button>
-                <input type="number" data-score="100" min="0" value="0">
-            </div>
-        </div>
-
-        <!-- 不期而遇作战 -->
-        <div class="category">
-            <h2>不期而遇作战</h2>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">战场侧面（+20/次）</button>
+                <button class="clickable-label" onclick="incrementCounter(this)">卡兹瀑布（+20/次）</button>
                 <input type="number" data-score="20" min="0" value="0">
             </div>
+
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">紧急战场侧面（+40/次）</button>
-                <input type="number" data-score="40" min="0" value="0">
+                <button class="clickable-label" onclick="incrementCounter(this)">溃乱魔典/火力小队（+10/次）</button>
+                <input type="number" data-score="10" min="0" value="0">
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">现代战争法则/幽灵城（+10/次）</button>
+                <input type="number" data-score="10" min="0" value="0">
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">猩红甬道（+20/次）</button>
+                <input type="number" data-score="20" min="0" value="0">
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">神出鬼没（+40/次）</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">无漏</button>
+                            <button onclick="incrementCounter(this, 2)">普通</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="40" min="0" value="0">
+                            <input type="number" data-score="20" min="0" value="0">
+                            <input type="number" data-score="-20" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">混沌（+40/次）</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">普通</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="40" min="0" value="0">
+                            <input type="number" data-score="-20" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">争议频发（+60/次）</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">无漏</button>
+                            <button onclick="incrementCounter(this, 2)">普通</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="60" min="0" value="0">
+                            <input type="number" data-score="10" min="0" value="0">
+                            <input type="number" data-score="-20" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">寄人城池下/计划耕种/巫咒同盟（+10/次）</button>
+                <input type="number" data-score="10" min="0" value="0">
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">无罪净土/浮空城接弦战（+10/次）</button>
+                <input type="number" data-score="10" min="0" value="0">
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">建制（+60/次）</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">无漏</button>
+                            <button onclick="incrementCounter(this, 2)">普通</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="60" min="0" value="0">
+                            <input type="number" data-score="20" min="0" value="0">
+                            <input type="number" data-score="-20" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">莱茵卫士（+80/次）</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">普通</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="80" min="0" value="0">
+                            <input type="number" data-score="-20" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">谋求共识/神圣的渴求（+60/次）</button>
+                <input type="number" data-score="60" min="0" value="0">
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">外道（+80/次）</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">普通</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="80" min="0" value="0">
+                            <input type="number" data-score="-20" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">洞天福地（+100/次）</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">普通</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="100" min="0" value="0">
+                            <input type="number" data-score="-40" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- 负面藏品加分 -->
         <div class="category">
-            <h2>负面藏品加分</h2>
+            <h2>结局加分</h2>
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">奎萨图什塔允诺/霸迩萨狂言（+200/次）</button>
-                <input type="number" data-score="200" min="0" value="0">
+                <button class="clickable-label" onclick="incrementCounter(this)">紧急授课</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">混乱</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="0" min="0" value="0">
+                            <input type="number" data-score="50" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
             </div>
+
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">以勒什呓语（+150/次）</button>
-                <input type="number" data-score="150" min="0" value="0">
+                <button class="clickable-label" onclick="incrementCounter(this)">思维矫正</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">混乱</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="150" min="0" value="0">
+                            <input type="number" data-score="50" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
             </div>
+
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">戈渎不语（+100/次）</button>
-                <input type="number" data-score="100" min="0" value="0">
+                <button class="clickable-label" onclick="incrementCounter(this)">朝谒</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">混乱</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="90" min="0" value="0">
+                            <input type="number" data-score="10" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
             </div>
+
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">未叙魔王残片（+50/次）</button>
-                <input type="number" data-score="50" min="0" value="0">
+                <button class="clickable-label" onclick="incrementCounter(this)">魂灵朝谒</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">混乱</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="240" min="0" value="0">
+                            <input type="number" data-score="10" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
             </div>
+
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">基础分（+400/次）</button>
-                <input type="number" data-score="400" min="0" value="0">
+                <button class="clickable-label" onclick="incrementCounter(this)">圣城</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">混乱</button>
+                            <button onclick="incrementCounter(this, 2)">滚动</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="150" min="0" value="0">
+                            <input type="number" data-score="50" min="0" value="0">
+                            <input type="number" data-score="50" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">授法一面奎隆</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="200" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">授法二面奎隆</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="150" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">授法</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">混乱</button>
+                            <button onclick="incrementCounter(this, 2)">滚动</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="150" min="0" value="0">
+                            <input type="number" data-score="50" min="0" value="0">
+                            <input type="number" data-score="50" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝一面"圣卫铳骑"</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="50" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝一面"奎隆"</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="100" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝二面"特雷西斯"</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="50" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝二面"曼弗雷德"</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="100" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝三面菈玛莲、歌利亚、凯尔希</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="50" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-category">
+                <button class="clickable-label" onclick="incrementCounter(this)">不容拒绝</button>
+                <div class="sub-options">
+                    <div class="option-group">
+                        <div class="option-header">
+                            <button onclick="incrementCounter(this, 0)">基础</button>
+                            <button onclick="incrementCounter(this, 1)">无漏</button>
+                            <button onclick="incrementCounter(this, 2)">混乱</button>
+                            <button onclick="incrementCounter(this, 3)">滚动</button>
+                        </div>
+                        <div class="option-inputs">
+                            <input type="number" data-score="150" min="0" value="0">
+                            <input type="number" data-score="50" min="0" value="0">
+                            <input type="number" data-score="100" min="0" value="0">
+                            <input type="number" data-score="100" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <!-- 三层关底加分 -->
-        <div class="category">
-            <h2>三层关底加分</h2>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">王冠之下（+40/次）</button>
-                <input type="number" data-score="40" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">赴敌者（+50/次）</button>
-                <input type="number" data-score="50" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">或然面纱（+50/次）</button>
-                <input type="number" data-score="50" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">离歌的庭院（+50/次）</button>
-                <input type="number" data-score="50" min="0" value="0">
-            </div>
-        </div>
-
-        <!-- 结算加分 -->
-        <div class="category">
-            <h2>结算加分</h2>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">藏品（+5/次）</button>
-                <input type="number" data-score="5" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">未进树洞（+150/次）</button>
-                <input type="number" data-score="150" min="0" value="0">
-            </div>
-             <div class="sub-category">
-                <label>局内结算分</label>
-                <input type="number" data-score="1" min="0" value="0">
-            </div>
-        </div>
-
-        <div id="total">0</div>
     </div>
+
+    <div class="category">
+        <h2>抢商店</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">物权纠纷（+100/次）</button>
+            <input type="number" data-score="100" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>不期而遇作战</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">战场侧面（+20/次）</button>
+            <input type="number" data-score="20" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">紧急战场侧面（+40/次）</button>
+            <input type="number" data-score="40" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>负面藏品加分</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">奎萨图什塔允诺/霸迩萨狂言（+200/次）</button>
+            <input type="number" data-score="200" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">以勒什呓语（+150/次）</button>
+            <input type="number" data-score="150" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">戈渎不语（+100/次）</button>
+            <input type="number" data-score="100" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">未叙魔王残片（+50/次）</button>
+            <input type="number" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">基础分（+400/次）</button>
+            <input type="number" data-score="400" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>三层关底加分</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">王冠之下（+40/次）</button>
+            <input type="number" data-score="40" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">赴敌者（+50/次）</button>
+            <input type="number" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">或然面纱（+50/次）</button>
+            <input type="number" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">离歌的庭院（+50/次）</button>
+            <input type="number" data-score="50" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>结算加分</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">藏品（+5/次）</button>
+            <input type="number" data-score="5" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">未进树洞（+150/次）</button>
+            <input type="number" data-score="150" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <label>局内结算分</label>
+            <input type="number" data-score="1" min="0" value="0">
+        </div>
+    </div>
+
+    <div id="total">0</div>
+</div>
 
 <script>
     // 点击计数功能
     function incrementCounter(button, index = 0) {
         const wrapper = button.closest('.sub-category') || button.closest('.option-group');
         const inputs = wrapper.querySelectorAll('input[type="number"]');
-        
+
         if (inputs.length > index) {
             const input = inputs[index];
             input.value = parseInt(input.value) + 1;
@@ -795,49 +827,49 @@ input:checked + .slider:before {
         document.querySelectorAll('input[type="number"]').forEach(input => {
             total += (parseInt(input.value) || 0) * parseInt(input.dataset.score);
         });
-        
+
         const totalElement = document.getElementById('total');
         totalElement.textContent = total;
         totalElement.style.color = total >= 0 ? '#2a611e' : '#a32121';
     }
 
-// 更新所有input的data-score值
-function updateScores(categoryElement, multiplier = 1) {
-    categoryElement.querySelectorAll('input[type="number"]').forEach(input => {
-        if (!input.dataset.originalScore) {
-            input.dataset.originalScore = input.dataset.score; // 保存原始值
-        }
-        const originalScore = parseInt(input.dataset.originalScore);
-        input.dataset.score = Math.round(originalScore * multiplier);
+    // 更新所有input的data-score值
+    function updateScores(categoryElement, multiplier = 1) {
+        categoryElement.querySelectorAll('input[type="number"]').forEach(input => {
+            if (!input.dataset.originalScore) {
+                input.dataset.originalScore = input.dataset.score; // 保存原始值
+            }
+            const originalScore = parseInt(input.dataset.originalScore);
+            input.dataset.score = Math.round(originalScore * multiplier);
+        });
+    }
+
+    // 切换分数模式
+    function toggleScoreMultiplier(event) {
+        const multiplierToggle = event.target;
+        const category = multiplierToggle.closest('.category'); // 只获取当前开关所在的分类
+        const multiplier = multiplierToggle.checked ? 1.5 : 1;
+
+        updateScores(category, multiplier);
+        calculate(); // 全局重新计算总分
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        // 为所有输入添加事件监听
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+
+        // 为切换开关添加事件监听
+        document.querySelectorAll('#multiplierToggle').forEach(toggle => {
+            toggle.addEventListener('change', toggleScoreMultiplier);
+
+            // 初始化当前 toggle 所在 category 的分数
+            const category = toggle.closest('.category');
+            updateScores(category, 1);
+        });
     });
-}
-
-// 切换分数模式
-function toggleScoreMultiplier(event) {
-    const multiplierToggle = event.target;
-    const category = multiplierToggle.closest('.category'); // 只获取当前开关所在的分类
-    const multiplier = multiplierToggle.checked ? 1.5 : 1;
-
-    updateScores(category, multiplier);
-    calculate(); // 全局重新计算总分
-}
-
-// 初始化
-document.addEventListener('DOMContentLoaded', function() {
-    // 为所有输入添加事件监听
-    document.querySelectorAll('input[type="number"]').forEach(input => {
-        input.addEventListener('input', calculate);
-    });
-    
-    // 为切换开关添加事件监听
-    document.querySelectorAll('#multiplierToggle').forEach(toggle => {
-        toggle.addEventListener('change', toggleScoreMultiplier);
-
-        // 初始化当前 toggle 所在 category 的分数
-        const category = toggle.closest('.category');
-        updateScores(category, 1);
-    });
-});
 
     // 创建打印按钮
     const printBtn = document.createElement('button');
@@ -858,17 +890,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // 打印成绩单功能
     printBtn.addEventListener('click', function() {
         const reportData = [];
-        
+
         // 收集所有非零数据
         document.querySelectorAll('.category').forEach(category => {
             const categoryTitle = category.querySelector('h2').textContent;
             const items = [];
-            
+
             category.querySelectorAll('.sub-category').forEach(subCategory => {
                 const inputs = subCategory.querySelectorAll('input[type="number"]');
-                const label = subCategory.querySelector('.clickable-label')?.textContent || 
-                              subCategory.querySelector('label')?.textContent || '';
-                
+                const label = subCategory.querySelector('.clickable-label')?.textContent ||
+                    subCategory.querySelector('label')?.textContent || '';
+
                 // 特殊处理"局内结算分"
                 if (label.includes('局内结算分')) {
                     const value = parseInt(inputs[0].value);
@@ -894,12 +926,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             hasOptions: false
                         });
                     }
-                } 
+                }
                 // 处理有子选项的项
                 else if(inputs.length > 1) {
                     const subOptions = [];
                     let subTotal = 0;
-                    
+
                     // 收集选项名称和值
                     const optionHeaders = subCategory.querySelectorAll('.option-header button');
                     optionHeaders.forEach((header, i) => {
@@ -918,7 +950,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         }
                     });
-                    
+
                     if(subOptions.length > 0) {
                         items.push({
                             name: label,
@@ -931,7 +963,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             });
-            
+
             if(items.length > 0) {
                 reportData.push({
                     category: categoryTitle,
@@ -939,17 +971,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
-        
+
         // 生成报告HTML
         let reportHTML = '<h3>成绩单</h3><table style="width:100%;border-collapse:collapse;">';
         reportHTML += '<tr><th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">项目</th>' +
-                     '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">次数</th>' +
-                     '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">单次分数</th>' +
-                     '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">小计</th></tr>';
-        
+            '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">次数</th>' +
+            '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">单次分数</th>' +
+            '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">小计</th></tr>';
+
         reportData.forEach(section => {
             reportHTML += `<tr><td colspan="4" style="padding:8px;font-weight:bold;background-color:#e0e0e0;">${section.category}</td></tr>`;
-            
+
             section.items.forEach(item => {
                 // 主项目行
                 reportHTML += `<tr>
@@ -958,7 +990,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${item.score}</td>
                     <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${item.total}</td>
                 </tr>`;
-                
+
                 // 子选项行
                 if(item.hasOptions && item.options.length > 0) {
                     item.options.forEach(opt => {
@@ -974,14 +1006,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-        
+
         // 添加总分
         const totalScore = parseInt(document.getElementById('total').textContent);
         reportHTML += `<tr>
             <td colspan="3" style="padding:8px;font-weight:bold;text-align:right;border-top:2px solid #ddd;">总分</td>
             <td style="text-align:right;padding:8px;font-weight:bold;border-top:2px solid #ddd;">${totalScore}</td>
         </tr>`;
-        
+
         reportHTML += '</table>';
         reportDiv.innerHTML = reportHTML;
     });

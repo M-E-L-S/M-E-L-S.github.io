@@ -2,8 +2,13 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>第五届仙术杯分数计算器 - 岁的界园志异</title>
     <style>
+        /* 全局盒模型优化，防止 padding 撑破布局 */
+        * {
+            box-sizing: border-box;
+        }
         body {
             background: #505050;
             margin: 0;
@@ -15,6 +20,7 @@
         }
         .calculator {
             background: #e0e0e0;
+            width: 100%;
             max-width: 1400px;
             padding: 25px;
             border-radius: 15px;
@@ -72,6 +78,7 @@
             color: #333;
             margin-right: 10px;
             min-width: 120px;
+            word-break: break-word; /* 允许长文本自动换行 */
         }
         input {
             width: 60px;
@@ -81,6 +88,7 @@
             text-align: center;
             font-size: 14px;
             background: white;
+            flex-shrink: 0; /* 防止输入框被无情压缩 */
         }
         input[readonly] {
             background: #e9e9e9;
@@ -98,7 +106,8 @@
         }
         button.action-btn {
             grid-column: 1 / -1;
-            width: 200px;
+            width: 100%;
+            max-width: 200px;
             padding: 12px;
             margin: 15px auto;
             display: block;
@@ -188,12 +197,65 @@
             border-radius: 50%;
         }
 
+        #score-report {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            display: none;
+            overflow-x: auto; /* 保证小屏下表格可横向滚动，不撑破网页 */
+        }
+
+        /* --- 响应式媒体查询优化 --- */
+
+        /* 中等屏幕（如平板、小屏笔记本）：平滑过渡为 2 列 */
         @media (max-width: 1200px) {
+            .calculator {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* 小屏幕（如大屏手机、纵向平板）：转为 1 列 */
+        @media (max-width: 768px) {
             .calculator {
                 grid-template-columns: 1fr;
             }
             .double-column {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        /* 紧凑型屏幕：防止顶部标题与开关挤压重叠 */
+        @media (max-width: 576px) {
+            .global-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 12px 15px;
+            }
+            .global-header h1 {
+                font-size: 18px;
+            }
+        }
+
+        /* 微型屏幕（手机）：压缩内边距，提高空间利用率 */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .calculator {
+                padding: 15px;
+                gap: 15px;
+            }
+            .category {
+                padding: 12px;
+            }
+            h2 {
+                font-size: 15px;
+            }
+            .sub-category label, .clickable-label {
+                font-size: 14px;
             }
         }
     </style>
@@ -293,68 +355,68 @@
         </div>
     </div>
 
-        <div class="category">
-            <h2>紧急作战加分 (重复作战只计算一次)</h2>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">险路恶敌: 夕娥忆/仁·义·武/求道<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层: 青山不语/砺锋/邙山镇地方志/离域检查/往事喑哑<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="50" data-n18-score="50" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">Ⅵ层: 炎灼/人镇/借力打力<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="60" data-n18-score="60" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">Ⅵ层: 越山海<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="100" data-n18-score="100" min="0" value="0">
-            </div>
+    <div class="category">
+        <h2>紧急作战加分 (重复作战只计算一次)</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">险路恶敌: 夕娥忆/仁·义·武/求道<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层: 青山不语/砺锋/邙山镇地方志/离域检查/往事喑哑<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="50" data-n18-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅵ层: 炎灼/人镇/借力打力<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="60" data-n18-score="60" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅵ层: 越山海<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="100" data-n18-score="100" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>结局加分</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">昔字如烟 / 往昔难忆<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="50" data-n18-score="100" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">谋岁者<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">末狩<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="150" data-n18-score="150" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">定乾坤<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">止变<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="250" data-n18-score="250" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">役群兽 / 定本源<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
         </div>
 
-        <div class="category">
-            <h2>结局加分</h2>
+        <div style="margin-left: 20px; border-left: 2px solid #ccc; padding-left: 10px;">
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">昔字如烟 / 往昔难忆<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="50" data-n18-score="100" min="0" value="0">
+                <button class="clickable-label" onclick="incrementCounter(this)">↳ 击杀“朔壳”<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="200" data-n18-score="300" min="0" value="0">
             </div>
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">谋岁者<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
+                <button class="clickable-label" onclick="incrementCounter(this)">↳ 携带“忘生珍珑”和“云与漆”<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="100" data-n18-score="200" min="0" value="0">
             </div>
             <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">末狩<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="150" data-n18-score="150" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">定乾坤<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">止变<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="250" data-n18-score="250" min="0" value="0">
-            </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">役群兽 / 定本源<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
-            </div>
-
-            <div style="margin-left: 20px; border-left: 2px solid #ccc; padding-left: 10px;">
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">↳ 击杀“朔壳”<span class="score-display"></span></button>
-                    <input type="number" class="score-input" data-normal-score="200" data-n18-score="300" min="0" value="0">
-                </div>
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">↳ 携带“忘生珍珑”和“云与漆”<span class="score-display"></span></button>
-                    <input type="number" class="score-input" data-normal-score="100" data-n18-score="200" min="0" value="0">
-                </div>
-                <div class="sub-category">
-                    <button class="clickable-label" onclick="incrementCounter(this)">↳ 未投出通宝“法与律”<span class="score-display"></span></button>
-                    <input type="number" class="score-input" data-normal-score="100" data-n18-score="200" min="0" value="0">
-                </div>
+                <button class="clickable-label" onclick="incrementCounter(this)">↳ 未投出通宝“法与律”<span class="score-display"></span></button>
+                <input type="number" class="score-input" data-normal-score="100" data-n18-score="200" min="0" value="0">
             </div>
         </div>
+    </div>
 
     <div class="category">
         <h2>负面及特定藏品加分</h2>
@@ -397,11 +459,10 @@
     <div id="total">总分: 0</div>
 
     <button class="action-btn" id="printBtn">打印本局成绩单</button>
-    <div id="score-report" style="grid-column: 1 / -1; margin-top: 10px; padding: 15px; background-color: #f5f5f5; border-radius: 8px; display: none;"></div>
+    <div id="score-report"></div>
 </div>
 
 <script>
-    // 初始化时，将 data-score 设置为 normal-score，并显示分数
     function initializeScores() {
         document.querySelectorAll('input.score-input').forEach(input => {
             input.dataset.score = input.dataset.normalScore;
@@ -411,7 +472,6 @@
         calculate();
     }
 
-    // 切换 N18 模式
     function toggleN18() {
         const isN18 = document.getElementById('n18Toggle').checked;
         document.querySelectorAll('input.score-input').forEach(input => {
@@ -425,7 +485,6 @@
         calculate();
     }
 
-    // 更新标签旁边的分值提示
     function updateScoreDisplay(input) {
         const displaySpan = input.parentElement.querySelector('.score-display');
         if(displaySpan) {
@@ -436,7 +495,6 @@
         }
     }
 
-    // 点击计数功能
     function incrementCounter(button) {
         const input = button.parentElement.querySelector('input[type="number"]');
         if (input) {
@@ -445,7 +503,6 @@
         }
     }
 
-    // 计算总分
     function calculate() {
         let total = 0;
         document.querySelectorAll('input.score-input').forEach(input => {
@@ -459,7 +516,6 @@
         totalElement.style.color = total >= 0 ? '#2a611e' : '#d32f2f';
     }
 
-    // 打印成绩单
     document.getElementById('printBtn').addEventListener('click', function() {
         const reportDiv = document.getElementById('score-report');
         const isN18 = document.getElementById('n18Toggle').checked;
@@ -481,7 +537,6 @@
                 const value = parseInt(input.value) || 0;
                 if(value > 0) {
                     sectionHasItems = true;
-                    // 清理标签中带的括号分数显示
                     const rawName = labelElement.textContent.replace(/\([+-]?\d+\)/, '').trim();
                     const score = parseInt(input.dataset.score);
                     const subTotal = value * score;
@@ -510,7 +565,6 @@
         reportDiv.style.display = 'block';
     });
 
-    // 页面加载完成后初始化
     document.addEventListener('DOMContentLoaded', initializeScores);
 </script>
 </body>
