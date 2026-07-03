@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第三届仙术杯分数计算器 - 探索者的银凇止境</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background: #505050;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .calculator {
+            background: #e0e0e0;
+            width: 100%;
+            max-width: 1400px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .global-header {
+            grid-column: 1 / -1;
+            background: #d4e1f9;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid #4a90e2;
+        }
+        .global-header h1 {
+            margin: 0;
+            font-size: 22px;
+            color: #333;
+        }
+        .category {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #d0d0d0;
+            break-inside: avoid;
+        }
+        h2 {
+            color: #444;
+            font-size: 16px;
+            margin: 0 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #ddd;
+        }
+        .sub-category {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 4px 0;
+            width: 100%;
+        }
+        .sub-category label, .clickable-label {
+            flex: 1;
+            font-size: 15px;
+            color: #333;
+            margin-right: 10px;
+            min-width: 120px;
+            word-break: break-word;
+        }
+        input {
+            width: 60px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            background: white;
+            flex-shrink: 0;
+        }
+        #total {
+            grid-column: 1 / -1;
+            background: #d8d8d8;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 26px;
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: center;
+        }
+        button.action-btn {
+            grid-column: 1 / -1;
+            width: 100%;
+            max-width: 200px;
+            padding: 12px;
+            margin: 15px auto;
+            display: block;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button.action-btn:hover {
+            background: #45a049;
+        }
+        .clickable-label {
+            cursor: pointer;
+            transition: background 0.2s;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: none;
+            border: none;
+            text-align: left;
+            font: inherit;
+            color: inherit;
+        }
+        .clickable-label:hover {
+            background: rgba(0,0,0,0.1);
+        }
+        .score-display {
+            font-size: 12px;
+            color: #1565c0;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+        #score-report {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            display: none;
+            overflow-x: auto;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .calculator { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .calculator { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 576px) {
+            .global-header { flex-direction: column; align-items: flex-start; gap: 12px; padding: 12px 15px; }
+            .global-header h1 { font-size: 18px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .calculator { padding: 15px; gap: 15px; }
+            .category { padding: 12px; }
+            h2 { font-size: 15px; }
+            .sub-category label, .clickable-label { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+<div class="calculator">
+    <div class="global-header">
+        <h1>第三届仙术杯 - 探索者的银凇止境</h1>
+    </div>
+
+    <div class="category">
+        <h2>分队与结局通关</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">永恒狩猎/生活之上/特训分队<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">指挥/集群/矛头/高规格分队<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="100" min="0" value="0">
+        </div>
+        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">通关“深寒造像”<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="250" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">通关“萨米之熵”<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="150" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">通关“虚无之偶”<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="250" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">通关“园丁”<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="200" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">通关“哨兵”<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="450" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">通关“时光之沙”<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="100" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">通关“迈入永恒”<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="150" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">全程未进入“树篱之途”<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="150" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">账号没点满文化比较/存钱数不满500<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="30" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>物品、招募与机制</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">藏品、密文版、战术道具(每个)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="5" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">趋同性消耗/缺失(每损失1目标生命)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="10" min="0" value="0">
+        </div>
+        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">临时招募 六星<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">临时招募 五星<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">临时招募 四星<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="20" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">局内结算分<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="1" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>不期而遇及隐藏作战</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">天途半道 / 夙愿将偿 / 惩罚<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">英雄无名 (每击杀一名敌人)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="20" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">豪华车队<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="10" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">正义使者 (仅通关)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="100" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">正义使者 (每击杀狗/鸭/熊)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="30" min="0" value="0">
+        </div>
+        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">任意作战击杀：鸭/熊/宝箱怪<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="20" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">任意作战击杀：狗/刺箱<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="10" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>紧急与路网作战 (Ⅰ-Ⅳ层)</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)" style="color:#d32f2f;">普通作战降级 (若为普通, 每关扣分)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="-10" min="0" value="0">
+        </div>
+        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅰ层：事不过四(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅰ层：其他(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="10" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅱ层：全部(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="10" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅲ层：冰海疑影(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅲ层：路网冰海疑影<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="40" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅲ层：饥渴祭坛(出宝箱怪)(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅲ层：路网恃强凌弱<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅲ层：夺树者(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅲ层：其他(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="20" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅳ层：禁区(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="30" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅳ层：其他(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="20" min="0" value="0">
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>紧急与路网作战 (Ⅴ-Ⅵ层)</h2>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：本能污染(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="70" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：路网本能污染<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="80" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：何处无山海(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：路网何处无山海<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="60" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：乐理之灾(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：路网乐理之灾<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="60" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：亡者行军(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：混乱的表象(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="40" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：路网混乱的表象<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：人造物狂欢节(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="100" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：路网人造物狂欢节<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="120" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层：其他(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="30" min="0" value="0">
+        </div>
+        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅵ层：霜与沙(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="50" min="0" value="0">
+        </div>
+        <div class="sub-category">
+            <button class="clickable-label" onclick="incrementCounter(this)">Ⅵ层：生灵的终点(紧急)<span class="score-display"></span></button>
+            <input type="number" class="score-input" data-score="100" min="0" value="0">
+        </div>
+    </div>
+
+    <div id="total">总计个人得分: 0</div>
+
+    <button class="action-btn" id="printBtn">打印本局成绩单</button>
+    <div id="score-report"></div>
+</div>
+
+<script>
+    function initializeScores() {
+        document.querySelectorAll('input.score-input').forEach(input => {
+            input.addEventListener('input', calculate);
+            updateScoreDisplay(input);
+        });
+        calculate();
+    }
+
+    function updateScoreDisplay(input) {
+        const displaySpan = input.parentElement.querySelector('.score-display');
+        if(displaySpan) {
+            const score = parseInt(input.dataset.score);
+            if (score > 0) displaySpan.textContent = `(+${score})`;
+            else if (score < 0) displaySpan.textContent = `(${score})`;
+            else displaySpan.textContent = `(0)`;
+        }
+    }
+
+    function incrementCounter(button) {
+        const input = button.parentElement.querySelector('input[type="number"]');
+        if (input) {
+            input.value = parseInt(input.value || 0) + 1;
+            input.dispatchEvent(new Event('input'));
+        }
+    }
+
+    function calculate() {
+        let total = 0;
+        document.querySelectorAll('input.score-input').forEach(input => {
+            const count = parseInt(input.value) || 0;
+            const score = parseInt(input.dataset.score) || 0;
+            total += count * score;
+        });
+
+        const totalElement = document.getElementById('total');
+        totalElement.textContent = `总计个人得分: ${total}`;
+        totalElement.style.color = total >= 0 ? '#2a611e' : '#d32f2f';
+    }
+
+    document.getElementById('printBtn').addEventListener('click', function() {
+        const reportDiv = document.getElementById('score-report');
+        let reportHTML = `<h3 style="margin-top:0;">个人成绩单</h3><table style="width:100%;border-collapse:collapse;">`;
+        reportHTML += '<tr><th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">项目</th>' +
+            '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">次数</th>' +
+            '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">单次分数</th>' +
+            '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">小计</th></tr>';
+
+        document.querySelectorAll('.category').forEach(category => {
+            let sectionHasItems = false;
+            let sectionHTML = `<tr><td colspan="4" style="padding:8px;font-weight:bold;background-color:#e0e0e0;">${category.querySelector('h2').textContent.split('(')[0]}</td></tr>`;
+
+            category.querySelectorAll('.sub-category').forEach(subCategory => {
+                const input = subCategory.querySelector('input[type="number"]');
+                const labelElement = subCategory.querySelector('.clickable-label');
+                if(!input || !labelElement) return;
+
+                const value = parseInt(input.value) || 0;
+                if(value > 0) {
+                    sectionHasItems = true;
+                    // Remove citation brackets and dynamic score parts from printed label
+                    let rawName = labelElement.textContent.replace(/\([+-]?\d+\)/g, '').trim();
+                    const score = parseInt(input.dataset.score);
+                    const subTotal = value * score;
+
+                    sectionHTML += `<tr>
+                        <td style="padding:8px;border-bottom:1px solid #eee;">${rawName}</td>
+                        <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${value}</td>
+                        <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${score}</td>
+                        <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${subTotal}</td>
+                    </tr>`;
+                }
+            });
+            if(sectionHasItems) {
+                reportHTML += sectionHTML;
+            }
+        });
+
+        const totalScore = document.getElementById('total').textContent.replace('总计个人得分: ', '');
+        reportHTML += `<tr>
+            <td colspan="3" style="padding:8px;font-weight:bold;text-align:right;border-top:2px solid #ddd;">个人结算分</td>
+            <td style="text-align:right;padding:8px;font-weight:bold;border-top:2px solid #ddd;color:${parseInt(totalScore)>=0?'#2a611e':'#d32f2f'}">${totalScore}</td>
+        </tr>`;
+
+        reportHTML += '</table>';
+        reportDiv.innerHTML = reportHTML;
+        reportDiv.style.display = 'block';
+    });
+
+    document.addEventListener('DOMContentLoaded', initializeScores);
+</script>
+</body>
+</html>
