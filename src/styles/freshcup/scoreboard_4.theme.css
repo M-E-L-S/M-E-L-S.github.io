@@ -1,0 +1,276 @@
+@scope (#freshcup-tool) {
+
+        /* 保持原有所有样式 */
+        :scope {
+            background: var(--page-bg);
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .calculator {
+            background: var(--body-text);
+            max-width: 1400px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .double-column {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .category {
+            background: var(--button-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            break-inside: avoid;
+        }
+        h2 {
+            color: var(--body-text);
+            font-size: 16px;
+            margin: 0 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--divider);
+        }
+        .sub-category {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 4px 0;
+            width: 100%;
+        }
+        .sub-category label {
+            flex: 1;
+            font-size: 16px;
+            color: var(--text);
+            margin-right: 15px;
+            min-width: 160px;
+        }
+        input {
+            width: 70px;
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            background: white;
+        }
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .option-header {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .option-header span {
+            width: 70px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        #total {
+            grid-column: 1 / -1;
+            background: var(--track);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: center;
+        }
+        button {
+            grid-column: 1 / -1;
+            width: 200px;
+            padding: 12px;
+            margin: 15px 0;
+            background: #808080;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        /* 新增按钮样式 */
+        .clickable-label {
+            cursor: pointer;
+            transition: background 0.2s;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: none;
+            border: none;
+            text-align: left;
+            font: inherit;
+            color: inherit;
+        }
+        .clickable-label:hover {
+            background: rgba(0,0,0,0.1);
+        }
+        .option-header button {
+            width: 70px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            font-size: 12px;
+        }
+        .option-header button:hover {
+            color: var(--body-text);
+        }
+
+        /* 开关样式 */
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .score-multiplier {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: .4s;
+            width: 100%;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* ========================================================
+           响应式媒体查询深度修复与优化
+           ======================================================== */
+        @media (max-width: 1200px) {
+            .calculator {
+                grid-template-columns: 1fr;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                padding: 20px;
+            }
+            .double-column {
+                grid-template-columns: 1fr;
+            }
+            .category {
+                box-sizing: border-box;
+            }
+        }
+
+        /* 针对 600px 以下的手机窄屏进行精准适配 */
+        @media (max-width: 600px) {
+            :scope {
+                padding: 10px;
+            }
+            .calculator {
+                padding: 12px;
+                gap: 12px;
+            }
+            .category {
+                padding: 12px;
+            }
+            h2 {
+                font-size: 15px;
+                margin-bottom: 10px;
+            }
+            .sub-category {
+                flex-wrap: wrap; /* 核心改动：允许内容过宽时弹性换行 */
+                gap: 6px;
+            }
+            .sub-category label, .clickable-label {
+                font-size: 14px;
+                min-width: auto;
+                margin-right: 5px;
+                flex: 1; /* 自动分配剩余空间，文本过长会自动在内部换行，不撑开容器 */
+            }
+            /* 手机端让多选项组（如包含多个input的区域）自动掉到文本下方，独占一横行 */
+            .sub-options {
+                width: 100%;
+                margin-top: 2px;
+            }
+            .option-header {
+                justify-content: flex-start;
+                gap: 5px;
+            }
+            .option-inputs {
+                display: flex;
+                gap: 5px;
+            }
+            /* 关键点：稍微缩减手机端的按钮和输入框固定宽度(70px -> 58px)，确保4个并排绝对不会挤爆屏幕 */
+            input, .option-header button, .option-header span {
+                width: 58px !important;
+                font-size: 13px;
+                padding: 5px;
+            }
+            /* 成绩单成绩报告区域防溢出滚动 */
+            #score-report {
+                overflow-x: auto;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            #score-report table {
+                min-width: 450px; /* 保证表格在手机上可横向滑动阅览，数据不挤压错位 */
+            }
+        }
+
+}

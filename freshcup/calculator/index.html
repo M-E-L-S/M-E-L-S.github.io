@@ -17,7 +17,7 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="src/styles/site-design.css?v=b825d9a032">
-<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/scoreboard_5.theme.css?v=2d167c41f5"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=5c5528216d"></head>
+<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/calculator.theme.css?v=a15fa656eb"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=5c5528216d"></head>
 <body>
 <!-- 顶部导航栏 -->
 <a class="skip-link" href="#main-content">跳至主要内容</a>
@@ -514,210 +514,62 @@
             </div>
         </div>
     </div>
-<section class="page" id="freshcup"><header class="section-heading"><p class="eyebrow">THE TOOLKIT</p><h1>鲜蔬杯工具中心</h1><p>记录每一场挑战，算清每一次伤害。</p></header><nav class="tool-tabs" aria-label="鲜蔬杯工具"><a href="/freshcup/" data-freshcup-tool="scoreboard_5" aria-current="page">界园计分器</a><a href="/freshcup/sarkaz/" data-freshcup-tool="scoreboard_4" >萨卡兹计分器</a><a href="/freshcup/sami/" data-freshcup-tool="scoreboard_3" >萨米计分器</a><a href="/freshcup/calculator/" data-freshcup-tool="calculator" >伤害计算器</a></nav><div id="freshcup-tool">
-<div class="calculator">
-    <div class="global-header">
-        <h1>仙术杯 - 岁的界园志异</h1>
-        <div class="score-multiplier">
-            <label class="switch">
-                <input type="checkbox" id="n18Toggle" onchange="toggleN18()">
-                <span class="slider round"></span>
-            </label>
-            <span>开启 N18 模式</span>
-        </div>
-    </div>
+<section class="page" id="freshcup"><header class="section-heading"><p class="eyebrow">THE TOOLKIT</p><h1>鲜蔬杯工具中心</h1><p>记录每一场挑战，算清每一次伤害。</p></header><nav class="tool-tabs" aria-label="鲜蔬杯工具"><a href="/freshcup/" data-freshcup-tool="scoreboard_5" >界园计分器</a><a href="/freshcup/sarkaz/" data-freshcup-tool="scoreboard_4" >萨卡兹计分器</a><a href="/freshcup/sami/" data-freshcup-tool="scoreboard_3" >萨米计分器</a><a href="/freshcup/calculator/" data-freshcup-tool="calculator" aria-current="page">伤害计算器</a></nav><div id="freshcup-tool">
+<div class="container">
+    <header>
+        <h1>明日方舟肉鸽伤害计算器</h1>
+        <p class="subtitle">交互式网页计算器 - 选择干员、配置藏品、输入敌人属性计算伤害</p>
+    </header>
 
-    <div class="category">
-        <h2>开局分队 (通关时结算)</h2>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">天师府<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="-100" data-n18-score="-100" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">职业队<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="100" data-n18-score="300" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">花团锦簇 / 棋行险着<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="150" data-n18-score="350" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">高台/地面/司岁台/指挥/特勤/后勤/矛头/高规格/岁影回音/知学<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="300" data-n18-score="500" min="0" value="0">
-        </div>
-    </div>
-
-    <div class="category">
-        <h2>临时招募 & 隐藏击杀</h2>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">临时招募 6星<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="50" data-n18-score="50" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">临时招募 5星<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">临时招募 4星<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="20" data-n18-score="20" min="0" value="0">
-        </div>
-        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">任意作战击杀：小八界<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">任意作战击杀：鸭/熊<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="20" data-n18-score="20" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">任意作战击杀：鼠/狗<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="10" data-n18-score="10" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">令常乐 违规<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="-50" data-n18-score="-50" min="-10000" value="0">
-        </div>
-    </div>
-
-    <div class="category">
-        <h2>不期而遇作战 & 彩蛋</h2>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">以逸待劳（仅限普通）<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="20" data-n18-score="20" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">硕果累累<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="20" data-n18-score="20" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">劫罚<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">生百相<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">易易鸭鸭（紧急）<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="60" data-n18-score="60" min="0" value="0">
-        </div>
-        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">硅基伥的宴席（紧急）<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="100" data-n18-score="100" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">彻底失控（紧急）<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="150" data-n18-score="150" min="0" value="0">
-        </div>
-    </div>
-
-    <div class="category">
-        <h2>紧急作战加分 (重复作战只计算一次)</h2>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">险路恶敌: 夕娥忆/仁·义·武/求道<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="30" data-n18-score="30" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">Ⅴ层: 青山不语/砺锋/邙山镇地方志/离域检查/往事喑哑<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="50" data-n18-score="50" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">Ⅵ层: 炎灼/人镇/借力打力<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="60" data-n18-score="60" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">Ⅵ层: 越山海<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="100" data-n18-score="100" min="0" value="0">
-        </div>
-    </div>
-
-    <div class="category">
-        <h2>结局加分</h2>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">昔字如烟 / 往昔难忆<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="50" data-n18-score="100" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">谋岁者<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">末狩<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="150" data-n18-score="150" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">定乾坤<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">止变<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="250" data-n18-score="250" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">役群兽 / 定本源<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="200" data-n18-score="200" min="0" value="0">
-        </div>
-
-        <div style="margin-left: 20px; border-left: 2px solid #ccc; padding-left: 10px;">
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">↳ 击杀“朔壳”<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="200" data-n18-score="300" min="0" value="0">
+    <div class="main-content">
+        <div class="section">
+            <h2 class="section-title">选择干员</h2>
+            <div class="operator-selection" id="operatorSelection">
+                <!-- 干员将通过JavaScript动态生成 -->
             </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">↳ 携带“忘生珍珑”和“云与漆”<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="100" data-n18-score="200" min="0" value="0">
+
+            <div id="specialOptions" class="hidden">
+                <!-- 特殊选项（如拉普兰德暖机层数）将在这里显示 -->
             </div>
-            <div class="sub-category">
-                <button class="clickable-label" onclick="incrementCounter(this)">↳ 未投出通宝“法与律”<span class="score-display"></span></button>
-                <input type="number" class="score-input" data-normal-score="100" data-n18-score="200" min="0" value="0">
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">选择藏品</h2>
+            <div class="relic-search">
+                <input type="text" id="relicSearch" placeholder="搜索藏品名称...">
+            </div>
+            <div class="relics-container" id="relicsContainer">
+                <!-- 藏品将通过JavaScript动态生成 -->
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">敌人属性</h2>
+            <div class="enemy-inputs" id="enemyInputs">
+                <!-- 敌人属性输入框将根据干员类型动态显示 -->
+            </div>
+
+            <div class="buttons">
+                <button class="calculate-btn" id="calculateBtn">计算伤害</button>
+                <button class="reset-btn" id="resetBtn">重置选择</button>
             </div>
         </div>
     </div>
 
-    <div class="category">
-        <h2>负面及特定藏品加分</h2>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">炭面/鸣镝吹筒/剑锤/一串钱伥<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="10" data-n18-score="10" min="0" value="0">
+    <div class="results hidden" id="resultsContainer">
+        <h2 class="result-title">计算结果</h2>
+        <div class="result-content">
+            <div class="result-box">
+                <div class="result-label">总伤害</div>
+                <div class="result-value" id="totalDamage">0</div>
+            </div>
+            <div class="result-box special-result hidden" id="specialDamageBox">
+                <div class="result-label">拉普兰德本体伤害</div>
+                <div class="result-value" id="specialDamage">0</div>
+            </div>
         </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">国王/魔王/手系列藏品<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="10" data-n18-score="10" min="0" value="0">
-        </div>
-        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
-        <h2 style="font-size:14px; border:none; color:#d32f2f;">以下藏品仅限 N18 模式加分</h2>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">无封长盒<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="0" data-n18-score="50" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">忘生珍珑<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="0" data-n18-score="30" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">云与漆<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="0" data-n18-score="70" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">不息<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="0" data-n18-score="75" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">不赦<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="0" data-n18-score="75" min="0" value="0">
-        </div>
-        <div class="sub-category">
-            <button class="clickable-label" onclick="incrementCounter(this)">局内结算分<span class="score-display"></span></button>
-            <input type="number" class="score-input" data-normal-score="1" data-n18-score="1" min="0" value="0">
-        </div>
+        <p class="hint" id="calculationHint"></p>
     </div>
-
-    <div id="total">总分: 0</div>
-
-    <button class="action-btn" id="printBtn">打印本局成绩单</button>
-    <div id="score-report"></div>
 </div>
 
 
@@ -871,6 +723,6 @@
 <script type="module" src="src/scripts/particle-title.js?v=fb2913bb52"></script>
 <script src="src/scripts/site.js?v=9dbe7129dc"></script>
 <script src="src/scripts/freshcup-navigation.js?v=114adac006"></script>
-<script id="freshcup-tool-script" data-tool="scoreboard_5" src="/src/scripts/freshcup/scoreboard_5.js?v=d7534bf2b9"></script>
+<script id="freshcup-tool-script" data-tool="calculator" src="/src/scripts/freshcup/calculator.js?v=28b034c80f"></script>
 </body>
 </html>

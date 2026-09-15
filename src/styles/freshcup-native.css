@@ -1,0 +1,23 @@
+/* Shared design for native score/calculator content; no embedded document. */
+#freshcup-tool {display:block;min-height:0;max-width:none;padding:0;margin:0;background:transparent;color:var(--text);font-family:var(--font);}
+#freshcup-tool[aria-busy="true"] {opacity:.58;pointer-events:none;transition:opacity .16s ease;}
+#freshcup-tool .calculator {padding:0;margin:0;max-width:none;background:transparent;box-shadow:none;gap:20px;}
+#freshcup-tool .global-header,#freshcup-tool header {background:var(--button-bg);border:0;border-radius:16px;padding:24px;box-shadow:none;text-align:left;}
+#freshcup-tool h1,#freshcup-tool h2,#freshcup-tool h3,#freshcup-tool .section-title {color:var(--text);text-shadow:none;border-color:var(--divider);}
+#freshcup-tool h1 {font-size:23px;}
+#freshcup-tool .category,#freshcup-tool .section {background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:none;padding:22px;min-width:0;}
+#freshcup-tool .sub-category label,#freshcup-tool .clickable-label {color:var(--body-text);}
+#freshcup-tool .clickable-label:hover {background:var(--button-bg);}
+#freshcup-tool input,#freshcup-tool select {background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:7px;}
+#freshcup-tool input[readonly] {background:var(--button-bg);color:var(--secondary);}
+#freshcup-tool #total {background:var(--button-bg);color:var(--text);border:1px solid var(--border);border-radius:16px;}
+#freshcup-tool button.action-btn,#freshcup-tool #calculateBtn {background:var(--accent);color:#fff;border:0;border-radius:99px;box-shadow:none;}
+#freshcup-tool .subtitle,#freshcup-tool .operator-stats,#freshcup-tool .relic-desc,#freshcup-tool .calculation-hint {color:var(--secondary);}
+#freshcup-tool .operator-card,#freshcup-tool .relic-category,#freshcup-tool .relic-category-header,#freshcup-tool .relic-item,#freshcup-tool .enemy-inputs,#freshcup-tool .results-container {background:var(--button-bg);color:var(--text);border-color:var(--border);box-shadow:none;}
+#freshcup-tool .operator-card.selected {background:color-mix(in srgb,var(--button-bg) 84%,var(--accent) 16%);border-color:var(--accent);}
+#freshcup-tool .operator-name,#freshcup-tool .relic-name,#freshcup-tool .relic-category-title,#freshcup-tool label {color:var(--text);}
+#freshcup-tool .relic-category-content {background:var(--surface);}
+#freshcup-tool .score {color:var(--accent-strong);}
+#freshcup-tool .report {background:var(--surface);color:var(--text);}
+@media(max-width:720px) {#freshcup-tool .calculator,#freshcup-tool .double-column {grid-template-columns:minmax(0,1fr);}#freshcup-tool .section {flex-basis:100%;min-width:0;}#freshcup-tool .global-header {gap:18px;flex-wrap:wrap;}#freshcup-tool .category {padding:16px;}}
+@media print {.navbar,.music-player,.site-footer,.tool-tabs,.skip-link {display:none;} .page-container{width:100%;}}

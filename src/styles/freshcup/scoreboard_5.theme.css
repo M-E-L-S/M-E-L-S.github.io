@@ -1,0 +1,257 @@
+@scope (#freshcup-tool) {
+
+        /* 全局盒模型优化，防止 padding 撑破布局 */
+        * {
+            box-sizing: border-box;
+        }
+        :scope {
+            background: var(--page-bg);
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .calculator {
+            background: var(--body-text);
+            width: 100%;
+            max-width: 1400px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .global-header {
+            grid-column: 1 / -1;
+            background: var(--button-bg);
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--accent);
+        }
+        .global-header h1 {
+            margin: 0;
+            font-size: 22px;
+            color: var(--text);
+        }
+        .double-column {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .category {
+            background: var(--button-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            break-inside: avoid;
+        }
+        h2 {
+            color: var(--body-text);
+            font-size: 16px;
+            margin: 0 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--divider);
+        }
+        .sub-category {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 4px 0;
+            width: 100%;
+        }
+        .sub-category label, .clickable-label {
+            flex: 1;
+            font-size: 15px;
+            color: var(--text);
+            margin-right: 10px;
+            min-width: 120px;
+            word-break: break-word; /* 允许长文本自动换行 */
+        }
+        input {
+            width: 60px;
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            background: white;
+            flex-shrink: 0; /* 防止输入框被无情压缩 */
+        }
+        input[readonly] {
+            background: var(--track);
+            color: var(--muted);
+        }
+        #total {
+            grid-column: 1 / -1;
+            background: var(--track);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 26px;
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: center;
+        }
+        button.action-btn {
+            grid-column: 1 / -1;
+            width: 100%;
+            max-width: 200px;
+            padding: 12px;
+            margin: 15px auto;
+            display: block;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button.action-btn:hover {
+            background: #45a049;
+        }
+        .clickable-label {
+            cursor: pointer;
+            transition: background 0.2s;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: none;
+            border: none;
+            text-align: left;
+            font: inherit;
+            color: inherit;
+        }
+        .clickable-label:hover {
+            background: rgba(0,0,0,0.1);
+        }
+        .score-display {
+            font-size: 12px;
+            color: #1565c0;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+
+        /* 开关样式 */
+        .score-multiplier {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+            margin-right: 10px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+        input:checked + .slider {
+            background-color: #d32f2f;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        .slider.round {
+            border-radius: 34px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        #score-report {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+            padding: 15px;
+            background-color: var(--button-bg);
+            border-radius: 8px;
+            display: none;
+            overflow-x: auto; /* 保证小屏下表格可横向滚动，不撑破网页 */
+        }
+
+        /* --- 响应式媒体查询优化 --- */
+
+        /* 中等屏幕（如平板、小屏笔记本）：平滑过渡为 2 列 */
+        @media (max-width: 1200px) {
+            .calculator {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* 小屏幕（如大屏手机、纵向平板）：转为 1 列 */
+        @media (max-width: 768px) {
+            .calculator {
+                grid-template-columns: 1fr;
+            }
+            .double-column {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 紧凑型屏幕：防止顶部标题与开关挤压重叠 */
+        @media (max-width: 576px) {
+            .global-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 12px 15px;
+            }
+            .global-header h1 {
+                font-size: 18px;
+            }
+        }
+
+        /* 微型屏幕（手机）：压缩内边距，提高空间利用率 */
+        @media (max-width: 480px) {
+            :scope {
+                padding: 10px;
+            }
+            .calculator {
+                padding: 15px;
+                gap: 15px;
+            }
+            .category {
+                padding: 12px;
+            }
+            h2 {
+                font-size: 15px;
+            }
+            .sub-category label, .clickable-label {
+                font-size: 14px;
+            }
+        }
+
+}

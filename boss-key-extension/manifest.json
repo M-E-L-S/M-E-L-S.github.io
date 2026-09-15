@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Winy 老板键助手",
+  "version": "1.0.0",
+  "description": "为 Winy 小游戏的老板键执行标签页切换、最小化和关闭操作。",
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [{
+    "matches": ["https://winyandme.github.io/*", "http://localhost/*", "http://127.0.0.1/*"],
+    "js": ["content.js"],
+    "run_at": "document_idle"
+  }]
+}
