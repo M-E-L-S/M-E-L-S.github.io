@@ -1,6 +1,8 @@
 /* Shared design for native score/calculator content; no embedded document. */
 #freshcup-tool {display:block;min-height:0;max-width:none;padding:0;margin:0;background:transparent;color:var(--text);font-family:var(--font);}
 #freshcup-tool[aria-busy="true"] {opacity:.58;pointer-events:none;transition:opacity .16s ease;}
+.tool-tabs[aria-busy="true"] {pointer-events:none;opacity:.66;}
+.tool-load-status {margin:12px 0;padding:11px 14px;border:1px solid var(--accent);border-radius:10px;background:var(--accent-soft);color:var(--text);}
 #freshcup-tool .calculator {padding:0;margin:0;max-width:none;background:transparent;box-shadow:none;gap:20px;}
 #freshcup-tool .global-header,#freshcup-tool header {background:var(--button-bg);border:0;border-radius:16px;padding:24px;box-shadow:none;text-align:left;}
 #freshcup-tool h1,#freshcup-tool h2,#freshcup-tool h3,#freshcup-tool .section-title {color:var(--text);text-shadow:none;border-color:var(--divider);}

@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化数据
     initMusicPlayer();
     initAnnounceArchive();
-    initAnnouncement();
 
     // 初始时滚动到顶部
     window.scrollTo(0, 0);
@@ -137,13 +136,11 @@ function initMusicPlayer() {
     const MAX_HISTORY = 30;
     const coverRequests = new Map();
     const lyricRequests = new Map();
+    const localAudioRequests = new Map();
     const PLAY_MODES = ['sequential', 'repeat-one', 'shuffle'];
 
     const localSongs = [
-        { id: 'local-1', name: '生日快乐（海底捞版）', artist: '本地音乐', album: '', src: 'assets/audio/music1.mp3', source: 'local', isLocal: true },
-        { id: 'local-2', name: 'Fly My Wings', artist: 'Mili', album: '', src: 'assets/audio/music2.mp3', source: 'local', isLocal: true },
-        { id: 'local-3', name: '这世界那么多人', artist: '莫文蔚', album: '', src: 'assets/audio/music3.mp3', source: 'local', isLocal: true },
-        { id: 'local-4', name: '小美满', artist: '周深', album: '', src: 'assets/audio/music4.mp3', source: 'local', isLocal: true }
+        { id: 'local-1', name: '没有如果', artist: '沐霂是mumu呀，阿梓从小就很可爱，小鸡蛋eggie', album: '', src: 'assets/audio/没有如果.mp3', cover: 'assets/images/没有如果.jpeg', lyricSrc: 'assets/audio/没有如果.lrc', source: 'local', isLocal: true }
     ];
 
     let activeQueue = localSongs;
@@ -330,6 +327,7 @@ function initMusicPlayer() {
             resolvedAt: track.resolvedAt || 0,
             cover: track.cover || null,
             src: track.src || null,
+            lyricSrc: track.lyricSrc || null,
             isLocal: Boolean(track.isLocal),
             addedAt: track.addedAt || 0
         };
@@ -408,7 +406,21 @@ function initMusicPlayer() {
     }
 
     async function resolveTrackUrl(track, force = false) {
-        if (track.isLocal) return track.src;
+        if (track.isLocal) {
+            if (!localAudioRequests.has(track.src)) {
+                localAudioRequests.set(track.src, fetch(track.src)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`本地音乐加载失败（${response.status}）`);
+                        return response.blob();
+                    })
+                    .then(blob => URL.createObjectURL(blob))
+                    .catch(error => {
+                        localAudioRequests.delete(track.src);
+                        throw error;
+                    }));
+            }
+            return localAudioRequests.get(track.src);
+        }
         if (!force && track.url && Date.now() - track.resolvedAt < REMOTE_URL_TTL) return track.url;
         const data = await fetchApi({ types: 'url', source: track.source, id: track.id, br: 192 });
         if (!data || !data.url) throw new Error('这首歌暂时无法播放');
@@ -466,7 +478,7 @@ function initMusicPlayer() {
             setLyricText('实时歌词已关闭');
             return;
         }
-        if (track.isLocal || !track.lyric_id) {
+        if ((track.isLocal && !track.lyricSrc) || (!track.isLocal && !track.lyric_id)) {
             setLyricText(track.isLocal ? '本地音乐暂无歌词' : '暂无歌词');
             return;
         }
@@ -474,8 +486,14 @@ function initMusicPlayer() {
         const key = trackKey(track);
         setLyricText('歌词加载中…');
         if (!lyricRequests.has(key)) {
-            lyricRequests.set(key, fetchApi({ types: 'lyric', source: track.source, id: track.lyric_id })
-                .then(data => parseLrc(data && data.lyric, data && data.tlyric))
+            const request = track.isLocal
+                ? fetch(track.lyricSrc).then(response => {
+                    if (!response.ok) throw new Error(`本地歌词加载失败：${response.status}`);
+                    return response.text();
+                }).then(text => parseLrc(text))
+                : fetchApi({ types: 'lyric', source: track.source, id: track.lyric_id })
+                    .then(data => parseLrc(data && data.lyric, data && data.tlyric));
+            lyricRequests.set(key, request
                 .catch(() => [])
                 .finally(() => lyricRequests.delete(key)));
         }
@@ -936,7 +954,13 @@ function initMusicPlayer() {
         audio.muted = false;
         setPlayerCollapsed(false, false);
         syncVolume();
-        audio.src = currentTrack.src;
+        audio.removeAttribute('src');
+        audio.load();
+        resolveTrackUrl(currentTrack).then(source => {
+            if (trackKey(currentTrack) !== trackKey(localSongs[0])) return;
+            audio.src = source;
+            audio.load();
+        }).catch(error => setStatus(error.message || '本地音乐加载失败', true));
         audio.currentTime = 0;
         searchInput.value = '';
         musicDataConfirm.hidden = true;
@@ -991,7 +1015,11 @@ function initMusicPlayer() {
         coverFallback.hidden = false;
     });
 
-    audio.src = currentTrack.src;
+    resolveTrackUrl(currentTrack).then(source => {
+        if (trackKey(currentTrack) !== trackKey(localSongs[0])) return;
+        audio.src = source;
+        audio.load();
+    }).catch(error => setStatus(error.message || '本地音乐加载失败', true));
     updateSongInfo();
     updatePlayButton();
     updatePlayModeButtons();
@@ -999,119 +1027,39 @@ function initMusicPlayer() {
     syncLyricPlacement();
     renderSearchResults();
     renderCurrentTab();
+    loadLyrics(currentTrack);
     updateProgress();
 }
-// ---------- 首次访问公告 ----------
-function initAnnouncement() {
-    const KEY = 'winy_announce_music_v4_0';
-    let seen = false;
-    try { seen = localStorage.getItem(KEY) === '1'; } catch (e) { seen = false; }
-    if (seen) return;
-
-    const mask = document.getElementById('announce-mask');
-    const goBtn = document.getElementById('announce-go');
-    const laterBtn = document.getElementById('announce-later');
-    if (!mask || !goBtn || !laterBtn) return;
-
-    let closed = false;
-    function closeAnnounce(target) {
-        if (closed) return;
-        closed = true;
-        try { localStorage.setItem(KEY, '1'); } catch (e) {}
-        mask.classList.remove('show');
-        if (target === 'settings') {
-            document.getElementById('settings-toggle')?.click();
-        } else if (target === 'game') {
-            document.querySelector('.nav-link[data-page="game"]')?.click();
-        } else if (target === 'music') {
-            document.getElementById('music-search-toggle')?.click();
-        }
-    }
-
-    setTimeout(() => { if (!closed) mask.classList.add('show'); }, 600);
-
-    goBtn.addEventListener('click', () => closeAnnounce('music'));
-    laterBtn.addEventListener('click', () => closeAnnounce(null));
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && mask.classList.contains('show')) closeAnnounce(null);
-    });
-}
-
 // ---------- 公告存档（关于页面） ----------
 // 新增公告：向 announcements 追加一条（ver 递增，列表自动按版本号倒序）；
-// 同时更新首页模态框文案，并升级首次访问标记 KEY，让老访客也能看到新公告。
 const announcements = [
     {
-        ver: 5.0,
-        date: '2026-09-15',
-        title: '「小功能」区正式上线！',
-        body: '1. 新增「小功能」区，点击顶部导航的「小功能」进入页面，可使用一些实用(或许)的小工具。<br>' +
-            '2. 新增“缩写转义”，工具来源是：“社交平台上通过拼音首字母缩写指代特定词句的情况越来越多，为了让更多人能勉强理解这一门另类沟通方式、做了这一个划词转义工具”。<br>'+
-            '3. 在输入框输入由连续 <b>字母和数字</b> 组成的缩写，即可自动显示所有可能的含义，仅供参考！'
-    },
-    {
-        ver: 4.1,
-        date: '2026-09-14',
-        title: '「小游戏」区新增“Wordle”！',
-        body: '1. 新增「Wordle」小游戏，点击顶部导航的「小游戏」进入游戏页，选择「Wordle」即可开始挑战。<br>' +
-            '2.支持经典五字模式，使用原生题库，来挑战吧！<br>' +
-            '3. 新增考试模式，支持CET-4/CET-6/IELTS/TOEFL/GRE/考研题库，同时猜词时附有词性及释义，来检验你的词汇量！<br>' +
-            '4. 新增长单词模式，自创“滑动窗口”玩法！支持不等长词语猜测对齐，来尝试这种更具挑战性的新玩法吧！<br>'
-    },
-    {
-        ver: 4.0,
-        date: '2026-09-14',
-        title: '「在线音乐」功能上线！',
-        body: '1. 音乐栏蜕变！正式支持在线播放而不仅是本地播放，并支持专辑封面、播放进度和实时歌词。<br>' +
-            '2. 新增独立播放列表，可选择顺序循环、单曲循环或随机播放，并直接切换歌曲。<br>' +
-            '3. 新增本地播放历史和收藏，收藏可按加入时间或歌名正序、倒序排列。<br>' +
-            '4. 新增在线搜索，可以搜索歌名、歌手和专辑，并播放搜索结果。<br>' +
-            '5. 历史、收藏、缓存播放地址和播放偏好仅保存在当前浏览器，可在设置中调整相关功能，清除本站浏览器数据即可移除。<br>' +
-            '6. 在线搜索结果、封面、歌词和播放地址由 GD音乐台及其上游来源提供；本站仅提供前端播放界面，不主张拥有相关内容版权，服务可用性以第三方实际状态为准。'
-    },
-    {
-        ver: 3.1,
-        date: '2026-09-12',
-        title: '“关于”文本增加网站内容开源许可声明',
-        body: '1. 在「关于」页面的文本中增加了针对代码、原创内容（文字、图片等）以及第三方代码和资源等内容开源许可声明，明确了网站内容的使用、分发和商用规则。'
-    },
-    {
-        ver: 3.0,
-        date: '2026-09-11',
-        title: '「小游戏」专区上线！新增两个小游戏',
-        body: '1. 顶部导航的「连连看」升级为「小游戏」专区，页面顶部新增下拉框，可在「连连看」、「扫雷」和「蜘蛛纸牌」之间自由切换，选择会自动记住。<br>' +
-            '2. 连连看模式焕新！三个模式改为竞速（小地图拼速度）、常规（大地图长时间）和BOSS对决（来挑战电脑吧！当然电脑连线速度受到限制，但似乎反而觉醒了一些特殊手段...？）<br>' +
-            '3. 全新上线「扫雷」：三档难度；支持插旗、双击数字快速翻开周围格子，还有「提示」道具与各难度的最佳用时纪录。<br>' +
-            '4. 全新上线「蜘蛛纸牌」：单色 / 双色 / 四色三档难度，支持点选或拖拽整组搬牌、撤销与提示，并记录各难度的最佳得分。<br>' +
-            '5. 小游戏支持后台自动暂停和「老板键」，老板键详细说明详见设置。但作者不对任何上班上学时摸鱼行为负责。'
-    },
-    {
         ver: 2.0,
-        date: '2026-09-06',
-        title: '外观系统上线！来自定义属于你的网站 🎨',
-        body: '1. 新增「外观」系统，点击顶部导航的「设置」进入设置页，可自定义网站的深浅色、和一些高级视觉效果。<br>' +
-            '2. 设置自动保存到设备！换设备访问外观会不同。你也可以点击「恢复默认」来重置所有设置。<br>' +
-            '3. 部分动态效果需要浏览器支持，如果你的设置无效请换台设备再试。<br>' +
-            '4. 注意！开启高级视觉效果可能会带来设备的卡顿和发热，请根据设备性能谨慎开启。'
+        date: '2026-09-15',
+        title: '网站全面重构，转向全面个人站。',
+        body: '1. 新增首页，关于，小道具，小游戏页面，原鲜蔬杯页面仍为单独页面。<br>' +
+            '2. 新增设置和音乐栏。重构并大幅升级了外观，并保持了设计统一。<br>'+
+            '3. 「关于」页面用于存放更新公告，网站开源协议、第三方声明、用户隐私声明。会随网站更新实时更新。<br>' +
+            '4. 「小道具」页面用于提供M.E. 自制/收集到的开源 实用妙妙工具，你早晚会用到。<br>' +
+            '5. 「小游戏」页面用于提供 <b>完全自制</b> 的各类游戏/经典游戏改，充满了作者的巧思。包括但不限于“连连看boss模式”“wordle长单词模式”。<br>' +
+            '6. 「鲜蔬杯」页面保持原有功能不变，仅做外观调整。<br>' +
+            '7. 「音乐」栏支持在线搜索、播放音乐，并支持同各家播放器一致的收藏和列表播放。 <b>独家功能</b>：粒子动态歌词，现可在首页标题下方体验。<br>'+
+            '7. 「设置」弹窗支持设置自定义外观，音乐相关和老板键的配置。'
     },
     {
         ver: 1.0,
-        date: '2026-08-27',
-        title: '「连连看」小游戏上线 🎉',
-        body: '1. 新上线「连连看」小游戏！点击顶部导航的「连连看」进入游戏页，选好难度后按「开始游戏」即可开局。三种难度、提示与洗牌一应俱全，至于怎么玩……就留给你自己探索啦 😉<br>' +
-            '2. 公告系统正式入驻「关于」页面，历史公告可在此查看。'
-    },
-    {
-        ver: 0.1,
-        date: '2026-01-16',
-        title:'关于网站正式转入常态化运营的通知',
-        body: '测试期圆满结束，功能正常，经主页文本调整后决定正式进入常态化运营。特此通知'
+        date: '2026-07-03',
+        title:'新增鲜蔬杯计分器',
+        body: '1. 正式转为鲜蔬杯专用网站，主办方M.E.提供官方计分器页面。<br>' +
+            '2. 计分器支持交互式点选加减分项目，实时计算总分和打印成绩单。此结果为唯一官方结果。'
     },
     {
         ver: 0.0,
-        date: '2026-01-12',
-        title:'网站上线啦 🎉',
-        body: '这一天终于来了。This is a special gift.'
+        date: '2026-01-08',
+        title:'网站上线',
+        body: '1. Github Pages正式上线，初期作为明日方舟肉鸽伤害计算器单独页面试运行，源逻辑来自<a href="https://github.com/M-E-L-S/M-E-L-S.github.io/blob/main/main.c" target="_blank" rel="noopener noreferrer">C代码</a>。<br>' +
+            '2. 计算器支持干员技能选择，藏品选择，敌方属性设置和精确伤害计算。<br>' +
+            '3. 计算器项目还在持续开发中，详见<a href="https://github.com/M-E-L-S/M-E-L-S.github.io/blob/main/freshcup/README.md" target="_blank" rel="noopener noreferrer">README.md</a>。'
     }
 ];
 

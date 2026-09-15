@@ -1,6 +1,6 @@
 # Boss Battle Feature — Noncommercial License
 
-Copyright (c) 2026 WinyAndME
+Copyright (c) 2026 M-E-L-S
 
 ## License
 
@@ -13,7 +13,7 @@ Official license terms:
 
 https://polyformproject.org/licenses/noncommercial/1.0.0/
 
-Required Notice: Copyright (c) 2026 WinyAndME
+Required Notice: Copyright (c) 2026 M-E-L-S
 
 By exercising permissions granted under that license, you agree to its terms.
 
@@ -47,14 +47,14 @@ License.
 No commercial license to the Boss Battle Software is granted under this
 repository.
 
-Commercial use requires a separate written license from WinyAndME.
+Commercial use requires a separate written license from M-E-L-S.
 
 A commercial license, if granted, may have different terms and does not
 change the license applicable to other users.
 
 ## Independent Ideas and Game Mechanics
 
-This license applies only to copyrightable material for which WinyAndME has
+This license applies only to copyrightable material for which M-E-L-S has
 the right to grant a license.
 
 It is not intended to claim exclusive ownership of abstract ideas, general

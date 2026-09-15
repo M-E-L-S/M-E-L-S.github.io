@@ -87,14 +87,14 @@ function createTitleAsset() {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="260" viewBox="0 0 1200 260">
         <text x="600" y="205" text-anchor="middle" fill="${color}"
             font-family="Segoe UI, Microsoft YaHei, sans-serif"
-            font-size="190" font-weight="800">M.E.的家</text>
+            font-size="190" font-weight="800">M.E.L.S.</text>
     </svg>`;
     return URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
 }
 
 function createLyricAsset() {
     const color = cssColor('--particle-lyric', '#65acd9');
-    const text = liveLyricActive ? liveLyricText : '✦ 愿每日平安幸福 ✦';
+    const text = liveLyricActive ? liveLyricText : '✦ 我来成为神明 ✦';
     const lines = String(text || '♪').split('\n').slice(0, 2);
     // Convert the available screen width to source-image units at the lyric plane.
     const worldPerPixel = 2 * (4.2 - 2.35 / Math.sqrt(17)) * Math.tan(65 * Math.PI / 360)

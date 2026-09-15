@@ -1,6 +1,6 @@
 # Long Wordle Feature — Noncommercial License
 
-Copyright (c) 2026 WinyAndME
+Copyright (c) 2026 M-E-L-S
 
 ## License
 
@@ -13,7 +13,7 @@ Official license terms:
 
 https://polyformproject.org/licenses/noncommercial/1.0.0/
 
-Required Notice: Copyright (c) 2026 WinyAndME
+Required Notice: Copyright (c) 2026 M-E-L-S
 
 By exercising permissions granted under that license, you agree to its terms.
 
@@ -44,14 +44,14 @@ and hobby projects.
 
 No free commercial license to the Long Wordle Software is granted by this
 repository. Any commercial use requires a separate written, paid commercial
-license from WinyAndME.
+license from M-E-L-S.
 
 A commercial license, if granted, may have different terms and does not change
 the license applicable to other users or other parts of this repository.
 
 ## Independent Ideas and Game Mechanics
 
-This license applies only to copyrightable material for which WinyAndME has
+This license applies only to copyrightable material for which M-E-L-S has
 the right to grant a license. It does not claim exclusive ownership of
 abstract ideas, general game mechanics, methods of play, mathematical rules,
 concepts, genres, common design patterns, or independently created

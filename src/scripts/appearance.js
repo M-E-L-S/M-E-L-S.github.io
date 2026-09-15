@@ -35,7 +35,7 @@
                 ? '正文捕获失败，已保留正文与火焰。请打开浏览器控制台查看具体原因。'
             : native
                 ? captured ? '完整效果已运行。' : '已检测到 HTML-in-Canvas，当前浏览器可显示完整效果'
-                : '当前浏览器尚未启用 HTML-in-Canvas，文字扭曲和页面折射效果已省略。';
+                : '当前浏览器尚未启用 HTML-in-Canvas，文字扭曲效果已省略。';
     }
     describeSupport();
 

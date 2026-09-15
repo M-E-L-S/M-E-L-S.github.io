@@ -3,54 +3,17 @@
 This document explains the ownership and licensing status of material in this
 repository that is not covered by the repository's general MIT grant.
 
-## 1. Original Articles and Written Content
-
-Unless explicitly stated otherwise, articles, diary-like writing, personal
-narratives, descriptions, and other original written content authored by
-WinyAndME are:
-
-**Copyright © 2026 WinyAndME. All rights reserved.**
-
-These materials are published for viewing as part of this personal website.
-
-Publication on GitHub or on the public website does not grant permission to
-copy, republish, redistribute, translate, adapt, commercially exploit, or
-otherwise reuse the material.
-
-Some writings may describe personal experiences or contain personal
-information. Their public availability should not be interpreted as consent
-to reproduce, aggregate, profile, republish, or otherwise reuse that
-information.
-
-Any rights independently provided by applicable law remain unaffected.
-
-## 2. Original Photographs and Images
-
-Unless explicitly stated otherwise, photographs, artwork, graphics, and
-other images originally created by WinyAndME are:
-
-**Copyright © 2026 WinyAndME. All rights reserved.**
-
-No reuse license is granted merely because an image is publicly accessible
-through this repository or website.
-
-Third-party images, if any, remain the property of their respective
-rightsholders.
-
-## 3. Third-Party Music and Audio
+## 1. Third-Party Music and Audio
 
 The following files currently included in the repository are not represented
-as original works of WinyAndME:
+as original works of M-E-L-S:
 
-* `assets/audio/music1.mp3`
-* `assets/audio/music2.mp3`
-* `assets/audio/music3.mp3`
-* `assets/audio/music4.mp3`
+* `assets/audio/没有如果.mp3`
 
 Copyright and related rights in these recordings and underlying musical
 works belong to their respective rightsholders.
 
-WinyAndME does not claim authorship or ownership of those works.
+M-E-L-S does not claim authorship or ownership of those works.
 
 No license, sublicense, or permission to reproduce, redistribute, perform,
 adapt, commercially exploit, or otherwise use those works is granted by this
@@ -85,7 +48,7 @@ the player therefore displays a link and attribution to GD音乐台.
 
 GD Music, the music platforms represented by API responses, and the relevant
 artists, labels, publishers, photographers, designers, and other rightsholders
-are independent third parties. WinyAndME does not claim ownership of, endorse,
+are independent third parties. M-E-L-S does not claim ownership of, endorse,
 or grant a license to their API data, music, recordings, lyrics, artwork,
 trademarks, or linked resources. The availability of a result or playback URL
 does not establish that it is public domain, openly licensed, or cleared for
@@ -113,10 +76,10 @@ Those third parties may receive ordinary network request information and handle
 it under their own terms and policies. This repository does not control their
 data handling.
 
-## 4. Third-Party Software
+## 2. Third-Party Software
 
 Third-party software is governed by its own license terms and is not
-relicensed by WinyAndME.
+relicensed by M-E-L-S.
 
 ### Canvas UI and related adapted code
 
@@ -186,39 +149,37 @@ with that material.
 A third-party license takes precedence over the repository's MIT license for
 the material to which that third-party license applies.
 
-### Fresh Cup tools and game-related references
+### F.V. cup tools and game-related references
 
-The Fresh Cup Tool Center is an unofficial fan-made collection of score and
+The F.V. cup Tool Center is an unofficial fan-made collection of score and
 damage-calculation tools. It refers to third-party game names, terminology,
 characters, items, mechanics, and numerical information, including material
 associated with *Arknights* / 《明日方舟》. Those names, trademarks, creative
 works, and other third-party material remain with their respective owners.
 Their appearance does not imply sponsorship, endorsement, affiliation, or a
-license from WinyAndME.
+license from M-E-L-S.
 
 The damage-calculation documentation credits the explanatory video
 “万物汇集#13《青年大学集》——集成战略收藏品当中的加减乘除” at
 `https://www.bilibili.com/video/BV1qnUWY4E59`. Referencing its calculation
 methodology does not relicense the video or any third-party material in it.
 
-WinyAndME's original copyrightable implementation of the Fresh Cup tools is
+M-E-L-S's original copyrightable implementation of the F.V. cup tools is
 licensed for noncommercial use under `FRESHCUP-NONCOMMERCIAL-LICENSE.md`.
-That restriction applies only to material WinyAndME has the right to license;
+That restriction applies only to material M-E-L-S has the right to license;
 it does not supersede third-party licenses or claim ownership of facts, game
 mechanics, methods, names, or trademarks.
 
-## 5. Mixed-Licensing Summary
+## 3. Mixed-Licensing Summary
 
 In summary:
 
 * original general-purpose website code: **MIT License**;
 * original Boss Battle implementation: **PolyForm Noncommercial 1.0.0**;
 * original Long Wordle implementation: **PolyForm Noncommercial 1.0.0**;
-* original Fresh Cup Tool Center implementation: **PolyForm Noncommercial
+* original F.V. cup Tool Center implementation: **PolyForm Noncommercial
   1.0.0**;
-* original articles, personal writings, photographs, and images:
-  **All rights reserved**;
-* third-party music and media: **no license granted by WinyAndME; rights remain
+* third-party music and media: **no license granted by M-E-L-S; rights remain
   with their respective owners**;
 * GD Music integration code: **MIT License**, while API responses and externally
   loaded content remain governed by their respective providers and

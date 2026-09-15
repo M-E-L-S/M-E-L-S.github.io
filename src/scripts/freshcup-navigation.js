@@ -1,16 +1,24 @@
 (() => {
     const selector = '.tool-tabs a[data-freshcup-tool]';
     let requestController = null;
+    let loading = false;
 
     function copyScript(source, tool) {
         return new Promise((resolve, reject) => {
-            document.getElementById('freshcup-tool-script')?.remove();
+            const current = document.getElementById('freshcup-tool-script');
             const script = document.createElement('script');
-            script.id = 'freshcup-tool-script';
+            script.id = 'freshcup-tool-script-next';
             script.dataset.tool = tool;
             script.src = source;
-            script.onload = resolve;
-            script.onerror = reject;
+            script.onload = () => {
+                current?.remove();
+                script.id = 'freshcup-tool-script';
+                resolve();
+            };
+            script.onerror = () => {
+                script.remove();
+                reject(new Error('工具脚本加载失败'));
+            };
             document.body.appendChild(script);
         });
     }
@@ -36,7 +44,14 @@
         });
     }
 
-    async function openTool(url, { push = false, fallback = false } = {}) {
+    function showStatus(message) {
+        const status = document.getElementById('tool-load-status');
+        if (!status) return;
+        status.textContent = message;
+        status.hidden = !message;
+    }
+
+    async function openTool(url, { push = false } = {}) {
         const targetUrl = new URL(url, location.href);
         const active = document.querySelector(`${selector}[href="${targetUrl.pathname}"]`);
         const currentScript = document.getElementById('freshcup-tool-script');
@@ -46,16 +61,25 @@
             }
             return;
         }
+        if (loading) return;
 
         requestController?.abort();
-        requestController = new AbortController();
+        const controller = new AbortController();
+        requestController = controller;
         const container = document.getElementById('freshcup-tool');
         if (!container) return;
+        const tabs = document.querySelector('.tool-tabs');
+        const previousNodes = Array.from(container.childNodes);
+        const previousTheme = document.getElementById('freshcup-tool-theme')?.getAttribute('href');
+        let contentChanged = false;
+        loading = true;
+        showStatus('');
         container.setAttribute('aria-busy', 'true');
+        tabs?.setAttribute('aria-busy', 'true');
 
         try {
             const response = await fetch(targetUrl, {
-                signal: requestController.signal,
+                signal: controller.signal,
                 headers: { 'X-Requested-With': 'freshcup-navigation' }
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -67,6 +91,7 @@
 
             await swapTheme(nextTheme.getAttribute('href'));
             container.replaceChildren(...Array.from(nextTool.childNodes).map(node => document.importNode(node, true)));
+            contentChanged = true;
             await copyScript(nextScript.getAttribute('src'), nextScript.dataset.tool);
 
             document.querySelectorAll(selector).forEach(link => {
@@ -79,9 +104,18 @@
         } catch (error) {
             if (error.name === 'AbortError') return;
             console.error('鲜蔬杯工具切换失败', error);
-            if (fallback) location.assign(targetUrl.href);
+            if (contentChanged) container.replaceChildren(...previousNodes);
+            if (previousTheme) {
+                try { await swapTheme(previousTheme); } catch (_) { /* Keep the usable current tool. */ }
+            }
+            showStatus('工具暂时加载失败，请检查网络后再次点击。当前页面不会刷新。');
         } finally {
-            container.removeAttribute('aria-busy');
+            if (requestController === controller) {
+                requestController = null;
+                loading = false;
+                container.removeAttribute('aria-busy');
+                tabs?.removeAttribute('aria-busy');
+            }
         }
     }
 
@@ -89,7 +123,7 @@
         const link = event.target.closest(selector);
         if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
-        openTool(link.href, { push: true, fallback: true });
+        openTool(link.href, { push: true });
     });
 
     addEventListener('popstate', () => {

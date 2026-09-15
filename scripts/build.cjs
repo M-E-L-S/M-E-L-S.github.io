@@ -10,7 +10,7 @@ shell = shell.replace(/\n    <\/div>\s*\n    <!-- HOME_SECTIONS -->/, '\n'+home+
 const tools = [['scoreboard_5','界园计分器',''],['scoreboard_4','萨卡兹计分器','sarkaz/'],['scoreboard_3','萨米计分器','sami/'],['calculator','伤害计算器','calculator/']];
 function freshcup(tool) {
   const tabs=tools.map(([id,title,url])=>`<a href="/freshcup/${url}" data-freshcup-tool="${id}" ${id===tool?'aria-current="page"':''}>${title}</a>`).join('');
-  return `<section class="page" id="freshcup"><header class="section-heading"><p class="eyebrow">THE TOOLKIT</p><h1>鲜蔬杯工具中心</h1><p>记录每一场挑战，算清每一次伤害。</p></header><nav class="tool-tabs" aria-label="鲜蔬杯工具">${tabs}</nav><div id="freshcup-tool">${read('src/pages/freshcup/'+tool+'.html')}</div></section>`;
+  return `<section class="page" id="freshcup"><header class="section-heading"><p class="eyebrow">THE TOOLKIT</p><h1>鲜蔬杯工具中心</h1><p>鲜蔬杯官方(M.E.)唯一指定工具集。思路参考<a href="https://space.bilibili.com/37804608">龙哥哥今天又鸽了</a> <a href="https://www.bilibili.com/video/BV1qnUWY4E59">万物汇集</a></p></header><nav class="tool-tabs" aria-label="鲜蔬杯工具">${tabs}</nav><p class="tool-load-status" id="tool-load-status" role="status" hidden></p><div id="freshcup-tool">${read('src/pages/freshcup/'+tool+'.html')}</div></section>`;
 }
 function render(tool='scoreboard_5') {
   return shell.replace('<!-- FRESHCUP_PAGE -->',freshcup(tool)).replace('</head>',`<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/${tool}.theme.css"><link rel="stylesheet" href="/src/styles/freshcup-native.css"></head>`).replace('<!-- TOOL_SCRIPT -->',`<script id="freshcup-tool-script" data-tool="${tool}" src="/src/scripts/freshcup/${tool}.js"></script>`).replace(/(src|href)="(\/?(?:src|vendor)\/[^"?]+)(?:\?[^" ]*)?"/g,(_,attr,file)=>`${attr}="${file}?v=${crypto.createHash('sha256').update(read(file.replace(/^\//,''))).digest('hex').slice(0,10)}"`);
@@ -30,4 +30,4 @@ for (const [id,,url] of tools) {
   // Original root-level public URLs remain usable as lightweight redirects.
   write(id+'.html', `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=/freshcup/${url}"><title>鲜蔬杯 · MELS</title><link rel="canonical" href="/freshcup/${url}"></head><body><a href="/freshcup/${url}">进入${tools.find(t=>t[0]===id)[1]}</a></body></html>`);
 }
-console.log('Built shared shell, main routes, direct tool/game routes and four native Fresh Cup tools.');
+console.log('Built shared shell, main routes, direct tool/game routes and four native F.V. cup tools.');
