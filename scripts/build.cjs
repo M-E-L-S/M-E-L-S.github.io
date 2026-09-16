@@ -24,7 +24,7 @@ const palette = {
  '#d4e1f9':'var(--button-bg)', '#4a90e2':'var(--accent)', '#fff':'var(--surface)', '#ffffff':'var(--surface)'
 };
 for (const [tool] of tools) write(`src/styles/freshcup/${tool}.theme.css`, read(`src/styles/freshcup/${tool}.css`).replace(/#[a-f\d]{3,8}\b/gi,hex=>palette[hex.toLowerCase()]||hex));
-for (const route of ['','about','tools','tools/acronym','minigame','minigame/link','minigame/minesweeper','minigame/spider','minigame/wordle','freshcup']) write((route?route+'/':'')+'index.html',render());
+for (const route of ['','about','tools','tools/acronym','tools/favicon','minigame','minigame/link','minigame/minesweeper','minigame/spider','minigame/wordle','freshcup']) write((route?route+'/':'')+'index.html',render());
 for (const [id,,url] of tools) {
   if(url) write('freshcup/'+url+'index.html',render(id));
   // Original root-level public URLs remain usable as lightweight redirects.

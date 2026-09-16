@@ -192,7 +192,7 @@
         <div class="about-content">
             <p>欢迎访问M.E.L.S.个人站。</p>
             <p>本站大部分代码，除非特殊说明，采用MIT协议开源。仅“连连看游戏的boss对决模式”“wordle游戏的长单词模式”以及“全部鲜蔬杯页面”由于涉及到大量个人独特原创设计，采用 <b>PolyForm Noncommercial License 1.0.0</b>协议，限制免费商用，但个人/非盈利项目依旧不受限制。详见<a href="https://github.com/M-E-L-S/M-E-L-S.github.io/blob/main/LICENSE.md" target="_blank" rel="noopener noreferrer">LICENSE</a>。</p>
-            <p>第三方来源声明：“外观设置”中的两项高级视觉效果，本地预设歌曲“没有如果”，在线歌曲服务，“缩写转义”功能，“wordle游戏中内置的各类词库以及词性、翻译文本”，“鲜蔬杯页面涉及到的明日方舟游戏文本及计算逻辑”等内容，为第三方提供，非本站原创，本站也不对其效果和稳定性作保证。详见<a href="https://github.com/M-E-L-S/M-E-L-S.github.io/blob/main/THIRD_PARTY_AND_CONTENT_NOTICE.md" target="_blank" rel="noopener noreferrer">第三方内容说明</a>。</p>
+            <p>第三方来源声明：“外观设置”中的两项高级视觉效果，本地预设歌曲“没有如果”，在线歌曲服务，“缩写转义”功能，“Favicon 图包生成功能”，“wordle游戏中内置的各类词库以及词性、翻译文本”，“鲜蔬杯页面涉及到的明日方舟游戏文本及计算逻辑”等内容，为第三方提供，非本站原创，本站也不对其效果和稳定性作保证。详见<a href="https://github.com/M-E-L-S/M-E-L-S.github.io/blob/main/THIRD_PARTY_AND_CONTENT_NOTICE.md" target="_blank" rel="noopener noreferrer">第三方内容说明</a>。</p>
             <p>隐私和个人信息声明：本站是Github Pages纯前端静态页面，不设后端服务器，不会在云端保存任何用户信息，也不会对任何用户的访问信息做收集和统计。关于一些设置和历史的记录，全部保存在您的浏览器本地，云端不可见，您自行清除本站浏览器数据即可完全删除。当然，换句话说，您使用不同的设备或浏览器访问本网站，设置与历史记录将 <b>不会互通</b>。</p>
             <p>特殊提醒：在线音乐以及缩写转义功能，由于使用第三方接口，您的请求将从您的设备直接访问第三方服务，对于第三方服务对请求和数据 可能的 记录或收集，本站不作保证。但注意，本站<b>不会</b>主动默默访问第三方服务，仅在您使用”音乐栏的搜索和非本地歌曲（“没有如果”）播放”以及“缩写转义的输入”时会访问第三方，若您不想接触第三方服务，不使用上述功能即可。</p>
             <p>版权声明：在线音乐的搜索结果、封面、歌词与播放地址由 <a href="https://music.gdstudio.xyz/">GD音乐台</a> 及其上游内容来源提供，本地歌曲“没有如果”来自于<a href="https://www.bilibili.com/video/BV1JJMg6UEWU">bilibili视频</a>，本站不主张拥有这些内容的版权。</p>
@@ -218,6 +218,12 @@
                         role="option" data-utility="acronym" aria-selected="true">
                         <span class="game-picker-emoji" aria-hidden="true">💬</span>
                         <span class="game-picker-name">缩写转义</span>
+                        <i class="fas fa-check game-picker-check" aria-hidden="true"></i>
+                    </a>
+                    <a href="/tools/favicon/" class="game-picker-item utility-picker-item"
+                        role="option" data-utility="favicon" aria-selected="false">
+                        <span class="game-picker-emoji" aria-hidden="true">🖼️</span>
+                        <span class="game-picker-name">Favicon 图包</span>
                         <i class="fas fa-check game-picker-check" aria-hidden="true"></i>
                     </a>
                 </div>
@@ -250,6 +256,36 @@
                     </div>
                 </div>
                 <p class="utility-credit">释义由 <a href="https://lab.magiconch.com/nbnhhsh/" target="_blank" rel="noopener noreferrer">「能不能好好说话？」</a>提供；查询内容会发送至该服务。查询结果来自第三方词库，可能包含不准确、过时或具有冒犯性的词语，仅供参考，不代表本站立场。</p>
+            </section>
+
+            <section class="utility-view favicon-view" id="favicon-view" aria-labelledby="favicon-title" hidden>
+                <div class="acronym-hero">
+                    <span class="acronym-kicker">IMAGE TO FAVICON</span>
+                    <h3 id="favicon-title">把图片转换成 Favicon 图包</h3>
+                    <p>上传一张简洁的方形图片，生成浏览器、Apple 与 Android 所需的完整图标文件。</p>
+                </div>
+                <div class="favicon-dropzone" id="favicon-dropzone" tabindex="0" role="button"
+                    aria-controls="favicon-input" aria-describedby="favicon-upload-help">
+                    <input id="favicon-input" type="file" accept="image/png,image/jpeg,image/bmp,image/webp" hidden>
+                    <span class="favicon-upload-icon" aria-hidden="true"><i class="fas fa-arrow-up-from-bracket"></i></span>
+                    <strong>拖放图片到这里，或点击上传</strong>
+                    <small id="favicon-upload-help">支持 PNG、JPG、BMP 与 WebP；图片仅在当前浏览器中处理。</small>
+                </div>
+                <p class="favicon-status" id="favicon-status" role="status" aria-live="polite"></p>
+                <section class="favicon-preview" id="favicon-preview" aria-labelledby="favicon-preview-title" hidden>
+                    <div class="favicon-preview-heading">
+                        <div><span class="acronym-kicker">PREVIEW</span><h4 id="favicon-preview-title">下载前预览</h4></div>
+                        <button class="favicon-change" id="favicon-change" type="button">更换图片</button>
+                    </div>
+                    <div class="favicon-preview-grid" id="favicon-preview-grid"></div>
+                    <div class="favicon-package">
+                        <div><strong>完整 Favicon 图包</strong><span>7 个文件 · ICO、PNG 与 Web Manifest</span></div>
+                        <button class="game-btn primary" id="favicon-download" type="button">
+                            <i class="fas fa-download" aria-hidden="true"></i> 下载 Favicon 图包
+                        </button>
+                    </div>
+                </section>
+                <p class="utility-credit">建议使用轮廓醒目、细节较少的方形图片；小尺寸预览最能反映浏览器标签页中的实际效果。</p>
             </section>
         </div>
     </div>
@@ -880,7 +916,8 @@
 <script src="src/scripts/spider.js?v=67c2080dc9"></script>
 <script src="src/scripts/wordle.js?v=e01284db42"></script>
 <script src="src/scripts/mini-games.js?v=962f853eb6"></script>
-<script src="src/scripts/utilities.js?v=9ac82d0893"></script>
+<script src="vendor/jszip.min.js?v=acc7e41455"></script>
+<script src="src/scripts/utilities.js?v=9bb7860658"></script>
 <script src="src/scripts/boss-key.js?v=dac778437d"></script>
 <script src="vendor/flame-wrap.js?v=7ff0908dc6"></script>
 <script src="src/scripts/appearance.js?v=63e82d6f6e"></script>

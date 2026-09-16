@@ -2211,11 +2211,58 @@ body.music-player-collapsed .page-container { padding-bottom: 24px; }
 .utility-credit { margin-top: 22px; text-align: center; }
 .utility-credit a { color: var(--accent); }
 
+.favicon-dropzone {
+    display: flex;
+    min-height: 230px;
+    margin-top: 30px;
+    padding: 30px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 2px dashed var(--border);
+    border-radius: 18px;
+    background: var(--button-bg);
+    color: var(--body-text);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s, transform .2s;
+}
+.favicon-dropzone:hover,.favicon-dropzone:focus-visible,.favicon-dropzone.is-dragging {
+    border-color: var(--accent);
+    background: color-mix(in srgb,var(--button-bg) 88%,var(--accent) 12%);
+    outline: none;
+}
+.favicon-dropzone.is-dragging { transform: scale(1.01); }
+.favicon-upload-icon { display:grid;place-items:center;width:54px;height:54px;margin-bottom:5px;border-radius:50%;background:var(--surface);color:var(--accent);font-size:21px; }
+.favicon-dropzone strong { font-size:16px; }
+.favicon-dropzone small { color:var(--muted);font-size:12px;line-height:1.6; }
+.favicon-status { min-height:20px;margin:10px 0 0;color:var(--secondary);font-size:13px;text-align:center; }
+.favicon-status.is-error { color:#c44f4f; }
+.favicon-preview { margin-top:24px; }
+.favicon-preview-heading { display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:16px; }
+.favicon-preview-heading .acronym-kicker { margin-bottom:5px; }
+.favicon-preview-heading h4 { margin:0;color:var(--text);font-size:22px; }
+.favicon-change { padding:8px 12px;border:1px solid var(--border);border-radius:9px;background:var(--button-bg);color:var(--body-text);cursor:pointer; }
+.favicon-preview-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px; }
+.favicon-preview-card { display:flex;min-height:150px;padding:16px;flex-direction:column;align-items:center;justify-content:center;gap:12px;border:1px solid var(--border);border-radius:14px;background:var(--button-bg); }
+.favicon-preview-card img { display:block;max-width:72px;max-height:72px;object-fit:contain;image-rendering:auto;box-shadow:0 1px 3px #0002; }
+.favicon-preview-card.is-small img { width:32px;height:32px; }
+.favicon-preview-card span { color:var(--secondary);font-size:12px;text-align:center; }
+.favicon-package { display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;padding:18px 20px;border:1px solid var(--border);border-radius:14px;background:var(--button-bg); }
+.favicon-package>div { display:flex;flex-direction:column;gap:4px; }
+.favicon-package strong { color:var(--text); }
+.favicon-package span { color:var(--muted);font-size:12px; }
+.favicon-package .game-btn { flex:none; }
+
 @media (max-width: 560px) {
     #tools { padding-inline: 12px; }
     .utility-panel { border-radius: 18px; }
     .acronym-input-row { grid-template-columns: 1fr; }
     .acronym-input-row .game-btn { width: 100%; }
+    .favicon-preview-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .favicon-package { align-items:stretch;flex-direction:column; }
+    .favicon-package .game-btn { width:100%; }
 }
 
 /* 标记模式等「开关型」按钮的选中态 */

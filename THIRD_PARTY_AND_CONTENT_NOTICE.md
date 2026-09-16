@@ -99,6 +99,10 @@ third-party license continues to apply to the derived portions.
 
 ### Other third-party software
 
+The favicon package generator includes JSZip 3.10.1 by Stuart Knightley and
+contributors. JSZip is used under the MIT License; the bundled license text is
+retained in `vendor/JSZIP-LICENSE.markdown`.
+
 The site loads Three.js 0.180.0 and selected addons from jsDelivr for the
 homepage particle renderer. Three.js is distributed under the MIT License by
 the three.js authors: `https://github.com/mrdoob/three.js/blob/dev/LICENSE`.
