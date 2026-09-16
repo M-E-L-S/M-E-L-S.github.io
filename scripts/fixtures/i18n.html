@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>i18n browser regression checks</title>
+<body>
+<h1 translate="no">i18n browser regression checks</h1>
+<div id="fixtures"></div>
+<pre id="results" translate="no">Running…</pre>
+<script src="../../src/scripts/i18n.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const output = document.getElementById('results');
+    const fixture = document.getElementById('fixtures');
+    const tick = () => new Promise(resolve => setTimeout(resolve, 0));
+    const check = (ok, message) => { if (!ok) throw Error(message); };
+    const originalPreference = MELSI18n.preference;
+    try {
+        MELSI18n.setLanguage('en');
+        const examples = [
+            '难度：初级 · 用时 <b>0:33</b> · 最佳 0:28<br>通关奖励 +27，最终得分 <b>195</b>',
+            '难度：单色 · 用时 <b>6:56</b> · 步数 <b>115</b> · 新纪录！<br>通关奖励 +6，最终得分 <b>1381</b>',
+            '坚持了 <b>0:25</b>，翻开 10 / 71 个安全格<br>另有 2 面旗子插错了位置（❌）',
+            '我方生命 120/300 · BOSS 生命 0/400<br>本局得分 <b>1500</b>',
+            '用时 0:33，剩余时间加分 +27，剩余道具加分 +5<br>最终得分 <b>195</b>',
+            '当前难度：双色（2 种花色 · 104 张牌）<br>同花色的 K→A 连满 13 张会自动收起，收齐 8 组获胜<br>点击「开始游戏」发牌',
+            '题库说明：答案库从 <b>考研英语</b> 中筛选出 <b>600</b> 个五字母单词；猜词库为宽泛英文词表中的五字母单词。',
+            '随机播放 · 1 首歌曲', '找到 12 首歌曲', '还没有收藏歌曲'
+        ];
+        for (const markup of examples) {
+            fixture.innerHTML = markup;
+            await tick();
+            check(!/[\u3400-\u9fff]/.test(fixture.textContent), 'Untranslated: ' + fixture.textContent);
+            check(fixture.querySelectorAll('b').length === (markup.match(/<b>/g) || []).length, 'Formatting lost');
+            MELSI18n.setLanguage('zh-CN');
+            check(fixture.innerHTML === markup, 'Round trip failed: ' + fixture.innerHTML);
+            MELSI18n.setLanguage('en');
+        }
+        fixture.innerHTML = '<span title="播放">播放</span>';
+        await tick();
+        const span = fixture.firstChild;
+        span.firstChild.nodeValue = '暂停';
+        span.firstChild.nodeValue = '重新开始';
+        span.title = '暂停'; span.title = '重新开始';
+        await tick();
+        check(span.textContent === 'Restart' && span.title === 'Restart', 'Batched updates failed');
+        MELSI18n.setLanguage('zh-CN');
+        check(span.textContent === '重新开始' && span.title === '重新开始', 'Batched updates lost source');
+        span.firstChild.nodeValue = '继续游戏';
+        MELSI18n.setLanguage('en');
+        check(span.textContent === 'Resume game', 'Pending mutation lost');
+        fixture.innerHTML = '<div translate="no"><span>随机播放</span></div>';
+        await tick();
+        fixture.firstChild.firstChild.textContent = '音乐';
+        await tick();
+        check(fixture.textContent === '音乐', 'Protected content translated');
+        fixture.innerHTML = '<span></span>';
+        MELSI18n.bind(fixture.firstChild, '正在播放：{name}', {name:'随机播放 <b>音乐</b>'});
+        await tick();
+        check(fixture.textContent === 'Now playing: 随机播放 <b>音乐</b>', 'Parameter content translated');
+        check(fixture.querySelectorAll('b').length === 0, 'Parameter interpreted as HTML');
+        MELSI18n.setLanguage('zh-CN');
+        check(fixture.textContent === '正在播放：随机播放 <b>音乐</b>', 'Binding round trip failed');
+        fixture.innerHTML = '<p>版权声明：在线音乐的搜索结果、封面、歌词与播放地址由 <a href="https://music.gdstudio.xyz/">GD音乐台</a> 及其上游内容来源提供，本地歌曲“没有如果”来自于<a href="https://www.bilibili.com/video/BV1JJMg6UEWU">bilibili视频</a>，本站不主张拥有这些内容的版权。</p><p>特别致歉：<a href="https://space.bilibili.com/13164144">魔法ZC目录</a>，dbq周哥，实在是没忍住。</p>';
+        await tick();
+        MELSI18n.setLanguage('en');
+        check(fixture.querySelectorAll('a').length === 3, 'About links were lost');
+        check([...fixture.querySelectorAll('a')].map(a => a.href).join('|').includes('music.gdstudio.xyz'), 'About link target changed');
+        check(fixture.textContent.includes('Special apology:') && fixture.textContent.includes('Sorry, Zhou'), 'About ending was not translated');
+        MELSI18n.setLanguage('zh-CN');
+        check(fixture.querySelectorAll('a').length === 3 && fixture.textContent.includes('特别致歉：'), 'About round trip failed');
+        output.textContent = `PASS: ${examples.length} rich-text and music fixtures; dynamic text/attributes; pending mutations; language round trips; protected content; safe parameters.`;
+        fixture.replaceChildren();
+    } catch (error) { output.textContent = 'FAIL: ' + error.message; }
+    finally { MELSI18n.setLanguage(originalPreference); }
+});
+</script>
+</body>
+</html>

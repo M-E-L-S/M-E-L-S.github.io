@@ -417,9 +417,13 @@
             },
             hit: (target, damage) => {
                 const el = $('#boss-' + target + '-health');
-                damageCue = (target === 'boss' ? '💥 命中 BOSS！ −' : '💔 我方受伤！ −') + damage + ' HP';
+                damageCue = target === 'boss'
+                    ? `💥 命中 BOSS！ −${damage} HP`
+                    : `💔 我方受伤！ −${damage} HP`;
                 damageCueUntil = battle.clock + 2000;
-                el.dataset.damage = (target === 'boss' ? '命中 −' : '受伤 −') + damage + ' HP';
+                el.dataset.damage = target === 'boss'
+                    ? `命中 −${damage} HP`
+                    : `受伤 −${damage} HP`;
                 el.classList.remove('health-hit'); void el.offsetWidth; el.classList.add('health-hit');
             },
             stunned: () => {
@@ -637,7 +641,9 @@
             elB.classList.remove('matched');
             elA.classList.add('removed');
             elB.classList.add('removed');
-            showFloatScore(elB, '+' + gained + (comboCount > 1 ? '  连击×' + comboCount : ''));
+            showFloatScore(elB, '+' + gained + (comboCount > 1
+                ? '  连击×' + comboCount
+                : ''));
             updateStatus();
             locking = false;
 

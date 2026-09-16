@@ -20,6 +20,11 @@
 #freshcup-tool .operator-name,#freshcup-tool .relic-name,#freshcup-tool .relic-category-title,#freshcup-tool label {color:var(--text);}
 #freshcup-tool .relic-category-content {background:var(--surface);}
 #freshcup-tool .score {color:var(--accent-strong);}
-#freshcup-tool .report {background:var(--surface);color:var(--text);}
+#freshcup-tool .report,#freshcup-tool #score-report {background:var(--surface) !important;color:var(--text);border:1px solid var(--border);}
+#freshcup-tool #score-report table {width:100%;border-collapse:collapse;color:var(--text);}
+#freshcup-tool #score-report th,#freshcup-tool #score-report td {padding:8px;border-color:var(--border) !important;color:var(--text);}
+#freshcup-tool #score-report .fc-report-section {font-weight:700;background:var(--button-bg) !important;color:var(--text);}
+#freshcup-tool #score-report .fc-report-option {padding-left:30px;color:var(--secondary) !important;}
+#freshcup-tool #score-report .fc-report-option ~ td {color:var(--secondary) !important;}
 @media(max-width:720px) {#freshcup-tool .calculator,#freshcup-tool .double-column {grid-template-columns:minmax(0,1fr);}#freshcup-tool .section {flex-basis:100%;min-width:0;}#freshcup-tool .global-header {gap:18px;flex-wrap:wrap;}#freshcup-tool .category {padding:16px;}}
 @media print {.navbar,.music-player,.site-footer,.tool-tabs,.skip-link {display:none;} .page-container{width:100%;}}

@@ -369,6 +369,7 @@
     let hintsLeft = LEVELS[level].hints, undosLeft = LEVELS[level].undos;
     let soundOn = true, audioCtx = null;
     let bestMap = {};
+    let renderedDone = [];
     let sel = null;             // 当前选中的一组牌 { c, i }
     let hintMark = null;        // 提示高亮 { from, index, to }
     let drag = null;            // 拖拽过程中的临时状态
@@ -628,15 +629,34 @@
 
     function renderTop() {
         if (foundEl) {
-            foundEl.innerHTML = '';
+            // Keep the completed-stack nodes stable. Rebuilding them on every
+            // render replayed their entrance animation after ordinary moves.
+            if (foundEl.children.length !== GROUPS) {
+                foundEl.innerHTML = '';
+                for (let i = 0; i < GROUPS; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'found-suit empty';
+                    el.textContent = SUITS[0];
+                    foundEl.appendChild(el);
+                }
+                renderedDone = [];
+            }
+            const previousCount = renderedDone.length;
             for (let i = 0; i < GROUPS; i++) {
                 const s = i < game.done.length ? game.done[i] : -1;
-                const el = document.createElement('div');
-                el.className = 'found-suit' + (s < 0 ? ' empty' : (isRed(s) ? ' red' : ' black'));
-                if (s === game.done.length - 1 && s >= 0) el.classList.add('just');
+                const el = foundEl.children[i];
+                const occupied = s >= 0;
+                const keepAnimationClass = occupied && el.classList.contains('just');
+                el.className = 'found-suit' + (occupied ? (isRed(s) ? ' red' : ' black') : ' empty') +
+                    (keepAnimationClass ? ' just' : '');
                 el.textContent = SUITS[s < 0 ? 0 : s];
-                foundEl.appendChild(el);
+                if (occupied && i >= previousCount) {
+                    el.classList.remove('just');
+                    void el.offsetWidth;
+                    el.classList.add('just');
+                }
             }
+            renderedDone = game.done.slice();
         }
         if (doneEl) doneEl.textContent = game.completed;
     }

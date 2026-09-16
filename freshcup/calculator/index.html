@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/">
     <title>MELS</title>
-    <script src="src/scripts/theme.js?v=4ee9800d43"></script>
+    <script src="src/scripts/theme.js?v=cc0b3dce6f"></script>
     <script src="src/scripts/freshcup-navigation.js?v=82d3cb1ab3"></script>
     <script type="importmap">
         {
@@ -17,8 +17,8 @@
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="src/styles/site-design.css?v=b825d9a032">
-<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/calculator.theme.css?v=a15fa656eb"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=6d376052ff"></head>
+    <link rel="stylesheet" href="src/styles/site-design.css?v=93dd0cc469">
+<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/calculator.theme.css?v=a15fa656eb"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
 <body>
 <!-- 顶部导航栏 -->
 <a class="skip-link" href="#main-content">跳至主要内容</a>
@@ -31,9 +31,14 @@
         <li><a class="nav-link" data-page="game" href="/minigame/">小游戏</a></li>
         <li><a class="nav-link" data-page="freshcup" href="/freshcup/">鲜蔬杯</a></li>
     </ul>
-    <button class="settings-toggle" id="settings-toggle" type="button" aria-label="设置" aria-haspopup="dialog" title="设置">
-        <span class="settings-label">设置</span>
-    </button>
+    <div class="nav-actions">
+        <button class="nav-icon-button theme-quick-toggle" id="theme-quick-toggle" type="button" aria-label="切换到深色模式" aria-pressed="false" title="切换到深色模式">
+            <i class="fas fa-moon" aria-hidden="true"></i>
+        </button>
+        <button class="nav-icon-button settings-toggle" id="settings-toggle" type="button" aria-label="设置" aria-haspopup="dialog" title="设置">
+            <i class="fas fa-gear" aria-hidden="true"></i>
+        </button>
+    </div>
 </nav>
 
 <dialog class="settings-dialog" id="settings-dialog" aria-labelledby="settings-title">
@@ -44,16 +49,13 @@
     <div class="settings-layout">
         <nav class="settings-nav" aria-label="设置分类">
             <button class="settings-category" type="button" aria-current="page" aria-controls="appearance-panel">外观</button>
+            <button class="settings-category" type="button" aria-controls="language-panel">语言</button>
             <button class="settings-category" type="button" aria-controls="music-settings-panel">音乐</button>
             <button class="settings-category" type="button" aria-controls="boss-key-panel">老板键</button>
         </nav>
         <section class="appearance-panel" id="appearance-panel" aria-labelledby="appearance-title">
             <h3 id="appearance-title">外观</h3>
             <p class="settings-intro">调整页面的色彩与动态效果</p>
-            <div class="setting-row">
-                <div><label for="theme-toggle">深色模式</label><p id="theme-description">使用柔和的深色背景</p></div>
-                <input class="appearance-switch" id="theme-toggle" type="checkbox" role="switch" aria-describedby="theme-description">
-            </div>
             <div class="setting-row theme-color-row">
                 <div><label for="theme-color">主题色</label><p id="theme-color-description">选择用于按钮、链接、标签和粒子文字的强调色</p></div>
                 <div class="theme-color-control">
@@ -82,6 +84,18 @@
                 <p class="settings-saved">设置会自动保存</p>
             </div>
         </section>
+        <section class="appearance-panel" id="language-panel" aria-labelledby="language-title" hidden>
+            <h3 id="language-title">语言</h3>
+            <p class="settings-intro">选择网站显示语言</p>
+            <div class="setting-row language-setting-row">
+                <div><label for="language-select">网站语言</label><p id="language-description">更改后立即应用，并保存在当前浏览器中。</p></div>
+                <select id="language-select" aria-describedby="language-description">
+                    <option value="auto">跟随浏览器</option>
+                    <option value="zh-CN" translate="no">简体中文</option>
+                    <option value="en" translate="no">English</option>
+                </select>
+            </div>
+        </section>
         <section class="appearance-panel" id="music-settings-panel" aria-labelledby="music-settings-title" hidden>
             <h3 id="music-settings-title">音乐</h3>
             <p class="settings-intro">管理本地音乐记录与歌词显示</p>
@@ -89,17 +103,14 @@
                 <div><label for="music-history-pause-toggle">停止记录播放历史</label><p>开启后，之后播放的歌曲不会加入历史记录。</p></div>
                 <input class="appearance-switch" id="music-history-pause-toggle" type="checkbox" role="switch" aria-describedby="music-history-pause-note">
             </div>
-            <p class="settings-note" id="music-history-pause-note">默认关闭，正在记录播放历史。</p>
             <div class="setting-row">
                 <div><label for="music-lyrics-pause-toggle">关闭实时歌词</label><p>开启后，音乐栏不再加载或显示实时歌词。</p></div>
                 <input class="appearance-switch" id="music-lyrics-pause-toggle" type="checkbox" role="switch" aria-describedby="music-lyrics-pause-note">
             </div>
-            <p class="settings-note" id="music-lyrics-pause-note">默认关闭，实时歌词已开启。</p>
             <div class="setting-row">
                 <div><label for="home-lyrics-effect-toggle">首页特殊歌词效果</label><p>在首页副标题位置显示独立粒子歌词；关闭后歌词保留在音乐栏。</p></div>
                 <input class="appearance-switch" id="home-lyrics-effect-toggle" type="checkbox" role="switch" aria-describedby="home-lyrics-effect-note" checked>
             </div>
-            <p class="settings-note" id="home-lyrics-effect-note">默认开启，首页使用独立粒子歌词。</p>
             <div class="settings-footer music-data-footer">
                 <button class="reset-settings music-danger-button" id="clear-music-data" type="button">清除全部本地音乐数据</button>
                 <p class="settings-saved">仅清除当前浏览器的数据</p>
@@ -550,36 +561,36 @@
     </div>
 <section class="page" id="freshcup"><header class="section-heading"><p class="eyebrow">THE TOOLKIT</p><h1>鲜蔬杯工具中心</h1><p>鲜蔬杯官方(M.E.)唯一指定工具集。思路参考<a href="https://space.bilibili.com/37804608">龙哥哥今天又鸽了</a> <a href="https://www.bilibili.com/video/BV1qnUWY4E59">万物汇集</a></p></header><nav class="tool-tabs" aria-label="鲜蔬杯工具"><a href="/freshcup/" data-freshcup-tool="scoreboard_5" >界园计分器</a><a href="/freshcup/sarkaz/" data-freshcup-tool="scoreboard_4" >萨卡兹计分器</a><a href="/freshcup/sami/" data-freshcup-tool="scoreboard_3" >萨米计分器</a><a href="/freshcup/calculator/" data-freshcup-tool="calculator" aria-current="page">伤害计算器</a></nav><p class="tool-load-status" id="tool-load-status" role="status" hidden></p><div id="freshcup-tool">
 <div class="container">
-    <header>
+    <header translate="no">
         <h1>明日方舟肉鸽伤害计算器</h1>
         <p class="subtitle">交互式网页计算器 - 选择干员、配置藏品、输入敌人属性计算伤害</p>
     </header>
 
     <div class="main-content">
         <div class="section">
-            <h2 class="section-title">选择干员</h2>
-            <div class="operator-selection" id="operatorSelection">
+            <h2 class="section-title" translate="no">选择干员</h2>
+            <div class="operator-selection" id="operatorSelection" translate="no">
                 <!-- 干员将通过JavaScript动态生成 -->
             </div>
 
-            <div id="specialOptions" class="hidden">
+            <div id="specialOptions" class="hidden" translate="no">
                 <!-- 特殊选项（如拉普兰德暖机层数）将在这里显示 -->
             </div>
         </div>
 
         <div class="section">
-            <h2 class="section-title">选择藏品</h2>
+            <h2 class="section-title" translate="no">选择藏品</h2>
             <div class="relic-search">
-                <input type="text" id="relicSearch" placeholder="搜索藏品名称...">
+                <input type="text" id="relicSearch" placeholder="搜索藏品名称..." translate="no">
             </div>
-            <div class="relics-container" id="relicsContainer">
+            <div class="relics-container" id="relicsContainer" translate="no">
                 <!-- 藏品将通过JavaScript动态生成 -->
             </div>
         </div>
 
         <div class="section">
-            <h2 class="section-title">敌人属性</h2>
-            <div class="enemy-inputs" id="enemyInputs">
+            <h2 class="section-title" translate="no">敌人属性</h2>
+            <div class="enemy-inputs" id="enemyInputs" translate="no">
                 <!-- 敌人属性输入框将根据干员类型动态显示 -->
             </div>
 
@@ -594,15 +605,15 @@
         <h2 class="result-title">计算结果</h2>
         <div class="result-content">
             <div class="result-box">
-                <div class="result-label">总伤害</div>
+                <div class="result-label" translate="no">总伤害</div>
                 <div class="result-value" id="totalDamage">0</div>
             </div>
             <div class="result-box special-result hidden" id="specialDamageBox">
-                <div class="result-label">拉普兰德本体伤害</div>
+                <div class="result-label" translate="no">拉普兰德本体伤害</div>
                 <div class="result-value" id="specialDamage">0</div>
             </div>
         </div>
-        <p class="hint" id="calculationHint"></p>
+        <p class="hint" id="calculationHint" translate="no"></p>
     </div>
 </div>
 
@@ -730,20 +741,21 @@
     <source src="assets/audio/没有如果.mp3" type="audio/mpeg">
 </audio>
 
-<script src="src/scripts/script.js?v=0ab5f8d8b3"></script>
+<script src="src/scripts/i18n.js?v=d632b69c43"></script>
+<script src="src/scripts/script.js?v=75a7b29289"></script>
 <script src="src/scripts/boss-battle.js?v=62c257ad94"></script>
-<script src="src/scripts/game.js?v=115ef840e4"></script>
+<script src="src/scripts/game.js?v=eadc706772"></script>
 <script src="src/scripts/minesweeper.js?v=df50eb57b1"></script>
-<script src="src/scripts/spider.js?v=67c2080dc9"></script>
+<script src="src/scripts/spider.js?v=313337cc38"></script>
 <script src="src/scripts/wordle.js?v=e01284db42"></script>
 <script src="src/scripts/mini-games.js?v=962f853eb6"></script>
 <script src="vendor/jszip.min.js?v=acc7e41455"></script>
-<script src="src/scripts/utilities.js?v=9bb7860658"></script>
+<script src="src/scripts/utilities.js?v=aedb1ceda9"></script>
 <script src="src/scripts/boss-key.js?v=dac778437d"></script>
 <script src="vendor/flame-wrap.js?v=7ff0908dc6"></script>
 <script src="src/scripts/appearance.js?v=63e82d6f6e"></script>
-<script type="module" src="src/scripts/particle-title.js?v=18d059a2f6"></script>
+<script type="module" src="src/scripts/particle-title.js?v=f2badaae0c"></script>
 <script src="src/scripts/site.js?v=9dbe7129dc"></script>
-<script id="freshcup-tool-script" data-tool="calculator" src="/src/scripts/freshcup/calculator.js?v=28b034c80f"></script>
+<script id="freshcup-tool-script" data-tool="calculator" src="/src/scripts/freshcup/calculator.js?v=9599a913bf"></script>
 </body>
 </html>

@@ -94,7 +94,7 @@ function createTitleAsset() {
 
 function createLyricAsset() {
     const color = cssColor('--particle-lyric', '#65acd9');
-    const text = liveLyricActive ? liveLyricText : '✦ 我来成为神明 ✦';
+    const text = liveLyricActive ? liveLyricText : (window.MELSI18n?.t('✦ 我来成为神明 ✦') || '✦ 我来成为神明 ✦');
     const lines = String(text || '♪').split('\n').slice(0, 2);
     // Convert the available screen width to source-image units at the lyric plane.
     const worldPerPixel = 2 * (4.2 - 2.35 / Math.sqrt(17)) * Math.tan(65 * Math.PI / 360)
@@ -284,6 +284,7 @@ window.addEventListener('winy-home-lyric-change', event => {
     liveLyricText = nextText;
     if (changed) updateLyricParticles();
 });
+window.addEventListener('mels-languagechange', updateLyricParticles);
 
 new MutationObserver(sync).observe(home, { attributes: true, attributeFilter: ['class'] });
 new MutationObserver(() => {

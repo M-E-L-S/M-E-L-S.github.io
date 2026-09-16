@@ -36,10 +36,17 @@
         root.style.setProperty('--particle-title', dark ? mix(themeColor, '#ffffff', 0.3) : mix(themeColor, '#000000', 0.04));
         root.style.setProperty('--particle-lyric', dark ? mix(themeColor, '#ffffff', 0.58) : mix(themeColor, '#ffffff', 0.22));
 
-        const themeToggle = document.getElementById('theme-toggle');
+        const themeToggle = document.getElementById('theme-quick-toggle');
         const colorInput = document.getElementById('theme-color');
         const colorValue = document.getElementById('theme-color-value');
-        if (themeToggle) themeToggle.checked = dark;
+        if (themeToggle) {
+            const label = dark ? '切换到浅色模式' : '切换到深色模式';
+            themeToggle.setAttribute('aria-pressed', String(dark));
+            themeToggle.setAttribute('aria-label', label);
+            themeToggle.title = label;
+            const icon = themeToggle.querySelector('i');
+            if (icon) icon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+        }
         if (colorInput) colorInput.value = themeColor;
         if (colorValue) {
             colorValue.value = themeColor.toUpperCase();
@@ -70,8 +77,8 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         applyTheme();
-        document.getElementById('theme-toggle')?.addEventListener('change', event => {
-            preference = event.target.checked ? 'dark' : 'light';
+        document.getElementById('theme-quick-toggle')?.addEventListener('click', () => {
+            preference = preference === 'dark' ? 'light' : 'dark';
             try { localStorage.setItem('winy-theme', preference); } catch (_) {}
             applyTheme();
         });
@@ -80,4 +87,5 @@
             button.addEventListener('click', () => saveColor(button.dataset.themeColor));
         });
     });
+    window.addEventListener('mels-languagechange', applyTheme);
 })();

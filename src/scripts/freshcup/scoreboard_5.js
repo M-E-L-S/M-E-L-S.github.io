@@ -48,6 +48,7 @@
         });
 
         const totalElement = document.getElementById('total');
+        totalElement.dataset.score = String(total);
         totalElement.textContent = `总分: ${total}`;
         totalElement.style.color = total >= 0 ? '#2a611e' : '#d32f2f';
     }
@@ -63,7 +64,7 @@
 
         document.getElementById('freshcup-tool').querySelectorAll('.category').forEach(category => {
             let sectionHasItems = false;
-            let sectionHTML = `<tr><td colspan="4" style="padding:8px;font-weight:bold;background-color:#e0e0e0;">${category.querySelector('h2').textContent.split('(')[0]}</td></tr>`;
+            let sectionHTML = `<tr><td class="fc-report-source fc-report-section" colspan="4" translate="no">${category.querySelector('h2').textContent}</td></tr>`;
 
             category.querySelectorAll('.sub-category').forEach(subCategory => {
                 const input = subCategory.querySelector('input[type="number"]');
@@ -78,7 +79,7 @@
                     const subTotal = value * score;
 
                     sectionHTML += `<tr>
-                        <td style="padding:8px;border-bottom:1px solid #eee;">${rawName}</td>
+                        <td class="fc-report-source" translate="no">${rawName}</td>
                         <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${value}</td>
                         <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${score}</td>
                         <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${subTotal}</td>
@@ -90,7 +91,7 @@
             }
         });
 
-        const totalScore = document.getElementById('total').textContent.replace('总分: ', '');
+        const totalScore = Number(document.getElementById('total').dataset.score || 0);
         reportHTML += `<tr>
             <td colspan="3" style="padding:8px;font-weight:bold;text-align:right;border-top:2px solid #ddd;">最终结算</td>
             <td style="text-align:right;padding:8px;font-weight:bold;border-top:2px solid #ddd;color:${parseInt(totalScore)>=0?'#2a611e':'#d32f2f'}">${totalScore}</td>

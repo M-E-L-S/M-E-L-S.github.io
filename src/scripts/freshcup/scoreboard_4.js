@@ -90,8 +90,7 @@
 
             category.querySelectorAll('.sub-category').forEach(subCategory => {
                 const inputs = subCategory.querySelectorAll('input[type="number"]');
-                const label = subCategory.querySelector('.clickable-label')?.textContent ||
-                    subCategory.querySelector('label')?.textContent || '';
+                const label = (subCategory.querySelector('.clickable-label') || subCategory.querySelector('label'))?.textContent || '';
 
                 // 特殊处理"局内结算分"
                 if (label.includes('局内结算分')) {
@@ -172,12 +171,12 @@
             '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">小计</th></tr>';
 
         reportData.forEach(section => {
-            reportHTML += `<tr><td colspan="4" style="padding:8px;font-weight:bold;background-color:#e0e0e0;">${section.category}</td></tr>`;
+            reportHTML += `<tr><td class="fc-report-source fc-report-section" colspan="4" translate="no">${section.category}</td></tr>`;
 
             section.items.forEach(item => {
                 // 主项目行
                 reportHTML += `<tr>
-                    <td style="padding:8px;border-bottom:1px solid #eee;">${item.name}</td>
+                    <td class="fc-report-source" translate="no">${item.name}</td>
                     <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${item.count}</td>
                     <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${item.score}</td>
                     <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;">${item.total}</td>
@@ -187,7 +186,7 @@
                 if(item.hasOptions && item.options.length > 0) {
                     item.options.forEach(opt => {
                         reportHTML += `<tr>
-                            <td style="padding:8px 8px 8px 30px;border-bottom:1px solid #eee;font-size:0.9em;color:#666;">
+                            <td class="fc-report-source fc-report-option" translate="no">
                                 <span style="font-size:0.8em;vertical-align:sub;">${opt.name}</span>
                             </td>
                             <td style="text-align:right;padding:8px;border-bottom:1px solid #eee;font-size:0.9em;color:#666;">${opt.value}</td>

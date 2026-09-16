@@ -1,35 +1,35 @@
 
 <div class="container">
-    <header>
+    <header translate="no">
         <h1>明日方舟肉鸽伤害计算器</h1>
         <p class="subtitle">交互式网页计算器 - 选择干员、配置藏品、输入敌人属性计算伤害</p>
     </header>
 
     <div class="main-content">
         <div class="section">
-            <h2 class="section-title">选择干员</h2>
-            <div class="operator-selection" id="operatorSelection">
+            <h2 class="section-title" translate="no">选择干员</h2>
+            <div class="operator-selection" id="operatorSelection" translate="no">
                 <!-- 干员将通过JavaScript动态生成 -->
             </div>
 
-            <div id="specialOptions" class="hidden">
+            <div id="specialOptions" class="hidden" translate="no">
                 <!-- 特殊选项（如拉普兰德暖机层数）将在这里显示 -->
             </div>
         </div>
 
         <div class="section">
-            <h2 class="section-title">选择藏品</h2>
+            <h2 class="section-title" translate="no">选择藏品</h2>
             <div class="relic-search">
-                <input type="text" id="relicSearch" placeholder="搜索藏品名称...">
+                <input type="text" id="relicSearch" placeholder="搜索藏品名称..." translate="no">
             </div>
-            <div class="relics-container" id="relicsContainer">
+            <div class="relics-container" id="relicsContainer" translate="no">
                 <!-- 藏品将通过JavaScript动态生成 -->
             </div>
         </div>
 
         <div class="section">
-            <h2 class="section-title">敌人属性</h2>
-            <div class="enemy-inputs" id="enemyInputs">
+            <h2 class="section-title" translate="no">敌人属性</h2>
+            <div class="enemy-inputs" id="enemyInputs" translate="no">
                 <!-- 敌人属性输入框将根据干员类型动态显示 -->
             </div>
 
@@ -44,15 +44,15 @@
         <h2 class="result-title">计算结果</h2>
         <div class="result-content">
             <div class="result-box">
-                <div class="result-label">总伤害</div>
+                <div class="result-label" translate="no">总伤害</div>
                 <div class="result-value" id="totalDamage">0</div>
             </div>
             <div class="result-box special-result hidden" id="specialDamageBox">
-                <div class="result-label">拉普兰德本体伤害</div>
+                <div class="result-label" translate="no">拉普兰德本体伤害</div>
                 <div class="result-value" id="specialDamage">0</div>
             </div>
         </div>
-        <p class="hint" id="calculationHint"></p>
+        <p class="hint" id="calculationHint" translate="no"></p>
     </div>
 </div>
 

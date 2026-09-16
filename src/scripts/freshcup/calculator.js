@@ -725,7 +725,7 @@
     // 计算总伤害
     function calculateDamage() {
         if (!selectedOperator) {
-            alert('请先选择干员！');
+            alert(window.MELSI18n?.t('请先选择干员！') || '请先选择干员！');
             return;
         }
 
@@ -889,7 +889,7 @@
             // 物理伤害计算
             const defInput = document.getElementById('defInput');
             if (!defInput || defInput.value === '') {
-                alert('请输入敌方防御力！');
+                alert(window.MELSI18n?.t('请输入敌方防御力！') || '请输入敌方防御力！');
                 return;
             }
 
@@ -932,7 +932,7 @@
             // 法术伤害计算
             const resInput = document.getElementById('resInput');
             if (!resInput || resInput.value === '') {
-                alert('请输入敌方法术抗性！');
+                alert(window.MELSI18n?.t('请输入敌方法术抗性！') || '请输入敌方法术抗性！');
                 return;
             }
 
@@ -1147,7 +1147,7 @@
             header.querySelector('.relic-category-icon:last-child').classList.remove('rotated');
         });
 
-        alert('已重置所有选择！');
+        alert(window.MELSI18n?.t('已重置所有选择！') || '已重置所有选择！');
     }
 
     // 初始化应用

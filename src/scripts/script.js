@@ -163,10 +163,11 @@ function initMusicPlayer() {
     let currentLyrics = [];
     let currentLyricIndex = -1;
     let displayedLyric = currentLyricElement.textContent;
+    let displayedLyricIsContent = false;
     let searchController = null;
     let retryingTrackKey = '';
 
-    const defaultHomeSubtitle = '✨ 愿每日平安幸福 ✨';
+    const defaultHomeSubtitle = '✨ 我来成为神明 ✨';
 
     function setPlayerCollapsed(collapsed, persist = true) {
         if (!player || !collapseToggle) return;
@@ -234,17 +235,23 @@ function initMusicPlayer() {
             && homePage?.classList.contains('active');
         currentLyricElement.classList.toggle('is-home-routed', showOnHome);
         particleTitleStage?.classList.toggle('has-home-lyric', showOnHome);
-        if (homeSubtitle) homeSubtitle.textContent = showOnHome ? displayedLyric : defaultHomeSubtitle;
+        if (homeSubtitle) {
+            homeSubtitle.setAttribute('translate', showOnHome && displayedLyricIsContent ? 'no' : 'yes');
+            homeSubtitle.textContent = showOnHome ? displayedLyric : defaultHomeSubtitle;
+        }
         window.dispatchEvent(new CustomEvent('winy-home-lyric-change', {
-            detail: { active: showOnHome, text: displayedLyric }
+            detail: { active: showOnHome, text: displayedLyricIsContent ? displayedLyric : (window.MELSI18n?.t(displayedLyric) || displayedLyric) }
         }));
     }
 
-    function setLyricText(text) {
+    function setLyricText(text, isContent = false) {
         displayedLyric = text;
+        displayedLyricIsContent = isContent;
+        currentLyricElement.setAttribute('translate', isContent ? 'no' : 'yes');
         currentLyricElement.textContent = text;
         syncLyricPlacement();
     }
+    window.addEventListener('mels-languagechange', syncLyricPlacement);
 
     if (homePage) {
         new MutationObserver(syncLyricPlacement).observe(homePage, {
@@ -292,17 +299,8 @@ function initMusicPlayer() {
 
     function updateMusicSettings() {
         if (historyPauseToggle) historyPauseToggle.checked = !historyEnabled;
-        if (historyPauseNote) historyPauseNote.textContent = historyEnabled
-            ? '默认关闭，正在记录播放历史。'
-            : '已开启，之后播放的歌曲不会加入历史记录。';
         if (lyricsPauseToggle) lyricsPauseToggle.checked = !lyricsEnabled;
-        if (lyricsPauseNote) lyricsPauseNote.textContent = lyricsEnabled
-            ? '默认关闭，实时歌词已开启。'
-            : '已开启，实时歌词不会加载或显示。';
         if (homeLyricsEffectToggle) homeLyricsEffectToggle.checked = homeLyricsEffectEnabled;
-        if (homeLyricsEffectNote) homeLyricsEffectNote.textContent = homeLyricsEffectEnabled
-            ? '默认开启，首页使用独立粒子歌词。'
-            : '已关闭，歌词保留在音乐栏。';
     }
 
     function trackKey(track) {
@@ -364,7 +362,8 @@ function initMusicPlayer() {
         const targets = target ? [target] : [statusElement, libraryStatusElement];
         targets.forEach(element => {
             if (!element) return;
-            element.textContent = message;
+            if (window.MELSI18n) window.MELSI18n.bind(element, message);
+            else element.textContent = message;
             element.classList.toggle('error', isError);
         });
     }
@@ -522,7 +521,7 @@ function initMusicPlayer() {
         }
         if (found !== currentLyricIndex) {
             currentLyricIndex = found;
-            setLyricText(found >= 0 ? currentLyrics[found].text : '♪');
+            setLyricText(found >= 0 ? currentLyrics[found].text : '♪', true);
         }
     }
 
@@ -556,6 +555,8 @@ function initMusicPlayer() {
     }
 
     function updateSongInfo() {
+        currentSongElement.setAttribute('translate', 'no');
+        currentArtistElement.setAttribute('translate', 'no');
         currentSongElement.textContent = currentTrack.name;
         currentArtistElement.textContent = currentTrack.album
             ? `${currentTrack.artist} · ${currentTrack.album}`
@@ -678,9 +679,11 @@ function initMusicPlayer() {
         info.className = 'music-result-info';
         const title = document.createElement('div');
         title.className = 'music-result-title';
+        title.setAttribute('translate', 'no');
         title.textContent = track.name;
         const meta = document.createElement('div');
         meta.className = 'music-result-meta';
+        meta.setAttribute('translate', 'no');
         meta.textContent = track.album ? `${track.artist} · ${track.album}` : track.artist;
         info.append(title, meta);
 
@@ -1044,7 +1047,7 @@ const announcements = [
             '5. 「小游戏」页面用于提供 <b>完全自制</b> 的各类游戏/经典游戏改，充满了作者的巧思。包括但不限于“连连看boss模式”“wordle长单词模式”。<br>' +
             '6. 「鲜蔬杯」页面保持原有功能不变，仅做外观调整。<br>' +
             '7. 「音乐」栏支持在线搜索、播放音乐，并支持同各家播放器一致的收藏和列表播放。 <b>独家功能</b>：粒子动态歌词，现可在首页标题下方体验。<br>'+
-            '7. 「设置」弹窗支持设置自定义外观，音乐相关和老板键的配置。'
+            '8. 「设置」弹窗支持设置自定义外观，音乐相关和老板键的配置。'
     },
     {
         ver: 1.0,

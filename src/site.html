@@ -31,9 +31,14 @@
         <li><a class="nav-link" data-page="game" href="/minigame/">小游戏</a></li>
         <li><a class="nav-link" data-page="freshcup" href="/freshcup/">鲜蔬杯</a></li>
     </ul>
-    <button class="settings-toggle" id="settings-toggle" type="button" aria-label="设置" aria-haspopup="dialog" title="设置">
-        <span class="settings-label">设置</span>
-    </button>
+    <div class="nav-actions">
+        <button class="nav-icon-button theme-quick-toggle" id="theme-quick-toggle" type="button" aria-label="切换到深色模式" aria-pressed="false" title="切换到深色模式">
+            <i class="fas fa-moon" aria-hidden="true"></i>
+        </button>
+        <button class="nav-icon-button settings-toggle" id="settings-toggle" type="button" aria-label="设置" aria-haspopup="dialog" title="设置">
+            <i class="fas fa-gear" aria-hidden="true"></i>
+        </button>
+    </div>
 </nav>
 
 <dialog class="settings-dialog" id="settings-dialog" aria-labelledby="settings-title">
@@ -44,16 +49,13 @@
     <div class="settings-layout">
         <nav class="settings-nav" aria-label="设置分类">
             <button class="settings-category" type="button" aria-current="page" aria-controls="appearance-panel">外观</button>
+            <button class="settings-category" type="button" aria-controls="language-panel">语言</button>
             <button class="settings-category" type="button" aria-controls="music-settings-panel">音乐</button>
             <button class="settings-category" type="button" aria-controls="boss-key-panel">老板键</button>
         </nav>
         <section class="appearance-panel" id="appearance-panel" aria-labelledby="appearance-title">
             <h3 id="appearance-title">外观</h3>
             <p class="settings-intro">调整页面的色彩与动态效果</p>
-            <div class="setting-row">
-                <div><label for="theme-toggle">深色模式</label><p id="theme-description">使用柔和的深色背景</p></div>
-                <input class="appearance-switch" id="theme-toggle" type="checkbox" role="switch" aria-describedby="theme-description">
-            </div>
             <div class="setting-row theme-color-row">
                 <div><label for="theme-color">主题色</label><p id="theme-color-description">选择用于按钮、链接、标签和粒子文字的强调色</p></div>
                 <div class="theme-color-control">
@@ -82,6 +84,18 @@
                 <p class="settings-saved">设置会自动保存</p>
             </div>
         </section>
+        <section class="appearance-panel" id="language-panel" aria-labelledby="language-title" hidden>
+            <h3 id="language-title">语言</h3>
+            <p class="settings-intro">选择网站显示语言</p>
+            <div class="setting-row language-setting-row">
+                <div><label for="language-select">网站语言</label><p id="language-description">更改后立即应用，并保存在当前浏览器中。</p></div>
+                <select id="language-select" aria-describedby="language-description">
+                    <option value="auto">跟随浏览器</option>
+                    <option value="zh-CN" translate="no">简体中文</option>
+                    <option value="en" translate="no">English</option>
+                </select>
+            </div>
+        </section>
         <section class="appearance-panel" id="music-settings-panel" aria-labelledby="music-settings-title" hidden>
             <h3 id="music-settings-title">音乐</h3>
             <p class="settings-intro">管理本地音乐记录与歌词显示</p>
@@ -89,17 +103,14 @@
                 <div><label for="music-history-pause-toggle">停止记录播放历史</label><p>开启后，之后播放的歌曲不会加入历史记录。</p></div>
                 <input class="appearance-switch" id="music-history-pause-toggle" type="checkbox" role="switch" aria-describedby="music-history-pause-note">
             </div>
-            <p class="settings-note" id="music-history-pause-note">默认关闭，正在记录播放历史。</p>
             <div class="setting-row">
                 <div><label for="music-lyrics-pause-toggle">关闭实时歌词</label><p>开启后，音乐栏不再加载或显示实时歌词。</p></div>
                 <input class="appearance-switch" id="music-lyrics-pause-toggle" type="checkbox" role="switch" aria-describedby="music-lyrics-pause-note">
             </div>
-            <p class="settings-note" id="music-lyrics-pause-note">默认关闭，实时歌词已开启。</p>
             <div class="setting-row">
                 <div><label for="home-lyrics-effect-toggle">首页特殊歌词效果</label><p>在首页副标题位置显示独立粒子歌词；关闭后歌词保留在音乐栏。</p></div>
                 <input class="appearance-switch" id="home-lyrics-effect-toggle" type="checkbox" role="switch" aria-describedby="home-lyrics-effect-note" checked>
             </div>
-            <p class="settings-note" id="home-lyrics-effect-note">默认开启，首页使用独立粒子歌词。</p>
             <div class="settings-footer music-data-footer">
                 <button class="reset-settings music-danger-button" id="clear-music-data" type="button">清除全部本地音乐数据</button>
                 <p class="settings-saved">仅清除当前浏览器的数据</p>
@@ -660,6 +671,7 @@
     <source src="assets/audio/没有如果.mp3" type="audio/mpeg">
 </audio>
 
+<script src="src/scripts/i18n.js"></script>
 <script src="src/scripts/script.js?v=8"></script>
 <script src="src/scripts/boss-battle.js"></script>
 <script src="src/scripts/game.js"></script>

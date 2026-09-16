@@ -46,6 +46,7 @@
             const translations = Array.isArray(entry.trans) ? entry.trans : [];
             if (translations.length) {
                 const list = make('ul', 'acronym-translation-list');
+                list.setAttribute('translate', 'no');
                 translations.forEach((value) => {
                     const item = make('li');
                     const parsed = splitTranslation(value);
