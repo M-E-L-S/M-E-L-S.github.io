@@ -1,0 +1,37 @@
+<section class="utility-view" id="aicu-view" aria-labelledby="aicu-title" hidden>
+    <div class="acronym-hero">
+        <span class="acronym-kicker">BILIBILI ARCHIVE</span>
+        <h3 id="aicu-title">B站记录查询</h3>
+        <p>输入 UID，查看已收录的评论、视频弹幕与用户资料。</p>
+    </div>
+    <div class="aicu-protected">
+        <div id="aicu-auth-overlay" class="aicu-auth-overlay" aria-labelledby="aicu-auth-title">
+            <form id="aicu-auth-form" class="aicu-auth-form">
+                <h3 id="aicu-auth-title">需要访问授权</h3>
+                <p>输入访问密码后可使用此功能。授权在此浏览器保存，24 小时后到期。</p>
+                <label for="aicu-password">访问密码</label>
+                <input id="aicu-password" type="password" autocomplete="off" maxlength="512" required>
+                <p id="aicu-auth-status" role="status" aria-live="polite">请输入访问密码。</p>
+                <button id="aicu-auth-submit" class="game-btn primary" type="submit">验证并解锁</button>
+            </form>
+        </div>
+        <div id="aicu-auth-content" inert>
+        <button id="aicu-logout" class="game-btn" type="button" hidden>退出授权</button>
+        <form id="aicu-form" class="aicu-form">
+            <label>用户 UID<input id="aicu-uid" inputmode="numeric" pattern="[0-9]{1,20}" maxlength="20" required autocomplete="off" placeholder="例如：2"></label>
+            <label>查询类型<select id="aicu-kind"><option value="replies">评论</option><option value="video-danmaku">视频弹幕</option><option value="history">历史用户名</option><option value="assets">粉丝牌 / 装扮</option></select></label>
+            <label id="aicu-keyword-label">关键词（选填）<input id="aicu-keyword" maxlength="80" autocomplete="off"></label>
+            <button class="game-btn primary" type="submit" id="aicu-submit">查询记录</button>
+            <button class="game-btn" type="button" id="aicu-cancel" hidden>取消查询</button>
+        </form>
+        <p class="utility-credit">收录可能不完整或有延迟，未查到不代表没有记录。</p>
+        <p id="aicu-status" role="status" aria-live="polite">输入 UID 后开始查询。</p>
+        <div id="aicu-results" aria-busy="false"></div>
+        <nav id="aicu-pagination" class="aicu-pagination" aria-label="查询结果分页" hidden>
+            <button type="button" class="game-btn" id="aicu-prev">上一页</button>
+            <span id="aicu-page" translate="no"></span>
+            <button type="button" class="game-btn" id="aicu-next">下一页</button>
+        </nav>
+        </div>
+    </div>
+</section>

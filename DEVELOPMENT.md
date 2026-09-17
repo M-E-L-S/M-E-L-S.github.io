@@ -49,3 +49,10 @@
 ## 本地预览
 
 运行 `python -m http.server 4173 --bind 127.0.0.1`，访问 `http://127.0.0.1:4173/`。页面包含根路径资源，不能直接双击 HTML 验证路由。
+# B站记录查询
+
+入口 `/tools/aicu/`，源文件为 `src/pages/aicu.html`、`src/scripts/aicu.js`、`src/styles/aicu.css`。Worker 地址集中在脚本的 `API` 常量中。未授权时遮罩仅覆盖 Aicu 内容区，页面导航与功能切换不受影响。提交查询才请求对应接口，评论与视频弹幕每页 20 条；离开功能或点击取消会中止浏览器请求。
+
+`mels-api/` 是独立部署的 Worker 项目，源码和绑定配置入库，依赖、运行缓存与本地密钥不入库。生产 CORS 只允许 `https://m-e-l-s.github.io`，因此 localhost 页面不能直接完成线上接口查询；不要为本地预览放宽生产 CORS。
+
+本地 HTTP 服务中打开 `/scripts/fixtures/aicu.html` 可执行模拟接口的浏览器回归测试，覆盖四类数据、安全渲染、分页、失败、限流与取消；该测试页面不会调用线上 Worker。

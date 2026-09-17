@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aicu UI regression fixture</title>
+<link rel="stylesheet" href="/src/styles/site-design.css"><link rel="stylesheet" href="/src/styles/aicu.css">
+<body><h1>Aicu UI regression fixture</h1><pre id="report">Running…</pre><main id="tools" class="active"></main>
+<script>
+(async () => {
+    const report = document.getElementById('report');
+    const output = [];
+    const storageKey = 'mels.aicu.authorization.v1';
+    const previousToken = localStorage.getItem(storageKey);
+    localStorage.removeItem(storageKey);
+    const check = (condition, label) => { if (!condition) throw Error(label); output.push(`PASS ${label}`); };
+    try {
+        document.getElementById('tools').innerHTML = await (await fetch('/src/pages/aicu.html')).text();
+        const $ = id => document.getElementById(`aicu-${id}`);
+        $('view').hidden = false;
+        let payload, code = 200, pending = false, authStatus = 200;
+        const requests = [];
+        window.fetch = async (url, options) => {
+            if (String(url).includes('/auth/')) return Response.json({ ok: authStatus === 200, token: 'fixture-token', expiresAt: Date.now() + 3600000 }, { status: authStatus });
+            check(options.headers.Authorization === 'Bearer fixture-token', 'query includes authorization');
+            requests.push(new URL(url));
+            if (pending) return new Promise((resolve, reject) => options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError'))));
+            return new Response(JSON.stringify(payload), { status: code, headers: { 'Content-Type': 'application/json' } });
+        };
+        await new Promise((resolve, reject) => { const script = document.createElement('script'); script.src = '/src/scripts/aicu.js'; script.onload = resolve; script.onerror = reject; document.body.append(script); });
+        const settle = () => new Promise(resolve => setTimeout(resolve, 20));
+        check(!$('auth-overlay').hidden && $('form').inert, 'unauthorized entry is locked');
+        authStatus = 401;
+        $('password').value = 'wrong-password';
+        $('auth-form').dispatchEvent(new Event('submit', { cancelable: true })); await settle();
+        check($('auth-status').textContent.includes('不正确') && $('form').inert && !$('password').value, 'wrong password keeps lock and clears password field');
+        authStatus = 429;
+        $('password').value = 'fixture-password';
+        $('auth-form').dispatchEvent(new Event('submit', { cancelable: true })); await settle();
+        check($('auth-status').textContent.includes('一分钟') && $('form').inert, 'login rate limiting stays locked');
+        authStatus = 200;
+        $('password').value = 'fixture-password';
+        $('auth-form').dispatchEvent(new Event('submit', { cancelable: true }));
+        await settle();
+        check($('auth-overlay').hidden && !$('form').inert && localStorage.getItem(storageKey) === 'fixture-token', 'login unlocks and persists token');
+        const submit = async (kind, data) => {
+            $('kind').value = kind; payload = { ok: true, data };
+            $('form').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            await settle();
+        };
+        $('uid').value = '0002';
+        await submit('replies', { replies: [{ message: '<img src=x onerror=alert(1)>', time: 1700000000, dyn: { type: 1, oid: '123' } }], cursor: { is_end: false, all_count: 21 } });
+        check(requests[0].searchParams.get('uid') === '2' && requests[0].searchParams.get('ps') === '20', 'canonical UID and bounded page size');
+        check(!$('results').querySelector('img') && $('results').textContent.includes('<img'), 'third-party HTML displayed as text');
+        check($('results').querySelector('a').href === 'https://www.bilibili.com/video/av123/', 'safe video link');
+        check($('prev').disabled && !$('next').disabled, 'first page boundaries');
+        payload.data.cursor.is_end = true;
+        $('next').click(); await settle();
+        check(requests.at(-1).searchParams.get('pn') === '2' && $('next').disabled && !$('prev').disabled, 'next page and end boundary');
+        await submit('video-danmaku', { videodmlist: [{ content: '弹幕样例', ctime: 1700000000, oid: '123' }], cursor: { is_end: true, all_count: 1 } });
+        check($('results').textContent.includes('弹幕样例') && requests.at(-1).pathname.endsWith('video-danmaku'), 'video comments rendering');
+        await submit('history', { hname: ['历史昵称'] });
+        check($('results').textContent.includes('历史昵称') && !$('results').querySelector('li:not([translate="no"])'), 'history preserves raw names');
+        await submit('assets', { medals: [{ name: '样例粉丝牌', level: 12 }], collections: null });
+        check($('results').textContent.includes('Lv.12') && $('results').textContent.includes('暂未获取成功'), 'partial assets are not reported as empty');
+        code = 429; await submit('history', {});
+        check($('status').textContent.includes('一分钟') && !$('submit').disabled, 'rate limit and retry controls');
+        code = 200; await submit('replies', { replies: [], cursor: { is_end: true, all_count: 0 } });
+        check($('status').textContent.includes('没有查到') && $('pagination').hidden, 'empty result');
+        pending = true; await submit('history', {});
+        check($('uid').disabled && !$('cancel').hidden, 'in-flight controls locked');
+        $('cancel').click(); await settle();
+        check($('status').textContent.includes('已取消') && !$('uid').disabled, 'cancellation restores controls');
+        await submit('history', {});
+        $('view').hidden = true; await settle();
+        check($('status').textContent.includes('已取消') && !$('submit').disabled, 'leaving the tool cancels pending requests');
+        $('view').hidden = false;
+        await settle();
+        check(!$('form').inert && $('auth-overlay').hidden, 'returning verifies persisted token without password');
+        pending = false; await submit('replies', { replies: 'bad' });
+        check($('status').textContent.includes('查询失败'), 'malformed payload rejected');
+        await submit('assets', { medals: [{ name: '样例粉丝牌', level: 12 }], collections: [{ name: '样例装扮', number: 6 }] });
+        code = 401; await submit('history', {});
+        check(!$('auth-overlay').hidden && $('form').inert && !localStorage.getItem(storageKey) && !$('results').textContent, '401 clears authorization and relocks');
+        $('password').value = 'fixture-password';
+        $('auth-form').dispatchEvent(new Event('submit', { cancelable: true })); await settle();
+        $('logout').click();
+        check(!$('auth-overlay').hidden && $('form').inert && !localStorage.getItem(storageKey), 'logout clears saved token');
+        report.textContent = output.join('\n') + `\n${output.length} checks passed`;
+    } catch (error) { report.textContent = output.join('\n') + '\nFAIL ' + error.message; }
+    finally { if (previousToken) localStorage.setItem(storageKey, previousToken); else localStorage.removeItem(storageKey); }
+})();
+</script></body></html>

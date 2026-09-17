@@ -18,7 +18,7 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="src/styles/site-design.css?v=93dd0cc469">
-<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/calculator.theme.css?v=a15fa656eb"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
+<link rel="stylesheet" href="/src/styles/aicu.css?v=874d23fb3e"><link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/calculator.theme.css?v=a15fa656eb"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
 <body>
 <!-- 顶部导航栏 -->
 <a class="skip-link" href="#main-content">跳至主要内容</a>
@@ -231,6 +231,11 @@
                         <span class="game-picker-name">缩写转义</span>
                         <i class="fas fa-check game-picker-check" aria-hidden="true"></i>
                     </a>
+                    <a href="/tools/aicu/" class="game-picker-item utility-picker-item" role="option" data-utility="aicu" aria-selected="false">
+                        <span class="game-picker-emoji" aria-hidden="true">🔎</span>
+                        <span class="game-picker-name">B站记录查询</span>
+                        <i class="fas fa-check game-picker-check" aria-hidden="true"></i>
+                    </a>
                     <a href="/tools/favicon/" class="game-picker-item utility-picker-item"
                         role="option" data-utility="favicon" aria-selected="false">
                         <span class="game-picker-emoji" aria-hidden="true">🖼️</span>
@@ -268,6 +273,44 @@
                 </div>
                 <p class="utility-credit">释义由 <a href="https://lab.magiconch.com/nbnhhsh/" target="_blank" rel="noopener noreferrer">「能不能好好说话？」</a>提供；查询内容会发送至该服务。查询结果来自第三方词库，可能包含不准确、过时或具有冒犯性的词语，仅供参考，不代表本站立场。</p>
             </section>
+
+            <section class="utility-view" id="aicu-view" aria-labelledby="aicu-title" hidden>
+    <div class="acronym-hero">
+        <span class="acronym-kicker">BILIBILI ARCHIVE</span>
+        <h3 id="aicu-title">B站记录查询</h3>
+        <p>输入 UID，查看已收录的评论、视频弹幕与用户资料。</p>
+    </div>
+    <div class="aicu-protected">
+        <div id="aicu-auth-overlay" class="aicu-auth-overlay" aria-labelledby="aicu-auth-title">
+            <form id="aicu-auth-form" class="aicu-auth-form">
+                <h3 id="aicu-auth-title">需要访问授权</h3>
+                <p>输入访问密码后可使用此功能。授权在此浏览器保存，24 小时后到期。</p>
+                <label for="aicu-password">访问密码</label>
+                <input id="aicu-password" type="password" autocomplete="off" maxlength="512" required>
+                <p id="aicu-auth-status" role="status" aria-live="polite">请输入访问密码。</p>
+                <button id="aicu-auth-submit" class="game-btn primary" type="submit">验证并解锁</button>
+            </form>
+        </div>
+        <div id="aicu-auth-content" inert>
+        <button id="aicu-logout" class="game-btn" type="button" hidden>退出授权</button>
+        <form id="aicu-form" class="aicu-form">
+            <label>用户 UID<input id="aicu-uid" inputmode="numeric" pattern="[0-9]{1,20}" maxlength="20" required autocomplete="off" placeholder="例如：2"></label>
+            <label>查询类型<select id="aicu-kind"><option value="replies">评论</option><option value="video-danmaku">视频弹幕</option><option value="history">历史用户名</option><option value="assets">粉丝牌 / 装扮</option></select></label>
+            <label id="aicu-keyword-label">关键词（选填）<input id="aicu-keyword" maxlength="80" autocomplete="off"></label>
+            <button class="game-btn primary" type="submit" id="aicu-submit">查询记录</button>
+            <button class="game-btn" type="button" id="aicu-cancel" hidden>取消查询</button>
+        </form>
+        <p class="utility-credit">收录可能不完整或有延迟，未查到不代表没有记录。</p>
+        <p id="aicu-status" role="status" aria-live="polite">输入 UID 后开始查询。</p>
+        <div id="aicu-results" aria-busy="false"></div>
+        <nav id="aicu-pagination" class="aicu-pagination" aria-label="查询结果分页" hidden>
+            <button type="button" class="game-btn" id="aicu-prev">上一页</button>
+            <span id="aicu-page" translate="no"></span>
+            <button type="button" class="game-btn" id="aicu-next">下一页</button>
+        </nav>
+        </div>
+    </div>
+</section>
 
             <section class="utility-view favicon-view" id="favicon-view" aria-labelledby="favicon-title" hidden>
                 <div class="acronym-hero">
@@ -741,7 +784,7 @@
     <source src="assets/audio/没有如果.mp3" type="audio/mpeg">
 </audio>
 
-<script src="src/scripts/i18n.js?v=d632b69c43"></script>
+<script src="src/scripts/i18n.js?v=3dd8c4c65f"></script>
 <script src="src/scripts/script.js?v=75a7b29289"></script>
 <script src="src/scripts/boss-battle.js?v=62c257ad94"></script>
 <script src="src/scripts/game.js?v=eadc706772"></script>
@@ -750,12 +793,12 @@
 <script src="src/scripts/wordle.js?v=e01284db42"></script>
 <script src="src/scripts/mini-games.js?v=962f853eb6"></script>
 <script src="vendor/jszip.min.js?v=acc7e41455"></script>
-<script src="src/scripts/utilities.js?v=aedb1ceda9"></script>
+<script src="src/scripts/utilities.js?v=3b45ea2597"></script>
 <script src="src/scripts/boss-key.js?v=dac778437d"></script>
 <script src="vendor/flame-wrap.js?v=7ff0908dc6"></script>
 <script src="src/scripts/appearance.js?v=63e82d6f6e"></script>
 <script type="module" src="src/scripts/particle-title.js?v=f2badaae0c"></script>
 <script src="src/scripts/site.js?v=9dbe7129dc"></script>
 <script id="freshcup-tool-script" data-tool="calculator" src="/src/scripts/freshcup/calculator.js?v=9599a913bf"></script>
-</body>
+<script src="/src/scripts/aicu.js?v=643348f76d"></script></body>
 </html>

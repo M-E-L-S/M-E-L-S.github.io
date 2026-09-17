@@ -42,6 +42,36 @@
         '只能输入英文字母':'Use English letters only.','词库中没有这个单词':'That word is not in the dictionary.','请选择有效的对齐位置':'Choose a valid alignment.','单词词库加载失败，请刷新页面重试':'The word list failed to load. Refresh and try again.'
         ,'题库说明：答案库从':'Word list: answers filtered from','中筛选出':'contain','个五字母单词；猜词库为宽泛英文词表中的五字母单词。':'five-letter answers; guesses use five-letter words from a broad English dictionary.','个 6–9 字母单词，6–7 字母优先抽取；猜词库为宽泛英文词表中长度介于 5 与本局答案长度之间的单词。':'6–9 letter answers, weighted toward 6–7 letters; guesses use broad-dictionary words from five letters up to the current answer length.'
     });
+    Object.assign(english, {
+        'B站记录查询': 'Bilibili archive',
+        '第 {page} 页 · 共 {count} 条收录': 'Page {page} · {count} archived records', '第 {page} 页': 'Page {page}',
+        '输入 UID，查看已收录的评论、视频弹幕与用户资料。': 'Enter a UID to explore archived comments, video comments and profile information.',
+        '用户 UID': 'User UID', '例如：2': 'For example: 2', '查询类型': 'Record type',
+        '评论': 'Comments', '视频弹幕': 'Video comments', '历史用户名': 'Previous usernames',
+        '粉丝牌 / 装扮': 'Fan medals / Collectibles', '粉丝牌': 'Fan medals', '装扮': 'Collectibles',
+        '关键词（选填）': 'Keyword (optional)', '查询记录': 'Search records', '取消查询': 'Cancel search',
+        '数据由': 'Data provided by',
+        '收录可能不完整或有延迟，未查到不代表没有记录。': 'Archives may be incomplete or delayed; no results do not imply no activity.',
+        '需要访问授权': 'Authorization required', '访问密码': 'Access password',
+        '输入访问密码后可使用此功能。授权在此浏览器保存，24 小时后到期。': 'Enter the access password to use this tool. Authorization is saved in this browser and expires in 24 hours.',
+        '请输入访问密码。': 'Enter the access password.', '验证并解锁': 'Verify and unlock', '退出授权': 'Sign out',
+        '正在验证授权…': 'Verifying authorization…', '授权已失效，请重新输入密码。': 'Authorization has expired or been revoked. Enter the password again.',
+        '访问密码不正确。': 'Incorrect access password.', '验证过于频繁，请一分钟后重试。': 'Too many attempts. Try again in a minute.',
+        '无法保存授权，请允许本站使用浏览器存储。': 'Cannot save authorization. Allow browser storage for this site.',
+        '验证失败，请检查网络或服务配置后重试。': 'Verification failed. Check the connection or service configuration and try again.',
+        '输入 UID 后开始查询。': 'Enter a UID to start searching.', '查询结果分页': 'Search result pages',
+        '上一页': 'Previous', '下一页': 'Next', '打开原视频': 'Open original video',
+        '查询完成。页码与收录总数见下方。': 'Search complete. Page number and archive count appear below.',
+        '没有查到记录；这不代表用户没有相关活动。': 'No records found. This does not imply no activity.',
+        '此项暂未获取成功，请稍后重新查询。': 'This section could not be loaded. Please try again later.',
+        '暂无收录。': 'No archived records.', '查询完成。': 'Search complete.',
+        '正在查询，繁忙时可能需要排队，请稍候…': 'Searching. Requests may queue when busy; please wait…',
+        '部分资料获取失败；已显示成功的部分，可稍后重新查询。': 'Some sections failed to load. Available data is shown; please try again later.',
+        '查询超时，请稍后重试。': 'Search timed out. Please try again later.', '查询已取消。': 'Search cancelled.',
+        '查询过于频繁，请一分钟后重试。': 'Too many requests. Please try again in a minute.',
+        '查询失败，请检查网络或稍后重试。': 'Search failed. Check your connection or try again later.',
+        '请输入有效的数字 UID。': 'Please enter a valid numeric UID.'
+    });
     const englishFragments = {
         '当前模式：':'Current mode: ','竞速':'Time Attack','常规':'Classic','当前难度：':'Current difficulty: ','限时 ':'Time limit: ','点击「开始游戏」出发！':'Select “Start game” to begin!',' 种花色':' suits',' 张牌':' cards','同花色的 K→A 连满 13 张会自动收起，收齐 8 组获胜':'A complete same-suit K-to-A run is removed automatically; complete all eight to win.','点击「开始游戏」发牌':'Select “Start game” to deal.','颗地雷':' mines','第一次点击必定安全':'The first click is always safe','正在加载单词词库…':'Loading word list…','单词词库加载失败，请刷新页面重试':'The word list failed to load. Refresh and try again.','填入 ':'Enter ',' 个字母':' letters','答案有 ':'The answer has ','还剩 ':'',' 次机会':' attempts left','已暂停':'Paused','继续游戏':'Resume game','切换到其他页面或其他小游戏会自动暂停，':'Switching pages or games pauses automatically. ','回到本页将自动继续':'Returning here resumes automatically.','难度：':'Difficulty: ','用时 ':'Time ','步数 ':'Moves ','新纪录！':'New record!','通关奖励 ':'Clear bonus ','最终得分 ':'Final score ','本局得分 ':'Score ','剩余时间加分 ':'Time bonus ','剩余道具加分 ':'Tool bonus ','剩余 ':'remaining ',' 次）':' times)','第 ':'',' 列':' column','发牌前每列都得有牌':'Every column must contain a card before dealing.','已悔棋':'Move undone','把第 ':'Move cards from column ','列的牌移到第 ':' to column ','收齐一组 ':'Completed one run of ','一次收起 ':'Completed ',' 组！':' runs!'
     };
