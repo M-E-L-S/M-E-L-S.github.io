@@ -46,12 +46,34 @@ test('password, signing secret and version independently revoke existing tokens'
 test('all query routes authenticate before touching shared cached data', async () => {
   let hits = 0;
   globalThis.caches = { default: { match: async () => { hits++; return Response.json({ ok: true, data: {} }); } } };
-  for (const path of ['replies', 'video-danmaku', 'history', 'assets']) {
+  for (const path of ['replies', 'video-danmaku', 'live-danmaku', 'history', 'assets']) {
     assert.equal((await fetchWorker(request(`${path}?uid=2`))).status, 401);
   }
   assert.equal(hits, 0);
   const response = await fetchWorker(request('history?uid=2', await getToken()));
   assert.equal(response.status, 200); assert.equal(response.headers.get('X-Cache'), 'HIT'); assert.equal(hits, 1);
+});
+test('live danmaku is fetched server-side, normalized and paginated from page one', async () => {
+  const token = await getToken();
+  const originalFetch = globalThis.fetch;
+  let upstreamUrl;
+  globalThis.caches = { default: { match: async () => null, put: async () => {} } };
+  globalThis.fetch = async input => {
+    upstreamUrl = new URL(input);
+    return Response.json({ code: 200, message: '成功', data: { total: 1, pageNum: 0, pageSize: 10, hasMore: false, data: { records: [{ channel: { uId: 9, uName: '主播', roomId: 99, faceUrl: 'private-extra' }, live: { liveId: 'live-id', title: '直播标题', startDate: 1000, stopDate: 2000, coverUrl: 'private-extra' }, danmakus: [{ uId: 2, uName: '用户', type: 0, sendDate: 1500, message: '你好', uploadAccountId: 8 }] }] } } });
+  };
+  try {
+    const response = await fetchWorker(request('live-danmaku?uid=2&pn=1&ps=10', token, { headers: { 'CF-Connecting-IP': '192.0.2.1' } }), { ...env, AICU_RATE_LIMITER: { limit: async () => ({ success: true }) }, AICU_GLOBAL_LIMITER: { limit: async () => ({ success: true }) } });
+    assert.equal(response.status, 200);
+    assert.equal(upstreamUrl.origin, 'https://ukamnads.icu');
+    assert.equal(upstreamUrl.searchParams.get('pageNum'), '0');
+    const body = await response.json();
+    assert.equal(body.data.records[0].danmakus[0].message, '你好');
+    assert.equal(body.data.records[0].channel.faceUrl, undefined);
+    assert.equal(body.data.records[0].danmakus[0].uploadAccountId, undefined);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 test('missing configuration and broken login limiter fail closed', async () => {
   assert.equal((await fetchWorker(request('history?uid=2'), {})).status, 503);

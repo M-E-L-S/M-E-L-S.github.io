@@ -3,6 +3,7 @@ import { authorize, login } from './auth.js';
 const CONFIG = {
   allowedOrigin: "https://m-e-l-s.github.io",
   upstreamOrigin: "https://api.aicu.cc",
+  liveDanmakuOrigin: "https://ukamnads.icu",
 
   v3TimeoutMs: 8000,
   requestTimeoutMs: 10000,
@@ -23,6 +24,7 @@ const CONFIG = {
   cacheTtl: {
     replies: 600,
     videoDanmaku: 600,
+    liveDanmaku: 600,
     history: 21600,
     assets: 21600,
   },
@@ -31,6 +33,7 @@ const CONFIG = {
 const ROUTES = new Map([
   ["/api/aicu/replies", "replies"],
   ["/api/aicu/video-danmaku", "videoDanmaku"],
+  ["/api/aicu/live-danmaku", "liveDanmaku"],
   ["/api/aicu/history", "history"],
   ["/api/aicu/assets", "assets"],
 ]);
@@ -383,9 +386,10 @@ function integerParam(url, name, fallback, min, max) {
 function parseParams(url, type) {
   const search =
     type === "replies" || type === "videoDanmaku";
+  const paged = search || type === "liveDanmaku";
 
   const allowed = new Set(
-    search
+    paged
       ? ["uid", "pn", "ps", "keyword", "stime", "etime"]
       : ["uid"],
   );
@@ -414,7 +418,7 @@ function parseParams(url, type) {
 
   const params = { uid };
 
-  if (!search) return params;
+  if (!paged) return params;
 
   params.pn = String(
     integerParam(url, "pn", 1, 1, CONFIG.maxPage),
@@ -423,6 +427,8 @@ function parseParams(url, type) {
   params.ps = String(
     integerParam(url, "ps", 100, 1, CONFIG.maxPageSize),
   );
+
+  if (type === "liveDanmaku") return params;
 
   const keyword = url.searchParams.get("keyword") ?? "";
 
@@ -459,6 +465,75 @@ function parseParams(url, type) {
   }
 
   return params;
+}
+
+function cleanLiveDanmaku(data) {
+  if (!isObject(data) || !isObject(data.data) || !Array.isArray(data.data.records)) {
+    throw new ApiError("invalid_response_shape");
+  }
+
+  return {
+    total: Number.isSafeInteger(data.total) && data.total >= 0 ? data.total : 0,
+    hasMore: data.hasMore === true,
+    records: data.data.records.map((record) => {
+      if (!isObject(record) || !isObject(record.channel) || !isObject(record.live) || !Array.isArray(record.danmakus)) {
+        throw new ApiError("invalid_response_shape");
+      }
+      return {
+        channel: {
+          uid: record.channel.uId,
+          name: record.channel.uName,
+          roomId: record.channel.roomId,
+        },
+        live: {
+          id: record.live.liveId,
+          title: record.live.title,
+          startDate: record.live.startDate,
+          stopDate: record.live.stopDate,
+        },
+        danmakus: record.danmakus.map((item) => ({
+          uid: item?.uId,
+          name: item?.uName,
+          type: item?.type,
+          sendDate: item?.sendDate,
+          message: item?.message,
+          price: item?.price,
+          count: item?.count,
+        })),
+      };
+    }),
+  };
+}
+
+async function queryLiveDanmaku(params) {
+  const url = new URL("/api/v2/user", CONFIG.liveDanmakuOrigin);
+  url.searchParams.set("uid", params.uid);
+  url.searchParams.set("target", "0");
+  url.searchParams.set("pageNum", String(Number(params.pn) - 1));
+  url.searchParams.set("pageSize", params.ps);
+  url.searchParams.set("useEmoji", "false");
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CONFIG.requestTimeoutMs);
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: "application/json", "User-Agent": "MELS-Worker/1.0" },
+      redirect: "manual",
+      signal: controller.signal,
+    });
+    if (!response.ok || (response.headers.get("content-type") ?? "").includes("text/html")) {
+      return failure("http_error", { status: response.status });
+    }
+    const text = await readLimitedText(response, controller);
+    const body = JSON.parse(text);
+    if (!isObject(body) || body.code !== 200) return failure("business_error", { status: response.status, code: body?.code, message: safeMessage(body?.message) });
+    return { success: true, source: "ukamnads-v2", fallbackUsed: false, data: cleanLiveDanmaku(body.data) };
+  } catch (error) {
+    return failure(errorReason(error, controller.signal));
+  } finally {
+    clearTimeout(timer);
+    controller.abort();
+  }
 }
 
 // code=0 之外，再检查功能所需的数据结构。
@@ -947,6 +1022,8 @@ async function handleApi(request, env, ctx, type) {
   const result =
     type === "assets"
       ? await queryAssets(params)
+      : type === "liveDanmaku"
+        ? await queryLiveDanmaku(params)
       : await queryVersioned(type, params);
 
   if (!result.success) {

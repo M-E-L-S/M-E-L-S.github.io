@@ -119,6 +119,37 @@
             if (window.MELSI18n) window.MELSI18n.bind($('page'), pageLabel, { page, count });
             else $('page').textContent = pageLabel.replace('{page}', page).replace('{count}', count);
             say(list.length ? '查询完成。页码与收录总数见下方。' : '没有查到记录；这不代表用户没有相关活动。');
+        } else if (kind === 'live-danmaku') {
+            if (!Array.isArray(data.records) || typeof data.hasMore !== 'boolean') throw new Error('format');
+            data.records.forEach(record => {
+                if (!record?.channel || !record?.live || !Array.isArray(record.danmakus)) throw new Error('format');
+                const card = node('article', ''); card.className = 'aicu-record';
+                card.append(node('h4', record.live.title || '未命名直播', true));
+                const roomId = record.channel.roomId;
+                if (numeric(roomId)) card.append(link(record.channel.name || `直播间 ${roomId}`, `https://live.bilibili.com/${roomId}`));
+                else card.append(node('p', record.channel.name || '未知主播', true));
+                const start = Number(record.live.startDate);
+                if (start > 0 && Number.isFinite(new Date(start).getTime())) card.append(node('small', `开播：${new Date(start).toLocaleString()}`, true));
+                const ul = node('ul', '');
+                record.danmakus.forEach(item => {
+                    const type = Number(item?.type);
+                    const label = type === 0 ? '弹幕' : `直播互动（类型 ${Number.isInteger(type) ? type : '未知'}）`;
+                    const content = item?.message || (item?.price != null ? `${label} · ¥${item.price}` : item?.count != null ? `${label} × ${item.count}` : label);
+                    const stamp = Number(item?.sendDate);
+                    const time = stamp > 0 && Number.isFinite(new Date(stamp).getTime()) ? ` · ${new Date(stamp).toLocaleString()}` : '';
+                    ul.append(node('li', `${content}${time}`, true));
+                });
+                if (record.danmakus.length) card.append(ul); else card.append(node('p', '该场直播暂无可显示记录。'));
+                fragment.append(card);
+            });
+            $('pagination').hidden = data.records.length === 0 && page === 1;
+            $('next').disabled = !data.hasMore || page >= 1000;
+            $('prev').disabled = page <= 1;
+            const count = data.total;
+            const pageLabel = Number.isSafeInteger(count) && count >= 0 ? '第 {page} 页 · 共 {count} 场直播' : '第 {page} 页';
+            if (window.MELSI18n) window.MELSI18n.bind($('page'), pageLabel, { page, count });
+            else $('page').textContent = pageLabel.replace('{page}', page).replace('{count}', count);
+            say(data.records.length ? '查询完成。直播弹幕按直播场次展示。' : '没有查到直播弹幕；这不代表用户没有相关活动。');
         } else {
             const groups = kind === 'history' ? [['历史用户名', data.hname]] : [['粉丝牌', data.medals], ['装扮', data.collections]];
             for (const [title, list] of groups) {
@@ -153,8 +184,10 @@
         try {
             const url = new URL(`/api/aicu/${query.kind}`, API);
             url.searchParams.set('uid', query.uid);
+            if (['replies', 'video-danmaku', 'live-danmaku'].includes(query.kind)) {
+                url.searchParams.set('pn', String(page)); url.searchParams.set('ps', query.kind === 'live-danmaku' ? '10' : '20');
+            }
             if (['replies', 'video-danmaku'].includes(query.kind)) {
-                url.searchParams.set('pn', String(page)); url.searchParams.set('ps', '20');
                 url.searchParams.set('keyword', query.keyword);
             }
             const response = await fetch(url, { signal: controller.signal, credentials: 'omit', cache: 'no-store', headers: { Authorization: `Bearer ${token}` } });
