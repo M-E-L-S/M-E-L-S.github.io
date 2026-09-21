@@ -43,6 +43,30 @@
         ,'题库说明：答案库从':'Word list: answers filtered from','中筛选出':'contain','个五字母单词；猜词库为宽泛英文词表中的五字母单词。':'five-letter answers; guesses use five-letter words from a broad English dictionary.','个 6–9 字母单词，6–7 字母优先抽取；猜词库为宽泛英文词表中长度介于 5 与本局答案长度之间的单词。':'6–9 letter answers, weighted toward 6–7 letters; guesses use broad-dictionary words from five letters up to the current answer length.'
     });
     Object.assign(english, {
+        'ARG 辅助器':'ARG Assistant','ARG 辅助器页面':'ARG Assistant pages','ARG 辅助器 · 小功能 · MELS':'ARG Assistant · Tools · MELS','支持的编码与密码 · ARG 辅助器 · MELS':'Supported Encodings and Ciphers · ARG Assistant · MELS',
+        '切换功能，当前：ARG 辅助器':'Switch tools. Current: ARG Assistant','切换功能（当前：ARG 辅助器）':'Switch tools (current: ARG Assistant)',
+        '自动探索':'Auto Decode','支持的编码与密码':'Supported Encodings and Ciphers','全自动多层解密工具':'Automatic Multi-layer Decoder','看懂一切暗语。 *本标语是产品目标，不是效果保证。':'Make sense of every secret message. *This is a product goal, not a guarantee.','待分析文本':'Text to analyze','粘贴各类编码、密码甚至多层嵌套密码……':'Paste an encoding, cipher, or even a multi-layer puzzle…','最大深度':'Maximum depth','节点预算':'Node budget','开始解密':'Start decoding','停止':'Stop',
+        '输入文本后开始分析；所有计算都在此设备完成。不会上传云端。':'Enter text to begin. All processing stays on this device and is never uploaded.','搜索结果与解码路径会显示在这里':'Candidate results and decoding paths will appear here.','本工具是面向ARG等场合的常见加密解码工具，不是也将不会是用来暴力破解 AES、RSA 等现代密码的工具。':'This tool decodes common encodings and classical ciphers used in ARGs. It is not, and will not become, a brute-force tool for modern cryptography such as AES or RSA.','当前共有 16 类 decoder。':'Sixteen decoder types are currently supported.',
+        '将二进制数据表示为 ASCII 字符。识别标准字母表、四字符分组与可选的 = 补位；解码结果必须是有效 UTF-8。':'Represents binary data as ASCII characters. It recognizes the standard alphabet, four-character groups, and optional = padding; decoded output must be valid UTF-8.',
+        '使用 A–Z 和 2–7 表示数据，常见于密钥和不区分大小写的文本传输；解码结果必须是有效 UTF-8。':'Represents data with A–Z and 2–7. It is common in keys and case-insensitive transport; decoded output must be valid UTF-8.',
+        '使用 Bitcoin 字母表并排除容易混淆的 0、O、I、l。格式本身没有校验和，因此识别置信度低于 Base64。':'Uses the Bitcoin alphabet and omits the easily confused 0, O, I, and l. The format has no checksum, so detection confidence is lower than Base64.',
+        '以五个可打印字符表示四个字节，支持 Adobe 的 <~ … ~> 包裹格式和零字节缩写 z。':'Represents four bytes with five printable characters. Adobe <~ … ~> wrappers and the z zero-block shorthand are supported.',
+        '把每个字节写成两个十六进制数字，支持空格、冒号、逗号和连字符分隔；结果必须是有效 UTF-8。':'Writes each byte as two hexadecimal digits. Spaces, colons, commas, and hyphens are accepted as separators; output must be valid UTF-8.',
+        '识别 %xx 转义，并按照 URI 组件规则每次还原一层。搜索器会继续检测解码后的结果，因此可以自动处理多层百分号编码。':'Recognizes %xx escapes and restores one URI-component layer at a time. Decoded output is analyzed again, allowing nested percent encoding to be unwrapped automatically.',
+        '支持十进制、十六进制数字实体，以及 amp、lt、gt、quot、apos。':'Supports decimal and hexadecimal numeric entities plus amp, lt, gt, quot, and apos.',
+        '把连续的 8 位二进制组解释成字符码，组间可以使用空白或常见分隔符。':'Interprets consecutive eight-bit binary groups as character codes, with whitespace or common punctuation between groups.',
+        '把 0–255 的十进制数字序列转换为字符，支持空白、冒号、逗号和连字符分隔。':'Converts decimal values from 0 to 255 into characters, accepting whitespace, colons, commas, and hyphens as separators.',
+        '还原 JavaScript 和 JSON 文本中常见的 \\uXXXX 与 \\xXX 转义。':'Restores common \\uXXXX and \\xXX escapes used in JavaScript and JSON text.',
+        '把 1–26 映射为 A–Z，支持空格及常见标点作为数字分隔符。':'Maps 1–26 to A–Z, accepting spaces and common punctuation as number separators.',
+        '把每五个 A/B 字符视为一个五位二进制数，并映射到 A–Z。':'Treats every five A/B characters as a five-bit value and maps it to A–Z.',
+        '支持拉丁字母与数字；字符以空白分隔，单词以斜杠分隔。':'Supports Latin letters and digits. Whitespace separates characters and slashes separate words.',
+        '枚举 1–25 的全部字母移位，不改变非字母字符。ROT13 是位移 13 的自反特例。':'Tries all 25 alphabet shifts while preserving non-letter characters. ROT13 is the self-inverse shift-13 case.',
+        '把拉丁字母表首尾互换：A↔Z、B↔Y。它是自反变换，应用两次会回到原文。':'Reverses the Latin alphabet: A↔Z and B↔Y. It is self-inverse, so applying it twice restores the input.',
+        '按 Unicode 字符顺序反转输入，用于常见的倒写谜题。它同样是自反变换。':'Reverses the input by Unicode character order for common backward-text puzzles. This transformation is also self-inverse.',
+        '没有找到可信候选。可提高深度或节点预算后重试。':'No credible candidates were found. Try a greater depth or node budget.','候选 {index}':'Candidate {index}','文本评分 {score} · 深度 {depth}':'Text score {score} · Depth {depth}','复制结果':'Copy result','已复制':'Copied','解码路径':'Decoding path',
+        '正在生成并排序搜索节点…':'Generating and ranking search nodes…','正在加载英文词库…':'Loading the English dictionary…','已展开 {expanded} 个节点，生成 {generated} 个不同状态，队列中还有 {queued} 个。':'Expanded {expanded} nodes, generated {generated} distinct states, with {queued} still queued.','搜索完成。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。':'Search complete. Expanded {expanded} nodes, generated {generated} distinct states, and showing the top {count} candidates.','搜索已停止。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。':'Search stopped. Expanded {expanded} nodes, generated {generated} distinct states, and showing the top {count} candidates.','搜索组件加载失败，请刷新页面后重试。':'The search component failed to load. Refresh the page and try again.','空输出':'Empty output','正常中文，视为明文':'Natural Chinese detected; treated as plaintext','检测到典型中文乱码':'Typical Chinese mojibake detected','有效 JSON':'Valid JSON','包含 URL':'Contains a URL','英文词命中':'Common English word found'
+    });
+    Object.assign(english, {
         'B站记录查询': 'Bilibili archive',
         '第 {page} 页 · 共 {count} 条收录': 'Page {page} · {count} archived records', '第 {page} 页': 'Page {page}',
         '输入 UID，查看已收录的评论、视频弹幕与用户资料。': 'Enter a UID to explore archived comments, video comments and profile information.',
@@ -77,6 +101,7 @@
     };
     english['老板键 · Alt + B'] = 'Boss key · Alt + B';
     Object.assign(englishFragments, {'初级':'Beginner','中级':'Intermediate','高级':'Expert','坚持了 ':'Survived ','，翻开 ':' · Revealed ',' 个安全格':' safe cells','正面朝上':'face up','黑桃':'spades','红桃':'hearts','梅花':'clubs','方块':'diamonds'});
+    Object.assign(englishFragments, {'可打印字符 ':'Printable characters ','熵 ':'Entropy ','英文词库命中 ':'English dictionary matches ','查看 ':'View ',' 介绍':' reference'});
     Object.assign(english, {
         '核心已摧毁':'Core destroyed','对决结束':'Battle over','攻击间隔':'Attack interval','瞄准第一个方块':'Targeting first tile','选中第一个 · 瞄准第二个':'First selected · Targeting second tile','🌑 夜幕降临':'🌑 Nightfall','⚔ 同台竞技':'⚔ Match race','🔥 狂暴模式':'🔥 Rage mode','施放中':'Active','就绪':'Ready','机器人已锁定此类方块':'The robot locked this tile type.','BOSS 正在复活：可点选，暂时无法消除':'The BOSS is reviving: tiles may be selected but not cleared.','🔒 消除已冻结 · 可以观看、点选 · 复活结束后恢复消除':'🔒 Matching frozen · You may inspect and select · Matching resumes after revival','🔥 狂暴模式发动 · BOSS 正在重排剩余方块':'🔥 Rage mode · The BOSS is rearranging remaining tiles','普通攻击 · 基础 10 / 连击 +5':'Normal attack · Base 10 / Combo +5'
     });

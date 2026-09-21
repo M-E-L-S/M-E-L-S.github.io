@@ -55,9 +55,16 @@ const fixtures = new Map([
     ['选择干员', '选择干员'],
     ['攻速藏品', '攻速藏品'],
     ['请输入敌方防御力！', '请输入敌方防御力！'],
-    ['音量 35%', 'Volume 35%']
+    ['音量 35%', 'Volume 35%'],
+    ['全自动多层解密工具', 'Automatic Multi-layer Decoder'],
+    ['开始解密', 'Start decoding'],
+    ['可打印字符 100%', 'Printable characters 100%'],
+    ['正常中文，视为明文', 'Natural Chinese detected; treated as plaintext']
 ]);
 for (const [source, expected] of fixtures) assert.equal(i18n.t(source), expected, source);
+assert.equal(i18n.t('候选 {index}', {index: 3}), 'Candidate 3');
+assert.equal(i18n.t('文本评分 {score} · 深度 {depth}', {score: '82.5', depth: 2}), 'Text score 82.5 · Depth 2');
+assert.equal(i18n.t('搜索完成。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。', {expanded: 40, generated: 90, count: 12}), 'Search complete. Expanded 40 nodes, generated 90 distinct states, and showing the top 12 candidates.');
 // HTML breaks a result into separate nodes; all nodes must round-trip independently.
 const sources = ['难度：单色 · 用时 ', '6:56', ' · 步数 ', '115', ' · 新纪录！', '通关奖励 +6，最终得分 ', '1381'];
 root.childNodes = sources.map(text);

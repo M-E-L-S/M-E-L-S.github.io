@@ -325,47 +325,47 @@
     <div id="arg-search-panel">
     <div class="acronym-hero">
         <span class="acronym-kicker">ARG DECODING ASSISTANT</span>
-        <h3 id="arg-title">自动探索编码与古典密码</h3>
-        <p>在本地浏览器中搜索可能的解码路径，并保留每一步 recipe。结果是候选线索，不是确定结论。</p>
+        <h3 id="arg-title">全自动多层解密工具</h3>
+        <p>看懂一切暗语。 *本标语是产品目标，不是效果保证。</p>
     </div>
     <form id="arg-form" class="arg-form" action="#" novalidate>
         <label for="arg-input">待分析文本</label>
         <textarea id="arg-input" rows="7" maxlength="20000" spellcheck="false" translate="no"
-            placeholder="粘贴 Base64、Hex、URL 编码、凯撒密码或多层嵌套文本……"></textarea>
+            placeholder="粘贴各类编码、密码甚至多层嵌套密码……"></textarea>
         <div class="arg-controls">
             <label>最大深度
-                <select id="arg-depth"><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+                <select id="arg-depth"><option>1</option><option selected>2</option><option>5</option><option>10</option></select>
             </label>
             <label>节点预算
-                <select id="arg-budget"><option>100</option><option selected>300</option><option>800</option><option>1500</option></select>
+                <select id="arg-budget"><option>100</option><option selected>500</option><option>1000</option><option>2000</option></select>
             </label>
-            <button class="game-btn primary" id="arg-run" type="submit"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> 开始探索</button>
+            <button class="game-btn primary" id="arg-run" type="submit"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> 开始解密</button>
             <button class="game-btn" id="arg-stop" type="button" hidden>停止</button>
         </div>
     </form>
-    <div class="arg-summary" id="arg-summary" role="status" aria-live="polite">输入文本后开始分析；所有计算都在此设备完成。</div>
+    <div class="arg-summary" id="arg-summary" role="status" aria-live="polite">输入文本后开始分析；所有计算都在此设备完成。不会上传云端。</div>
     <div class="arg-results" id="arg-results" aria-live="polite" aria-busy="false">
         <div class="acronym-empty"><span aria-hidden="true">🧭</span><p>搜索结果与解码路径会显示在这里</p></div>
     </div>
-    <p class="utility-credit">当前版本面向编码、文本变换和古典密码，不尝试破解 AES、RSA 等没有密钥的现代密码。</p>
+    <p class="utility-credit">本工具是面向ARG等场合的常见加密解码工具，不是也将不会是用来暴力破解 AES、RSA 等现代密码的工具。</p>
     </div>
     <article class="arg-reference" id="arg-reference-panel" hidden>
         <header class="acronym-hero">
             <span class="acronym-kicker">SUPPORTED DECODERS</span>
             <h3>支持的编码与密码</h3>
-            <p>当前共有 16 类 decoder。格式置信度表示“值得尝试”，不表示结果一定正确。</p>
+            <p>当前共有 16 类 decoder。</p>
         </header>
         <div class="arg-reference-grid">
-            <section id="decoder-base64"><h4>Base64</h4><p>将二进制数据表示为 ASCII 字符。识别标准字母表、四字符分组与可选的 <code>=</code> 补位；解码结果必须是有效 UTF-8。</p><code class="arg-example">SGVsbG8gV29ybGQ= → Hello World</code></section>
+            <section id="decoder-base64"><h4>Base64</h4><p>将二进制数据表示为 ASCII 字符。识别标准字母表、四字符分组与可选的 = 补位；解码结果必须是有效 UTF-8。</p><code class="arg-example">SGVsbG8gV29ybGQ= → Hello World</code></section>
             <section id="decoder-base32"><h4>Base32</h4><p>使用 A–Z 和 2–7 表示数据，常见于密钥和不区分大小写的文本传输；解码结果必须是有效 UTF-8。</p><code class="arg-example">JBSWY3DPEBLW64TMMQ====== → Hello World</code></section>
             <section id="decoder-base58"><h4>Base58</h4><p>使用 Bitcoin 字母表并排除容易混淆的 0、O、I、l。格式本身没有校验和，因此识别置信度低于 Base64。</p><code class="arg-example">JxF12TrwUP45BMd → Hello World</code></section>
-            <section id="decoder-ascii85"><h4>ASCII85</h4><p>以五个可打印字符表示四个字节，支持 Adobe 的 <code>&lt;~ … ~&gt;</code> 包裹格式和零字节缩写 <code>z</code>。</p><code class="arg-example">&lt;~87cURD]i,"Ebo7~&gt; → Hello World</code></section>
+            <section id="decoder-ascii85"><h4>ASCII85</h4><p>以五个可打印字符表示四个字节，支持 Adobe 的 &lt;~ … ~&gt; 包裹格式和零字节缩写 z。</p><code class="arg-example">&lt;~87cURD]i,"Ebo7~&gt; → Hello World</code></section>
             <section id="decoder-hex"><h4>Hex 十六进制</h4><p>把每个字节写成两个十六进制数字，支持空格、冒号、逗号和连字符分隔；结果必须是有效 UTF-8。</p><code class="arg-example">48 65 6c 6c 6f → Hello</code></section>
-            <section id="decoder-url"><h4>URL Percent-Encoding</h4><p>识别 <code>%xx</code> 转义，并按照 URI 组件规则每次还原一层。搜索器会继续检测解码后的结果，因此可以自动处理多层百分号编码。</p><code class="arg-example">Hello%2520World → Hello%20World → Hello World</code></section>
-            <section id="decoder-html"><h4>HTML Entity</h4><p>支持十进制、十六进制数字实体，以及 <code>amp</code>、<code>lt</code>、<code>gt</code>、<code>quot</code>、<code>apos</code>。</p><code class="arg-example">&amp;#72;&amp;#105; → Hi</code></section>
+            <section id="decoder-url"><h4>URL Percent-Encoding</h4><p>识别 %xx 转义，并按照 URI 组件规则每次还原一层。搜索器会继续检测解码后的结果，因此可以自动处理多层百分号编码。</p><code class="arg-example">Hello%2520World → Hello%20World → Hello World</code></section>
+            <section id="decoder-html"><h4>HTML Entity</h4><p>支持十进制、十六进制数字实体，以及 amp、lt、gt、quot、apos。</p><code class="arg-example">&amp;#72;&amp;#105; → Hi</code></section>
             <section id="decoder-binary"><h4>Binary 二进制字符码</h4><p>把连续的 8 位二进制组解释成字符码，组间可以使用空白或常见分隔符。</p><code class="arg-example">01001000 01101001 → Hi</code></section>
             <section id="decoder-decimal"><h4>Decimal 十进制字符码</h4><p>把 0–255 的十进制数字序列转换为字符，支持空白、冒号、逗号和连字符分隔。</p><code class="arg-example">72 105 → Hi</code></section>
-            <section id="decoder-unicode"><h4>Unicode / Hex Escape</h4><p>还原 JavaScript 和 JSON 文本中常见的 <code>\uXXXX</code> 与 <code>\xXX</code> 转义。</p><code class="arg-example">\u0048\u0069 → Hi</code></section>
+            <section id="decoder-unicode"><h4>Unicode / Hex Escape</h4><p>还原 JavaScript 和 JSON 文本中常见的 \uXXXX 与 \xXX 转义。</p><code class="arg-example">\u0048\u0069 → Hi</code></section>
             <section id="decoder-a1z26"><h4>A1Z26</h4><p>把 1–26 映射为 A–Z，支持空格及常见标点作为数字分隔符。</p><code class="arg-example">8 5 12 12 15 → HELLO</code></section>
             <section id="decoder-bacon"><h4>Bacon Cipher</h4><p>把每五个 A/B 字符视为一个五位二进制数，并映射到 A–Z。</p><code class="arg-example">aabbb aabaa ababb ababb abbba → HELLO</code></section>
             <section id="decoder-morse"><h4>Morse 摩尔斯电码</h4><p>支持拉丁字母与数字；字符以空白分隔，单词以斜杠分隔。</p><code class="arg-example">.... .. / - .... . .-. . → HI THERE</code></section>
@@ -373,12 +373,6 @@
             <section id="decoder-atbash"><h4>Atbash</h4><p>把拉丁字母表首尾互换：A↔Z、B↔Y。它是自反变换，应用两次会回到原文。</p><code class="arg-example">Svool → Hello</code></section>
             <section id="decoder-reverse"><h4>Reverse 文本反转</h4><p>按 Unicode 字符顺序反转输入，用于常见的倒写谜题。它同样是自反变换。</p><code class="arg-example">dlroW olleH → Hello World</code></section>
         </div>
-        <section class="arg-algorithm-note">
-            <h4>自动探索如何工作</h4>
-            <p>每个文本状态都是一个节点。系统从全局候选队列取出当前优先级最高的节点，运行所有 decoder 的轻量格式检测，只执行置信度大于零的 decoder，再将未见过的结果放回队列。</p>
-            <p>当前优先级为：文本质量分 + 格式置信度 × 18 + 质量改善 × 0.25（最低截断为 −12）− 深度 × 4。英文质量使用 Wordle 的宽泛英文词库计算命中数与命中率；包含正常汉字且未命中典型乱码特征的节点视为明文，不再向下展开。</p>
-            <p>搜索受最大深度、节点预算和队列上限约束，最后仍按同一启发式优先级返回前 12 项，使高置信度的确定性解码不会被表面上更像文本的猜测性结果挤掉。英文词库来自本站 Wordle 使用的 <code>word-list</code> 数据。</p>
-        </section>
     </article>
 </section>
 
@@ -1328,7 +1322,7 @@
     <source src="assets/audio/没有如果.mp3" type="audio/mpeg">
 </audio>
 
-<script src="src/scripts/i18n.js?v=3dd8c4c65f"></script>
+<script src="src/scripts/i18n.js?v=5822ba6508"></script>
 <script src="src/scripts/script.js?v=75a7b29289"></script>
 <script src="src/scripts/boss-battle.js?v=62c257ad94"></script>
 <script src="src/scripts/game.js?v=eadc706772"></script>
@@ -1344,5 +1338,5 @@
 <script type="module" src="src/scripts/particle-title.js?v=f2badaae0c"></script>
 <script src="src/scripts/site.js?v=9dbe7129dc"></script>
 <script id="freshcup-tool-script" data-tool="scoreboard_4" src="/src/scripts/freshcup/scoreboard_4.js?v=105d846dfe"></script>
-<script src="/src/scripts/aicu.js?v=086a9ec5a0"></script><script defer src="/src/scripts/arg.js?v=ba22d714fb"></script></body>
+<script src="/src/scripts/aicu.js?v=086a9ec5a0"></script><script defer src="/src/scripts/arg.js?v=d55cf8781d"></script></body>
 </html>
