@@ -284,14 +284,14 @@
         if (!picker || !pickerBtn || !menu || !input || !form || !submit || !results) return;
 
         function showUtility(name, updateTitle = true) {
-            const selected = ['favicon', 'aicu'].includes(name) ? name : 'acronym';
+            const selected = ['favicon', 'aicu', 'arg'].includes(name) ? name : 'acronym';
             document.querySelectorAll('.utility-view').forEach((view) => { view.hidden = view.id !== `${selected}-view`; });
             menu.querySelectorAll('.utility-picker-item').forEach((item) => {
                 const active = item.dataset.utility === selected;
                 item.classList.toggle('active', active);
                 item.setAttribute('aria-selected', active ? 'true' : 'false');
             });
-            const label = { favicon: 'Favicon 图包', aicu: 'B站记录查询', acronym: '缩写转义' }[selected];
+            const label = { favicon: 'Favicon 图包', aicu: 'B站记录查询', arg: 'ARG 辅助器', acronym: '缩写转义' }[selected];
             pickerBtn.title = `切换功能（当前：${label}）`;
             pickerBtn.setAttribute('aria-label', `切换功能，当前：${label}`);
             if (updateTitle) document.title = `${label} · 小功能 · MELS`;
@@ -344,7 +344,7 @@
             debounceTimer = setTimeout(() => lookup(input, results, submit), 450);
         });
 
-        const fromPath = () => location.pathname.startsWith('/tools/aicu') ? 'aicu' : location.pathname.startsWith('/tools/favicon') ? 'favicon' : 'acronym';
+        const fromPath = () => location.pathname.startsWith('/tools/aicu') ? 'aicu' : location.pathname.startsWith('/tools/favicon') ? 'favicon' : location.pathname.startsWith('/tools/arg') ? 'arg' : 'acronym';
         const utilityFromPath = fromPath();
         showUtility(utilityFromPath, location.pathname.startsWith('/tools'));
         addEventListener('popstate', () => showUtility(fromPath(), location.pathname.startsWith('/tools')));

@@ -4,6 +4,8 @@ const path = require('node:path');
 const root = path.resolve(__dirname,'..');
 const routes = ['index.html','about/index.html','tools/index.html','tools/acronym/index.html','minigame/index.html','minigame/link/index.html','minigame/minesweeper/index.html','minigame/spider/index.html','minigame/wordle/index.html','freshcup/index.html','freshcup/sarkaz/index.html','freshcup/sami/index.html','freshcup/calculator/index.html'];
 routes.push('tools/aicu/index.html');
+routes.push('tools/arg/index.html');
+routes.push('tools/arg/reference/index.html');
 const requiredNotices = ['LICENSE.md','FRESHCUP-NONCOMMERCIAL-LICENSE.md','BOSS-NONCOMMERCIAL-LICENSE.md','LONG-WORDLE-NONCOMMERCIAL-LICENSE.md','THIRD_PARTY_AND_CONTENT_NOTICE.md','vendor/CanvasUI-LICENSE.md'];
 for (const notice of requiredNotices) {
  if(!fs.existsSync(path.join(root,notice))) throw Error(`Missing license or notice: ${notice}`);
