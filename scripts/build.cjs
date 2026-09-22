@@ -15,7 +15,11 @@ function freshcup(tool) {
   return `<section class="page" id="freshcup"><header class="section-heading"><p class="eyebrow">THE TOOLKIT</p><h1>鲜蔬杯工具中心</h1><p>鲜蔬杯官方(M.E.)唯一指定工具集。思路参考<a href="https://space.bilibili.com/37804608">龙哥哥今天又鸽了</a> <a href="https://www.bilibili.com/video/BV1qnUWY4E59">万物汇集</a></p></header><nav class="tool-tabs" aria-label="鲜蔬杯工具">${tabs}</nav><p class="tool-load-status" id="tool-load-status" role="status" hidden></p><div id="freshcup-tool">${read('src/pages/freshcup/'+tool+'.html')}</div></section>`;
 }
 function render(tool='scoreboard_5') {
-  return shell.replace('<!-- FRESHCUP_PAGE -->',freshcup(tool)).replace('</head>',`<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/${tool}.theme.css"><link rel="stylesheet" href="/src/styles/freshcup-native.css"></head>`).replace('<!-- TOOL_SCRIPT -->',`<script id="freshcup-tool-script" data-tool="${tool}" src="/src/scripts/freshcup/${tool}.js"></script>`).replace(/(src|href)="(\/?(?:src|vendor)\/[^"?]+)(?:\?[^" ]*)?"/g,(_,attr,file)=>`${attr}="${file}?v=${crypto.createHash('sha256').update(read(file.replace(/^\//,''))).digest('hex').slice(0,10)}"`);
+  return shell.replace('<!-- FRESHCUP_PAGE -->',freshcup(tool)).replace('</head>',`<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/${tool}.theme.css"><link rel="stylesheet" href="/src/styles/freshcup-native.css"></head>`).replace('<!-- TOOL_SCRIPT -->',`<script id="freshcup-tool-script" data-tool="${tool}" src="/src/scripts/freshcup/${tool}.js"></script>`).replace(/(src|href)="(\/?(?:src|vendor)\/[^"?]+)(?:\?[^" ]*)?"/g,(_,attr,file)=>{
+    const source=read(file.replace(/^\//,''));
+    const versionSource=file.replace(/^\//,'')==='src/scripts/arg.js'?source+read('src/scripts/arg-engine.js'):source;
+    return `${attr}="${file}?v=${crypto.createHash('sha256').update(versionSource).digest('hex').slice(0,10)}"`;
+  });
 }
 const palette = {
  '#1a1a2e':'var(--page-bg)', '#2a2a3e':'var(--surface)', '#3a3a4e':'var(--button-bg)', '#4a4a5e':'var(--track)',

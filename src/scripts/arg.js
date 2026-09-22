@@ -1,6 +1,8 @@
 const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 let controller;
-const enginePromise = import('./arg-engine.js');
+const engineUrl = new URL('./arg-engine.js', document.currentScript.src);
+engineUrl.search = new URL(document.currentScript.src).search;
+const enginePromise = import(engineUrl.href);
 let dictionaryPromise;
 const bindText=(element,source,params={})=>window.MELSI18n?window.MELSI18n.bind(element,source,params):element.textContent=source.replace(/\{(\w+)\}/g,(match,key)=>Object.hasOwn(params,key)?params[key]:match);
 function loadEnglishDictionary(){
@@ -26,12 +28,38 @@ function init() {
     if(!form)return;
     const searchPanel=document.getElementById('arg-search-panel'),referencePanel=document.getElementById('arg-reference-panel');
     const showArgPage=()=>{
+        if(!location.pathname.startsWith('/tools/arg'))return;
         const reference=location.pathname.startsWith('/tools/arg/reference');
         searchPanel.hidden=reference;referencePanel.hidden=!reference;
         document.querySelectorAll('[data-arg-page]').forEach(link=>link.toggleAttribute('aria-current',(link.dataset.argPage==='reference')===reference));
-        if(reference)document.title='支持的编码与密码 · ARG 辅助器 · MELS';
+        document.title=reference?'支持的编码与密码 · ARG 辅助器 · MELS':'ARG 辅助器 · 小功能 · MELS';
+        if(reference&&location.hash){
+            const entry=document.getElementById(decodeURIComponent(location.hash.slice(1)));
+            entry?.closest('.arg-category')?.setAttribute('open','');
+        }
     };
     showArgPage();addEventListener('popstate',showArgPage);
+    addEventListener('hashchange',showArgPage);
+    document.querySelector('.nav-link[data-page="tools"]')?.addEventListener('click',()=>queueMicrotask(showArgPage));
+    document.querySelector('.utility-picker-item[data-utility="arg"]')?.addEventListener('click',()=>queueMicrotask(showArgPage));
+    document.querySelectorAll('[data-arg-page]').forEach(link=>link.addEventListener('click',event=>{
+        if(event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+        event.preventDefault();
+        const url=new URL(link.href);
+        if(location.pathname!==url.pathname)history.pushState({page:'tools',utility:'arg'},'',url.pathname);
+        showArgPage();
+        window.scrollTo({top:0,behavior:'instant'});
+    }));
+    results.addEventListener('click',event=>{
+        const link=event.target.closest('.arg-step');
+        if(!link||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+        const url=new URL(link.href),entry=document.getElementById(decodeURIComponent(url.hash.slice(1)));
+        if(!entry)return;
+        event.preventDefault();
+        history.pushState({page:'tools',utility:'arg'},'',url.pathname+url.hash);
+        showArgPage();
+        entry.scrollIntoView({block:'start'});
+    });
     form.addEventListener('submit',async event=>{
         event.preventDefault();const text=input.value.trim();if(!text){input.focus();return;}
         controller?.abort();controller=new AbortController();run.disabled=true;stop.hidden=false;results.setAttribute('aria-busy','true');bindText(summary,'正在生成并排序搜索节点…');

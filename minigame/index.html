@@ -18,7 +18,7 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="src/styles/site-design.css?v=93dd0cc469">
-<link rel="stylesheet" href="/src/styles/aicu.css?v=874d23fb3e"><link rel="stylesheet" href="/src/styles/arg.css?v=b0d3cae057"><link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/scoreboard_5.theme.css?v=2d167c41f5"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
+<link rel="stylesheet" href="/src/styles/aicu.css?v=874d23fb3e"><link rel="stylesheet" href="/src/styles/arg.css?v=17d6f248fa"><link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/scoreboard_5.theme.css?v=2d167c41f5"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
 <body>
 <!-- 顶部导航栏 -->
 <a class="skip-link" href="#main-content">跳至主要内容</a>
@@ -353,26 +353,36 @@
         <header class="acronym-hero">
             <span class="acronym-kicker">SUPPORTED DECODERS</span>
             <h3>支持的编码与密码</h3>
-            <p>当前共有 16 类 decoder。</p>
+            <p>按用途展开查看；当前支持 22 类解码器。</p>
         </header>
-        <div class="arg-reference-grid">
+        <details class="arg-category" open><summary>编码（固定映射） <span>21 项</span></summary><div class="arg-reference-grid">
             <section id="decoder-base64"><h4>Base64</h4><p>将二进制数据表示为 ASCII 字符。识别标准字母表、四字符分组与可选的 = 补位；解码结果必须是有效 UTF-8。</p><code class="arg-example">SGVsbG8gV29ybGQ= → Hello World</code></section>
             <section id="decoder-base32"><h4>Base32</h4><p>使用 A–Z 和 2–7 表示数据，常见于密钥和不区分大小写的文本传输；解码结果必须是有效 UTF-8。</p><code class="arg-example">JBSWY3DPEBLW64TMMQ====== → Hello World</code></section>
             <section id="decoder-base58"><h4>Base58</h4><p>使用 Bitcoin 字母表并排除容易混淆的 0、O、I、l。格式本身没有校验和，因此识别置信度低于 Base64。</p><code class="arg-example">JxF12TrwUP45BMd → Hello World</code></section>
             <section id="decoder-ascii85"><h4>ASCII85</h4><p>以五个可打印字符表示四个字节，支持 Adobe 的 &lt;~ … ~&gt; 包裹格式和零字节缩写 z。</p><code class="arg-example">&lt;~87cURD]i,"Ebo7~&gt; → Hello World</code></section>
+            <section id="decoder-base85"><h4>Base85（RFC 1924 / Git）</h4><p>与 ASCII85 同属 85 进制编码，但使用不同的字母表；此项支持 RFC 1924 / Git 风格，解码结果必须是有效 UTF-8。</p><code class="arg-example">NM&amp;qnZy;B1a%^M → Hello World</code></section>
+            <section id="decoder-base91"><h4>Base91</h4><p>使用 91 字符字母表进行可变长度位打包，结果必须是有效 UTF-8。</p><code class="arg-example">fPNKd → test</code></section>
             <section id="decoder-hex"><h4>Hex 十六进制</h4><p>把每个字节写成两个十六进制数字，支持空格、冒号、逗号和连字符分隔；结果必须是有效 UTF-8。</p><code class="arg-example">48 65 6c 6c 6f → Hello</code></section>
             <section id="decoder-url"><h4>URL Percent-Encoding</h4><p>识别 %xx 转义，并按照 URI 组件规则每次还原一层。搜索器会继续检测解码后的结果，因此可以自动处理多层百分号编码。</p><code class="arg-example">Hello%2520World → Hello%20World → Hello World</code></section>
             <section id="decoder-html"><h4>HTML Entity</h4><p>支持十进制、十六进制数字实体，以及 amp、lt、gt、quot、apos。</p><code class="arg-example">&amp;#72;&amp;#105; → Hi</code></section>
-            <section id="decoder-binary"><h4>Binary 二进制字符码</h4><p>把连续的 8 位二进制组解释成字符码，组间可以使用空白或常见分隔符。</p><code class="arg-example">01001000 01101001 → Hi</code></section>
+            <section id="decoder-binary"><h4>Binary 二进制字符码</h4><p>每 8 位还原一个字节并按 UTF-8 解码。支持 0/1 或任意两种字符；字节组用单个空格分隔或连续书写，单词用 /、|、换行或多个空格分隔。</p><code class="arg-example">01001000 01101001 → Hi</code></section>
+            <section id="decoder-octal"><h4>Octal 八进制字符码</h4><p>将空格或常见标点分隔的八进制字节还原为 UTF-8 文本。</p><code class="arg-example">110 145 154 154 157 → Hello</code></section>
             <section id="decoder-decimal"><h4>Decimal 十进制字符码</h4><p>把 0–255 的十进制数字序列转换为字符，支持空白、冒号、逗号和连字符分隔。</p><code class="arg-example">72 105 → Hi</code></section>
             <section id="decoder-unicode"><h4>Unicode / Hex Escape</h4><p>还原 JavaScript 和 JSON 文本中常见的 \uXXXX 与 \xXX 转义。</p><code class="arg-example">\u0048\u0069 → Hi</code></section>
             <section id="decoder-a1z26"><h4>A1Z26</h4><p>把 1–26 映射为 A–Z，支持空格及常见标点作为数字分隔符。</p><code class="arg-example">8 5 12 12 15 → HELLO</code></section>
-            <section id="decoder-bacon"><h4>Bacon Cipher</h4><p>把每五个 A/B 字符视为一个五位二进制数，并映射到 A–Z。</p><code class="arg-example">aabbb aabaa ababb ababb abbba → HELLO</code></section>
-            <section id="decoder-morse"><h4>Morse 摩尔斯电码</h4><p>支持拉丁字母与数字；字符以空白分隔，单词以斜杠分隔。</p><code class="arg-example">.... .. / - .... . .-. . → HI THERE</code></section>
-            <section id="decoder-caesar"><h4>Caesar / ROT13</h4><p>枚举 1–25 的全部字母移位，不改变非字母字符。ROT13 是位移 13 的自反特例。</p><code class="arg-example">Uryyb Jbeyq → Hello World</code></section>
+            <section id="decoder-bacon"><h4>Bacon Cipher</h4><p>每五个二元符号映射到 A–Z。支持 A/B 或任意两种符号；字母组用单个空格分隔或连续书写，单词用 /、|、换行或多个空格分隔。</p><code class="arg-example">aabbb aabaa ababb ababb abbba → HELLO</code></section>
+            <section id="decoder-morse"><h4>Morse 摩尔斯电码</h4><p>支持拉丁字母与数字。点、划可用任意两种符号表示；字母用单个空格分隔，单词用 /、|、换行或多个空格分隔。</p><code class="arg-example">.... .. / - .... . .-. . → HI THERE</code></section>
+            <section id="decoder-polybius"><h4>Polybius 5×5</h4><p>无密钥标准方阵，I/J 共用一格；每两个 1–5 数字表示行和列。</p><code class="arg-example">23 15 31 31 34 → HELLO</code></section>
+            <section id="decoder-adfgx"><h4>ADFGX（无换位）</h4><p>使用标准 5×5 方阵将 A、D、F、G、X 字母对映射为文字，不处理需要密钥的列换位层。</p><code class="arg-example">DF AX FA FA FG → HELLO</code></section>
+            <section id="decoder-tap"><h4>Tap Code 敲击码</h4><p>每两串敲击组成一个字母，点或其他重复字符均可，敲击串之间用单个空格分隔；单词用 /、|、换行或多个空格分隔，C/K 共用一格。</p><code class="arg-example">xx xxx x xxxxx → HE</code></section>
             <section id="decoder-atbash"><h4>Atbash</h4><p>把拉丁字母表首尾互换：A↔Z、B↔Y。它是自反变换，应用两次会回到原文。</p><code class="arg-example">Svool → Hello</code></section>
             <section id="decoder-reverse"><h4>Reverse 文本反转</h4><p>按 Unicode 字符顺序反转输入，用于常见的倒写谜题。它同样是自反变换。</p><code class="arg-example">dlroW olleH → Hello World</code></section>
-        </div>
+        </div></details>
+        <details class="arg-category"><summary>密码（需要密钥） <span>1 项</span></summary><div class="arg-reference-grid">
+            <section id="decoder-caesar"><h4>Caesar / ROT13</h4><p>枚举 1–25 的全部字母移位，不改变非字母字符。ROT13 是位移 13 的自反特例。</p><code class="arg-example">Uryyb Jbeyq → Hello World</code></section>
+        </div></details>
+        <details class="arg-category"><summary>特殊领域 <span>暂未收录</span></summary><p>后续增加这一类时会在这里列出。</p></details>
+        <details class="arg-category"><summary>数学与代码 <span>暂未收录</span></summary><p>后续增加这一类时会在这里列出。</p></details>
     </article>
 </section>
 
@@ -996,7 +1006,7 @@
     <source src="assets/audio/没有如果.mp3" type="audio/mpeg">
 </audio>
 
-<script src="src/scripts/i18n.js?v=5822ba6508"></script>
+<script src="src/scripts/i18n.js?v=0e2afcbdf5"></script>
 <script src="src/scripts/script.js?v=75a7b29289"></script>
 <script src="src/scripts/boss-battle.js?v=62c257ad94"></script>
 <script src="src/scripts/game.js?v=eadc706772"></script>
@@ -1012,5 +1022,5 @@
 <script type="module" src="src/scripts/particle-title.js?v=f2badaae0c"></script>
 <script src="src/scripts/site.js?v=9dbe7129dc"></script>
 <script id="freshcup-tool-script" data-tool="scoreboard_5" src="/src/scripts/freshcup/scoreboard_5.js?v=0224d7befa"></script>
-<script src="/src/scripts/aicu.js?v=086a9ec5a0"></script><script defer src="/src/scripts/arg.js?v=d55cf8781d"></script></body>
+<script src="/src/scripts/aicu.js?v=086a9ec5a0"></script><script defer src="/src/scripts/arg.js?v=e71ced8da3"></script></body>
 </html>

@@ -27,6 +27,33 @@ await expectCandidate('<~87cURD]i,"Ebo7~>', 'Hello World', { maxDepth: 1 });
 await expectCandidate('\\u0048\\u0065\\u006c\\u006c\\u006f', 'Hello', { maxDepth: 1 });
 await expectCandidate('8 5 12 12 15', 'HELLO', { maxDepth: 1 });
 await expectCandidate('aabbb aabaa ababb ababb abbba', 'HELLO', { maxDepth: 1 });
+await expectCandidate('110 145 154 154 157', 'Hello', { maxDepth: 1 });
+await expectCandidate('NM&qnZy;B1a%^M', 'Hello World', { maxDepth: 1 });
+await expectCandidate('fPNKd', 'test', { maxDepth: 1 });
+await expectCandidate('fPNKd', 'test', { maxDepth: 2, maxNodes: 500, englishWords });
+await expectCandidate('○●○○●○○○ ○●●○●○○●', 'Hi', { maxDepth: 1 });
+await expectCandidate('01001000 | 01101001', 'H i', { maxDepth: 1 });
+await expectCandidate('01001000 / 01101001', 'H i', { maxDepth: 1 });
+await expectCandidate('23 15 31 31 34', 'HELLO', { maxDepth: 1 });
+await expectCandidate('DF AX FA FA FG', 'HELLO', { maxDepth: 1 });
+await expectCandidate('.. ... . .....', 'HE', { maxDepth: 1 });
+await expectCandidate('xx xxx x xxxxx', 'HE', { maxDepth: 1 });
+await expectCandidate('. ... .. .....', 'CJ', { maxDepth: 1 });
+await expectCandidate('xx xxx x xxxxx | x xxx', 'HE C', { maxDepth: 1 });
+await expectCandidate('.. ...  . .....', 'H E', { maxDepth: 1 });
+await expectCandidate('aabbb aabaa | ababb ababb abbba', 'HE LLO', { maxDepth: 1 });
+await expectCandidate('aabbb aabaa\nababb ababb abbba', 'HE LLO', { maxDepth: 1 });
+await expectCandidate('.... .. | - .... . .-. .', 'HI THERE', { maxDepth: 1 });
+await expectCandidate('.... ..  - .... .', 'HI THE', { maxDepth: 1 });
+await expectCandidate('•••• •• / —', 'HI T', { maxDepth: 1 });
+await expectCandidate('0011100100010110101101110', 'HELLO', { maxDepth: 1 });
+for (const [id, input] of [
+    ['morse','••••:••:—'],
+    ['bacon','aab bbaabaaababbababbabbba'],
+    ['binary','01001000,01101001'],
+    ['tap','xx xxx, x xxxxx']
+]) assert.equal(decoders.find(decoder=>decoder.id===id).probe(input),0,`${id} should use fixed separators`);
+for (const title of ['编码（固定映射）','密码（需要密钥）','特殊领域','数学与代码']) assert(reference.includes(title));
 assert(textQuality('this is a secret message', englishWords).score > textQuality('xqzt plmn vrkk', englishWords).score, 'English dictionary hits should improve text quality');
 assert.equal(textQuality('这是一个正常的中文线索', englishWords).plainTextLikely, true, 'Normal Chinese should be accepted as plaintext');
 assert.equal(textQuality('锟斤拷烫烫烫', englishWords).plainTextLikely, false, 'Typical Chinese mojibake should not be accepted as plaintext');
