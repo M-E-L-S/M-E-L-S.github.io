@@ -6,7 +6,7 @@ const enginePromise = import(engineUrl.href);
 let dictionaryPromise;
 const bindText=(element,source,params={})=>window.MELSI18n?window.MELSI18n.bind(element,source,params):element.textContent=source.replace(/\{(\w+)\}/g,(match,key)=>Object.hasOwn(params,key)?params[key]:match);
 function loadEnglishDictionary(){
-    if(!dictionaryPromise)dictionaryPromise=fetch('/assets/data/wordle-words.txt').then(response=>{if(!response.ok)throw new Error(`Dictionary HTTP ${response.status}`);return response.text();}).then(text=>new Set(text.toLowerCase().split(/\s+/).filter(Boolean)));
+    if(!dictionaryPromise)dictionaryPromise=fetch('/assets/data/arg-english-words.txt').then(response=>{if(!response.ok)throw new Error(`Dictionary HTTP ${response.status}`);return response.text();}).then(text=>new Set(text.toLowerCase().split(/\s+/).filter(Boolean)));
     return dictionaryPromise;
 }
 

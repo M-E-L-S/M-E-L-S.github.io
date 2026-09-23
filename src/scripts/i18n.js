@@ -69,11 +69,11 @@
     Object.assign(english, {
         '按用途展开查看；当前支持 24 类解码器。':'Browse by category. 24 decoders are supported.',
         '不含空格的编码可用 /、|、换行或多个空格显式分词；单个空格仍用于编码分组。':'For encodings without spaces, /, |, a newline, or multiple spaces mark word breaks; one space remains available for grouping.',
-        '未显式分词时，较长的连续英文解码结果会参考英语词表尝试自动分词。':'Long decoded English letter runs without explicit word breaks are also segmented using the English dictionary.',
+        '未显式分词时，较长的连续英文解码结果会结合独立的完整英语词表和字符组合尝试自动分词。':'Long decoded English letter runs without explicit word breaks are segmented using a separate complete English word list and character patterns.',
         '编码（固定映射）':'Encodings (fixed mapping)','密码（需要密钥）':'Ciphers (key required)','特殊领域':'Specialized','数学与代码':'Math and code',
         '21 项':'21 entries','3 项':'3 entries','暂未收录':'Coming later','后续增加这一类时会在这里列出。':'New decoders in this category will appear here.',
-        '按标准之字形栅栏还原，枚举 2–10 栏；短文本不会枚举超过字符数一半的栏数。保留原文中的空格。':'Decodes the standard zigzag rail fence with 2–10 rails, capped at half the character count for short texts. Spaces remain in place.',
-        '按美式 QWERTY 键盘的同行位置，枚举左移或右移 1、2 个键。保留字母大小写；移到行边界之外的方案不作为候选。':'Tries shifting each key one or two positions left or right on a US QWERTY row. Letter case is preserved; shifts past a row edge are discarded.',
+        '按标准之字形栅栏还原，枚举 2–10 栏；短文本不会枚举超过字符数一半的栏数。字母、数字和空白都作为字符参与重排。':'Decodes the standard zigzag rail fence with 2–10 rails, capped at half the character count for short texts. Letters, digits, and whitespace all participate in the transposition.',
+        '按美式 QWERTY 键盘的行列位置，枚举左、右、上、下位移 1 或 2 个键；上下位移按相同列序号对应。保留字母大小写；越过键盘边界的方案不作为候选。':'Tries moving one or two keys left, right, up, or down on a US QWERTY keyboard. Vertical moves use the same column index. Letter case is preserved; moves past the keyboard edge are discarded.',
         '支持 RFC 1924 字母表，也称 b85；每五个字符还原四个字节，结果必须是有效 UTF-8。':'Uses the RFC 1924 alphabet, also known as b85. Each five characters decode to four bytes; output must be valid UTF-8.',
         '与 ASCII85 同属 85 进制编码，但使用不同的字母表；此项支持 RFC 1924 / Git 风格，解码结果必须是有效 UTF-8。':'Like ASCII85, it uses radix 85, but with a different alphabet. This entry supports the RFC 1924 / Git variant; output must be valid UTF-8.',
         '使用 91 字符字母表进行可变长度位打包，结果必须是有效 UTF-8。':'Uses a 91-character alphabet with variable-length bit packing; output must be valid UTF-8.',
@@ -127,7 +127,7 @@
     };
     english['老板键 · Alt + B'] = 'Boss key · Alt + B';
     Object.assign(englishFragments, {'初级':'Beginner','中级':'Intermediate','高级':'Expert','坚持了 ':'Survived ','，翻开 ':' · Revealed ',' 个安全格':' safe cells','正面朝上':'face up','黑桃':'spades','红桃':'hearts','梅花':'clubs','方块':'diamonds'});
-    Object.assign(englishFragments, {'可打印字符 ':'Printable characters ','熵 ':'Entropy ','英文词库命中 ':'English dictionary matches ','查看 ':'View ',' 介绍':' reference'});
+    Object.assign(englishFragments, {'可打印字符 ':'Printable characters ','熵 ':'Entropy ','英文词库命中 ':'English dictionary matches ','英文字符组合 ':'English letter patterns ','自动分词':'Automatic word segmentation','查看 ':'View ',' 介绍':' reference'});
     Object.assign(english, {
         '核心已摧毁':'Core destroyed','对决结束':'Battle over','攻击间隔':'Attack interval','瞄准第一个方块':'Targeting first tile','选中第一个 · 瞄准第二个':'First selected · Targeting second tile','🌑 夜幕降临':'🌑 Nightfall','⚔ 同台竞技':'⚔ Match race','🔥 狂暴模式':'🔥 Rage mode','施放中':'Active','就绪':'Ready','机器人已锁定此类方块':'The robot locked this tile type.','BOSS 正在复活：可点选，暂时无法消除':'The BOSS is reviving: tiles may be selected but not cleared.','🔒 消除已冻结 · 可以观看、点选 · 复活结束后恢复消除':'🔒 Matching frozen · You may inspect and select · Matching resumes after revival','🔥 狂暴模式发动 · BOSS 正在重排剩余方块':'🔥 Rage mode · The BOSS is rearranging remaining tiles','普通攻击 · 基础 10 / 连击 +5':'Normal attack · Base 10 / Combo +5'
     });

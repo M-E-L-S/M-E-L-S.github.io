@@ -123,6 +123,12 @@ the `word-list` npm package by Sindre Sorhus, filtered to lowercase alphabetic
 words of 5–9 letters. It is distributed under the MIT License; the retained
 license is available at `assets/data/wordle-words-LICENSE.txt`.
 
+The ARG assistant uses a separate dictionary at
+`assets/data/arg-english-words.txt`: the complete `words.txt` from Sindre
+Sorhus's `word-list` npm package, version 4.1.0. It is not limited by the
+Wordle game's word lengths. The package is distributed under the MIT License;
+its license is retained at `assets/data/arg-english-words-LICENSE.txt`.
+
 The classic-mode answer data at `assets/data/wordle-classic-answers.txt`
 reproduces the 2,315-word answer set embedded in the original pre-NYT Wordle
 web application. The checked copy was obtained from

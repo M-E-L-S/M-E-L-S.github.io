@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('../src/scripts/arg-engine.js', import.meta.url), 'utf8');
-const { search, decoders, textQuality } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+const { search, decoders, textQuality, redundantTransform } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 const reference = await readFile(new URL('../src/pages/arg.html', import.meta.url), 'utf8');
-const dictionaryText = await readFile(new URL('../assets/data/wordle-words.txt', import.meta.url), 'utf8');
+const dictionaryText = await readFile(new URL('../assets/data/arg-english-words.txt', import.meta.url), 'utf8');
 const englishWords = new Set(dictionaryText.toLowerCase().split(/\s+/).filter(Boolean));
+assert(englishWords.size>270000,'ARG dictionary must contain the full npm word-list, not Wordle-length entries');
+for(const word of ['path','scan','can','look','structured']) assert(englishWords.has(word),`ARG dictionary is missing ${word}`);
 for (const decoder of decoders) {
     assert(reference.includes(`id="decoder-${decoder.id}"`), `Missing reference entry for decoder ${decoder.id}`);
 }
@@ -37,6 +39,69 @@ assert.deepEqual(rail.decode('WECRLTEERDSOEEFEAOCAIVDEN').map(result => result.p
 assert(rail.decode('WECRLTEERDSOEEFEAOCAIVDEN').some(result => result.parameter === 3 && result.text === 'WEAREDISCOVEREDFLEEATONCE'));
 await expectCandidate('WECRLTEERDSOEEFEAOCAIVDEN', 'WEAREDISCOVEREDFLEEATONCE', { maxDepth: 2, maxNodes: 500, englishWords });
 await expectCandidate('WECRLTEERDSOEEFEAOCAIVDEN', 'WE ARE DISCOVERED FLEE AT ONCE', { maxDepth: 2, maxNodes: 500, englishWords });
+function encodeRail(text,rails){
+    const rows=Array.from({length:rails},()=>[]);
+    let row=0,direction=1;
+    for(const char of text){
+        rows[row].push(char);
+        if(row===0)direction=1;else if(row===rails-1)direction=-1;
+        row+=direction;
+    }
+    return rows.flat().join('');
+}
+for(const [plaintext,rails] of [['0123456789',3],['A1B2C3D4E5F6G7H8',4],['12 34 56 78',3]]){
+    const encoded=encodeRail(plaintext,rails);
+    assert(rail.probe(encoded)>0,`Rail Fence did not detect digits in ${encoded}`);
+    assert(rail.decode(encoded).some(result=>result.parameter===rails&&result.text===plaintext));
+    await expectCandidate(encoded,plaintext,{maxDepth:1,maxNodes:100,englishWords});
+}
+const square='ABCDEFGHIKLMNOPQRSTUVWXYZ',axis='ADFGX';
+function encodeLayered(text,rails,shift) {
+    const pairs=[...text].map(char=>{
+        const index=square.indexOf(char);
+        assert(index>=0,`ADFGX test cannot encode ${char}`);
+        return axis[Math.floor(index/5)]+axis[index%5];
+    }).join('');
+    const shifted=[...pairs].map(char=>String.fromCharCode((char.charCodeAt(0)-65+shift)%26+65));
+    return encodeRail(shifted,rails);
+}
+for(const [plaintext,rails,shift] of [
+    ['FOLLOWTHEHIDDENPATH',4,11],
+    ['THESECRETMESSAGEISBELOW',6,3],
+    ['WRONGPATHSCANSTILLLOOKSTRUCTURED',9,7]
+]) {
+    const encoded=encodeLayered(plaintext,rails,shift);
+    const outcome=await search(encoded,{maxDepth:3,maxNodes:500,englishWords});
+    const match=outcome.candidates.find(candidate=>candidate.text===plaintext);
+    assert(match,`Three-layer route was not found for ${plaintext}`);
+    assert.equal(outcome.candidates[0].text.replace(/ /g,''),plaintext,`Three-layer route was ranked below a false positive for ${plaintext}`);
+    assert.equal(match.depth,3);
+    assert.deepEqual(new Set(match.path.map(step=>step.decoder)),new Set(['railfence','caesar','adfgx']));
+    assert(match.path.some(step=>step.label===`Rail Fence ${rails} rails`));
+    assert(match.path.some(step=>step.label===`Caesar -${shift}`));
+    if(rails===9){
+        const segmented=outcome.candidates.find(candidate=>candidate.text==='WRONG PATHS CAN STILL LOOK STRUCTURED');
+        assert(segmented?.evidence.includes('自动分词'),'Long plaintext should be segmented with the complete ARG dictionary');
+        assert.equal(outcome.candidates[0],segmented,'Confident word segmentation should lead the results');
+    }
+}
+assert.equal(encodeLayered('WRONGPATHSCANSTILLLOOKSTRUCTURED',9,7),'EKMNKNMNHNKNNNNKMNNHKHMNHMEEMHHNMNHHNEMMHEMKMMHNMKNNMKHMNNNEKMMN');
+const nested=Buffer.from(Buffer.from(encodeLayered('FOLLOWTHEHIDDENPATH',4,11)).toString('hex')).toString('base64');
+await expectCandidate(nested,'FOLLOWTHEHIDDENPATH',{maxDepth:5,maxNodes:500,englishWords});
+const baconPlaintext='KEEPBADSTATESALIVELONGER';
+const baconCipher=[...baconPlaintext].map(char=>(char.charCodeAt(0)-65).toString(2).padStart(5,'0').replace(/0/g,'A').replace(/1/g,'B')).join('');
+const baconRows=Array.from({length:9},()=>[]);
+let baconRow=0,baconDirection=1;
+for(const char of baconCipher){
+    baconRows[baconRow].push(char);
+    if(baconRow===0)baconDirection=1;else if(baconRow===8)baconDirection=-1;
+    baconRow+=baconDirection;
+}
+const baconBits=baconRows.flat().map(char=>char.charCodeAt(0).toString(2).padStart(8,'0')).join('');
+const baconInput=[...baconBits].reverse().join('');
+const baconOutcome=await search(baconInput,{maxDepth:5,maxNodes:500,englishWords});
+assert.equal(baconOutcome.candidates[0]?.text,'KEEP BAD STATES ALIVE LONGER','Four-layer plaintext should be segmented and ranked first');
+assert(baconOutcome.candidates.some(candidate=>candidate.text===baconPlaintext),'Unsegmented plaintext should remain available');
 await expectCandidate('UryybJbeyq', 'Hello World', { maxDepth: 2, maxNodes: 500, englishWords });
 await expectCandidate('dGhpc2lzYXNlY3JldG1lc3NhZ2U=', 'this is a secret message', { maxDepth: 2, maxNodes: 500, englishWords });
 const noDictionary = await search('UryybJbeyq', { maxDepth: 1, maxNodes: 100 });
@@ -46,6 +111,55 @@ for (const [ciphertext, offset] of [['Jr;;p',-1],['Gwkki',1],["Kt''[",-2],['Fqjj
     assert(keyboard.decode(ciphertext).some(result => result.parameter === offset && result.text === 'Hello'), `Keyboard Shift ${offset} failed for ${ciphertext}`);
     await expectCandidate(ciphertext, 'Hello', { maxDepth: 2, maxNodes: 500, englishWords });
 }
+for(const [ciphertext,direction,steps,expected] of [
+    ['Asdfgh','up',1,'Qwerty'],
+    ['Zxcvbn','up',2,'Qwerty'],
+    ['Qwerty','down',1,'Asdfgh'],
+    ['Qwerty','down',2,'Zxcvbn']
+]) {
+    assert(keyboard.decode(ciphertext).some(result=>result.label===`Keyboard Shift ${direction} ${steps}`&&result.text===expected),`Keyboard Shift ${direction} ${steps} failed for ${ciphertext}`);
+    await expectCandidate(ciphertext,expected,{maxDepth:1,maxNodes:100,englishWords});
+}
+assert(keyboard.probe('123456')>0,'Numeric keyboard row should be eligible for vertical shifts');
+await expectCandidate('123456','qwerty',{maxDepth:1,maxNodes:100,englishWords});
+const pathNode=(parent,decoder,result)=>({text:result.text,parent,step:{decoder,parameter:result.parameter}});
+const digitInput='341351435234114421215444143332235541331314314325';
+const digitRoot={text:digitInput,parent:null,step:null};
+const down=keyboard.decode(digitInput).find(result=>result.label==='Keyboard Shift down 1');
+const downNode=pathNode(digitRoot,'keyboardshift',down);
+const digitRail=rail.decode(down.text).find(result=>result.parameter===8);
+const digitRailNode=pathNode(downNode,'railfence',digitRail);
+const up=keyboard.decode(digitRail.text).find(result=>result.label==='Keyboard Shift up 1');
+assert(redundantTransform(digitRailNode,keyboard,up),'Opposite keyboard shifts across a transposition should be pruned');
+const digitOutcome=await search(digitInput,{maxDepth:5,maxNodes:500,englishWords});
+assert.equal(digitOutcome.candidates[0]?.text,'PRUNE LATE OR LOSE THE SIGNAL');
+assert.deepEqual(digitOutcome.candidates[0].path.map(step=>step.decoder),['railfence','polybius']);
+assert(digitOutcome.stats.redundantPruned>0,'Search should report equivalent paths pruned before generation');
+const caesar=decoders.find(decoder=>decoder.id==='caesar');
+const atbash=decoders.find(decoder=>decoder.id==='atbash');
+const reverse=decoders.find(decoder=>decoder.id==='reverse');
+const letterRoot={text:'HELLOWORLD',parent:null,step:null};
+const firstCaesar=caesar.decode(letterRoot.text).find(result=>result.parameter===7);
+const caesarNode=pathNode(letterRoot,'caesar',firstCaesar);
+const middleRail=rail.decode(firstCaesar.text).find(result=>result.parameter===3);
+const caesarRailNode=pathNode(caesarNode,'railfence',middleRail);
+assert(redundantTransform(caesarRailNode,caesar,caesar.decode(middleRail.text).find(result=>result.parameter===3)),'Two Caesar shifts across Rail Fence should be combined');
+const middleAtbash=atbash.decode(firstCaesar.text)[0];
+const affineNode=pathNode(caesarNode,'atbash',middleAtbash);
+assert(redundantTransform(affineNode,caesar,caesar.decode(middleAtbash.text).find(result=>result.parameter===3)),'Three affine letter substitutions should reduce to two');
+const atbashNode=pathNode(letterRoot,'atbash',atbash.decode(letterRoot.text)[0]);
+const atbashRailNode=pathNode(atbashNode,'railfence',rail.decode(atbashNode.text).find(result=>result.parameter===3));
+assert(redundantTransform(atbashRailNode,atbash,atbash.decode(atbashRailNode.text)[0]),'Two Atbash steps across Rail Fence should cancel');
+const reverseNode=pathNode(letterRoot,'reverse',reverse.decode(letterRoot.text)[0]);
+const reverseCaesarNode=pathNode(reverseNode,'caesar',caesar.decode(reverseNode.text).find(result=>result.parameter===7));
+assert(redundantTransform(reverseCaesarNode,reverse,reverse.decode(reverseCaesarNode.text)[0]),'Two Reverse steps across Caesar should cancel');
+const keyboardRoot={text:'yuiop',parent:null,step:null};
+const firstLeft=keyboard.decode(keyboardRoot.text).find(result=>result.label==='Keyboard Shift left 2');
+const leftNode=pathNode(keyboardRoot,'keyboardshift',firstLeft);
+assert(!redundantTransform(leftNode,keyboard,keyboard.decode(firstLeft.text).find(result=>result.label==='Keyboard Shift left 2')),'A four-key displacement still needs two supported steps');
+const upperRoot={text:'QWERTY',parent:null,step:null};
+const upperNode=pathNode(upperRoot,'keyboardshift',keyboard.decode(upperRoot.text).find(result=>result.label==='Keyboard Shift up 1'));
+assert(redundantTransform(upperNode,keyboard,keyboard.decode(upperNode.text).find(result=>result.label==='Keyboard Shift down 1')),'Case loss should not make opposite keyboard shifts useful');
 await expectCandidate('○●○○●○○○ ○●●○●○○●', 'Hi', { maxDepth: 1 });
 await expectCandidate('01001000 | 01101001', 'H i', { maxDepth: 1 });
 await expectCandidate('01001000 / 01101001', 'H i', { maxDepth: 1 });
@@ -85,10 +199,12 @@ for (const [id, input] of [
 ]) assert.equal(decoders.find(decoder=>decoder.id===id).probe(input),0,`${id} should use fixed separators`);
 for (const title of ['编码（固定映射）','密码（需要密钥）','特殊领域','数学与代码']) assert(reference.includes(title));
 assert(textQuality('this is a secret message', englishWords).score > textQuality('xqzt plmn vrkk', englishWords).score, 'English dictionary hits should improve text quality');
+const unsegmentedQuality=textQuality('PRUNELATEORLOSETHESIGNAL',englishWords);
+assert(unsegmentedQuality.trigramSignal>0&&unsegmentedQuality.score<=54,'Letter-pattern scoring should remain a weak signal until words are segmented');
 assert.equal(textQuality('这是一个正常的中文线索', englishWords).plainTextLikely, true, 'Normal Chinese should be accepted as plaintext');
 assert.equal(textQuality('锟斤拷烫烫烫', englishWords).plainTextLikely, false, 'Typical Chinese mojibake should not be accepted as plaintext');
 const chineseResult = await search(Buffer.from('这是一个中文答案').toString('base64'), { maxDepth: 3, maxNodes: 100, englishWords });
 const chineseCandidate = chineseResult.candidates.find(candidate => candidate.text === '这是一个中文答案');
 assert(chineseCandidate?.plainTextLikely, 'Decoded Chinese should be returned as plaintext');
 assert.equal(chineseCandidate.depth, 1, 'Plain Chinese should stop expanding after it is found');
-console.log('OK ARG engine: decoders, Wordle dictionary scoring and Chinese plaintext detection');
+console.log('OK ARG engine: decoders, ARG dictionary scoring and Chinese plaintext detection');

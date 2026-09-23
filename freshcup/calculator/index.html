@@ -334,7 +334,7 @@
             placeholder="粘贴各类编码、密码甚至多层嵌套密码……"></textarea>
         <div class="arg-controls">
             <label>最大深度
-                <select id="arg-depth"><option>1</option><option selected>2</option><option>5</option><option>10</option></select>
+                <select id="arg-depth"><option>1</option><option>2</option><option selected>5</option><option>10</option></select>
             </label>
             <label>节点预算
                 <select id="arg-budget"><option>100</option><option selected>500</option><option>1000</option><option>2000</option></select>
@@ -355,7 +355,7 @@
             <h3>支持的编码与密码</h3>
             <p>按用途展开查看；当前支持 24 类解码器。</p>
             <p>不含空格的编码可用 /、|、换行或多个空格显式分词；单个空格仍用于编码分组。</p>
-            <p>未显式分词时，较长的连续英文解码结果会参考英语词表尝试自动分词。</p>
+            <p>未显式分词时，较长的连续英文解码结果会结合独立的完整英语词表和字符组合尝试自动分词。</p>
         </header>
         <details class="arg-category" open><summary>编码（固定映射） <span>21 项</span></summary><div class="arg-reference-grid">
             <section id="decoder-base64"><h4>Base64</h4><p>将二进制数据表示为 ASCII 字符。识别标准字母表、四字符分组与可选的 = 补位；解码结果必须是有效 UTF-8。</p><code class="arg-example">SGVsbG8gV29ybGQ= → Hello World</code></section>
@@ -382,8 +382,8 @@
         </div></details>
         <details class="arg-category"><summary>密码（需要密钥） <span>3 项</span></summary><div class="arg-reference-grid">
             <section id="decoder-caesar"><h4>Caesar / ROT13</h4><p>枚举 1–25 的全部字母移位，不改变非字母字符。ROT13 是位移 13 的自反特例。</p><code class="arg-example">Uryyb Jbeyq → Hello World</code></section>
-            <section id="decoder-railfence"><h4>Rail Fence 栅栏密码</h4><p>按标准之字形栅栏还原，枚举 2–10 栏；短文本不会枚举超过字符数一半的栏数。保留原文中的空格。</p><code class="arg-example">WECRLTEERDSOEEFEAOCAIVDEN → WEAREDISCOVEREDFLEEATONCE（3 栏）</code></section>
-            <section id="decoder-keyboardshift"><h4>Keyboard Shift 键盘移位</h4><p>按美式 QWERTY 键盘的同行位置，枚举左移或右移 1、2 个键。保留字母大小写；移到行边界之外的方案不作为候选。</p><code class="arg-example">Jr;;p → Hello（左移 1 键）</code></section>
+            <section id="decoder-railfence"><h4>Rail Fence 栅栏密码</h4><p>按标准之字形栅栏还原，枚举 2–10 栏；短文本不会枚举超过字符数一半的栏数。字母、数字和空白都作为字符参与重排。</p><code class="arg-example">WECRLTEERDSOEEFEAOCAIVDEN → WEAREDISCOVEREDFLEEATONCE（3 栏）</code></section>
+            <section id="decoder-keyboardshift"><h4>Keyboard Shift 键盘移位</h4><p>按美式 QWERTY 键盘的行列位置，枚举左、右、上、下位移 1 或 2 个键；上下位移按相同列序号对应。保留字母大小写；越过键盘边界的方案不作为候选。</p><code class="arg-example">Jr;;p → Hello（左移 1 键）；Asdfgh → Qwerty（上移 1 行）</code></section>
         </div></details>
         <details class="arg-category"><summary>特殊领域 <span>暂未收录</span></summary><p>后续增加这一类时会在这里列出。</p></details>
         <details class="arg-category"><summary>数学与代码 <span>暂未收录</span></summary><p>后续增加这一类时会在这里列出。</p></details>
@@ -862,7 +862,7 @@
     <source src="assets/audio/没有如果.mp3" type="audio/mpeg">
 </audio>
 
-<script src="src/scripts/i18n.js?v=a74c90e9d8"></script>
+<script src="src/scripts/i18n.js?v=3593d6972c"></script>
 <script src="src/scripts/script.js?v=75a7b29289"></script>
 <script src="src/scripts/boss-battle.js?v=62c257ad94"></script>
 <script src="src/scripts/game.js?v=eadc706772"></script>
@@ -878,5 +878,5 @@
 <script type="module" src="src/scripts/particle-title.js?v=f2badaae0c"></script>
 <script src="src/scripts/site.js?v=9dbe7129dc"></script>
 <script id="freshcup-tool-script" data-tool="calculator" src="/src/scripts/freshcup/calculator.js?v=9599a913bf"></script>
-<script src="/src/scripts/aicu.js?v=086a9ec5a0"></script><script defer src="/src/scripts/arg.js?v=f6ffa27c22"></script></body>
+<script src="/src/scripts/aicu.js?v=086a9ec5a0"></script><script defer src="/src/scripts/arg.js?v=0cc65f157a"></script></body>
 </html>

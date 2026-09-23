@@ -1,4 +1,28 @@
 const encoder = new TextEncoder();
+const trigramModels = new WeakMap();
+const prefixModels = new WeakMap();
+
+function englishTrigramScore(text, englishWords) {
+    if (!englishWords || !/^[A-Za-z]{10,}$/.test(text)) return 0;
+    let model = trigramModels.get(englishWords);
+    if (!model) {
+        model = new Map();
+        for (const word of englishWords) {
+            if (!/^[a-z]{3,}$/.test(word)) continue;
+            for (let i=0;i<word.length-2;i++) {
+                const group=word.slice(i,i+3);
+                model.set(group,(model.get(group)||0)+1);
+            }
+        }
+        trigramModels.set(englishWords,model);
+    }
+    const lower=text.toLowerCase();
+    let average=0;
+    for(let i=0;i<lower.length-2;i++) average+=Math.log1p(model.get(lower.slice(i,i+3))||0);
+    average/=lower.length-2;
+    const diversity=Math.max(0,Math.min(1,(entropy(lower)-2.4)/.8));
+    return Math.max(0,Math.min(40,(average-2.4)*10))*diversity;
+}
 
 function entropy(text) {
     if (!text.length) return 0;
@@ -21,16 +45,19 @@ function textQuality(text, englishWords=null) {
     const spaces = (text.match(/\s/g) || []).length;
     const replacement = (text.match(/�/g) || []).length;
     const dictionaryRatio = eligibleWords.length ? dictionaryHits/eligibleWords.length : 0;
-    const englishScore = englishWords ? Math.min(38,dictionaryHits*6+dictionaryRatio*14) : Math.min(latinWords.length,8)*2;
+    const trigramSignal=englishTrigramScore(text,englishWords);
+    const trigramScore=trigramSignal*.5;
+    const englishScore = englishWords ? Math.max(Math.min(38,dictionaryHits*6+dictionaryRatio*14),trigramScore) : Math.min(latinWords.length,8)*2;
     let score = printable * 34 + englishScore + Math.min(spaces, 8) * 1.2 - replacement * 12;
     const evidence = [`可打印字符 ${Math.round(printable * 100)}%`, `熵 ${entropy(text).toFixed(2)}`];
     if(englishWords&&eligibleWords.length)evidence.push(`英文词库命中 ${dictionaryHits}/${eligibleWords.length}`);
+    if(trigramScore>0)evidence.push(`英文字符组合 ${trigramScore.toFixed(1)}`);
     if(plainTextLikely){score=Math.max(score,96);evidence.push('正常中文，视为明文');}
     else if(hanChars.length>=2&&chineseMojibake)evidence.push('检测到典型中文乱码');
     if (/^\s*[\[{].*[\]}]\s*$/s.test(text)) { try { JSON.parse(text); score += 30; evidence.push('有效 JSON'); } catch {} }
     if (/https?:\/\/[^\s]+/i.test(text)) { score += 18; evidence.push('包含 URL'); }
     if (/\b(?:the|and|that|this|with|from|hello|flag|secret|password)\b/i.test(text)) { score += 18; evidence.push('英文词命中'); }
-    return { score: Math.max(0, Math.min(100, score)), evidence, plainTextLikely };
+    return { score: Math.max(0, Math.min(100, score)), evidence, plainTextLikely, trigramSignal };
 }
 
 const same = (a, b) => a === b;
@@ -39,21 +66,39 @@ const one = (text, label) => text == null ? [] : [{ text, label }];
 const utf8 = bytes => new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(bytes));
 const commonWords=new Set('a i am an as at be by do go he hi if in is it me my no of on or so to up us we all and any are but can day did end for get got had has her him his how its let may new not now off old one our out own say see she the too two use was way who why yes yet you your after again about been being come could every first found from give going good great have here into just know like little look make many more most much must name never only other over part people right said same some such take than that their them then there these they thing think this those time under want were what when where which while will with word work would years hello world secret message discover discovered flee once'.split(' '));
 
-function autoSegmentEnglish(text,englishWords){
-    if(!englishWords||!/^[A-Za-z]{10,80}$/.test(text)||englishWords.has(text.toLowerCase()))return null;
+function wordPrefixBonus(word,englishWords){
+    if(word.length<3||!englishWords.has(word))return 0;
+    // The dictionary has no usage frequencies. Prefix families provide a
+    // small tie-breaker between productive words and isolated rare entries.
+    let model=prefixModels.get(englishWords);
+    if(!model){model={sorted:[...englishWords].sort(),cache:new Map()};prefixModels.set(englishWords,model);}
+    if(model.cache.has(word))return model.cache.get(word);
+    const lowerBound=value=>{
+        let left=0,right=model.sorted.length;
+        while(left<right){const middle=(left+right)>>>1;if(model.sorted[middle]<value)left=middle+1;else right=middle;}
+        return left;
+    };
+    const familySize=lowerBound(word+'{')-lowerBound(word);
+    const bonus=Math.min(2,Math.log1p(familySize)*.45);
+    model.cache.set(word,bonus);
+    return bonus;
+}
+
+function autoSegmentEnglish(text,englishWords,trigramScore=englishTrigramScore(text,englishWords)){
+    if(!englishWords||!/^[A-Za-z]{10,80}$/.test(text)||englishWords.has(text.toLowerCase())||trigramScore<7)return null;
     const lower=text.toLowerCase(),best=Array(lower.length+1).fill(null);
-    best[0]={score:0,parts:[],common:0};
+    best[0]={score:0,parts:[]};
     for(let end=1;end<=lower.length;end++){
         for(let start=Math.max(0,end-20);start<end;start++){
             const previous=best[start];if(!previous)continue;
             const word=lower.slice(start,end),common=commonWords.has(word);
-            if((word.length===1&&!['a','i'].includes(word))||(!common&&!englishWords.has(word)))continue;
-            const score=previous.score+word.length+Math.min(word.length,8)*.35+(common?3:0)-2.5-(word.length===1?3:0);
-            if(!best[end]||score>best[end].score)best[end]={score,parts:[...previous.parts,text.slice(start,end)],common:previous.common+Number(common)};
+            if(!common&&!englishWords.has(word))continue;
+            const score=previous.score+word.length+Math.min(word.length,8)*.35+wordPrefixBonus(word,englishWords)+(common?3:0)-2.5-(word.length===1?3:0);
+            if(!best[end]||score>best[end].score)best[end]={score,parts:[...previous.parts,text.slice(start,end)]};
         }
     }
     const result=best[lower.length];
-    return result?.parts.length>=2&&result.common>=1&&result.score>=lower.length*.85?result.parts.join(' '):null;
+    return result?.parts.length>=2&&result.score>=lower.length*.85?result.parts.join(' '):null;
 }
 
 function decodeBase32(text){
@@ -232,19 +277,32 @@ function decodeRailFence(text){
     }
     return results;
 }
+function probeRailFence(text){
+    const source=text.trim();
+    if(source.length<8||source.length>500||!/^[A-Za-z0-9\s]+$/.test(source)||!/[A-Za-z0-9]/.test(source))return 0;
+    // A confirmed byte/code decode is more specific than a transposition;
+    // keep Rail Fence available, but search the confirmed decode first.
+    const confirmed=strongFollowups.some(decoder=>decoder.probe(source)>=.85&&decoder.decode(source).length>0);
+    return confirmed?.08:.28;
+}
 const keyboardRows=['1234567890-=','qwertyuiop[]\\',"asdfghjkl;'",'zxcvbnm,./'];
 function decodeKeyboardShift(text){
     const results=[];
-    for(const offset of [-2,-1,1,2]){
+    const shifts=[...[-2,-1,1,2].map(offset=>({axis:'horizontal',offset})),...[-2,-1,1,2].map(offset=>({axis:'vertical',offset}))];
+    for(const {axis,offset} of shifts){
         let valid=true;
         const decoded=[...text].map(char=>{
-            const lower=char.toLowerCase(),row=keyboardRows.find(keys=>keys.includes(lower));
-            if(!row)return char;
-            const target=row[row.indexOf(lower)+offset];
+            const lower=char.toLowerCase(),rowIndex=keyboardRows.findIndex(keys=>keys.includes(lower));
+            if(rowIndex<0)return char;
+            const column=keyboardRows[rowIndex].indexOf(lower);
+            const target=axis==='horizontal'?keyboardRows[rowIndex][column+offset]:keyboardRows[rowIndex+offset]?.[column];
             if(!target){valid=false;return char;}
             return char!==lower&&/[a-z]/.test(lower)?target.toUpperCase():target;
         }).join('');
-        if(valid)results.push({text:decoded,label:'Keyboard Shift '+(offset<0?'left ':'right ')+Math.abs(offset),parameter:offset});
+        if(valid){
+            const direction=axis==='horizontal'?(offset<0?'left':'right'):(offset<0?'up':'down');
+            results.push({text:decoded,label:`Keyboard Shift ${direction} ${Math.abs(offset)}`,parameter:axis==='horizontal'?offset:{direction,steps:Math.abs(offset)}});
+        }
     }
     return results;
 }
@@ -272,8 +330,8 @@ export const decoders = [
     { id:'atbash', name:'Atbash', probe:t=>/[A-Za-z]{4}/.test(t)?.24:0, decode:t=>one(t.replace(/[A-Za-z]/g,c=>String.fromCharCode((c<='Z'?155:219)-c.charCodeAt(0))),'Atbash') },
     { id:'reverse', name:'Reverse', probe:t=>t.length>=4?.14:0, decode:t=>one([...t].reverse().join(''),'Reverse') },
     { id:'caesar', name:'Caesar', probe:t=>(t.match(/[A-Za-z]/g)||[]).length>=4?.3:0, decode:t=>Array.from({length:25},(_,i)=>{const shift=i+1;return{text:t.replace(/[A-Za-z]/g,c=>{const a=c<='Z'?65:97;return String.fromCharCode((c.charCodeAt(0)-a-shift+26)%26+a)}),label:shift===13?'ROT13':`Caesar -${shift}`,parameter:shift};}) },
-    { id:'railfence', name:'Rail Fence', probe:t=>{const s=t.trim();return s.length>=8&&s.length<=500&&/^[A-Za-z\s]+$/.test(s)?.28:0;}, decode:decodeRailFence },
-    { id:'keyboardshift', name:'Keyboard Shift', probe:t=>{const chars=[...t],mapped=chars.filter(c=>keyboardRows.some(row=>row.includes(c.toLowerCase()))).length;return chars.length>=5&&chars.length<=500&&(t.match(/[A-Za-z]/g)||[]).length>=2&&mapped/chars.length>=.75?.34:0;}, decode:decodeKeyboardShift }
+    { id:'railfence', name:'Rail Fence', probe:probeRailFence, decode:decodeRailFence },
+    { id:'keyboardshift', name:'Keyboard Shift', probe:t=>{const chars=[...t],mapped=chars.filter(c=>keyboardRows.some(row=>row.includes(c.toLowerCase()))).length;if(chars.length<5||chars.length>500||mapped/chars.length<.75)return 0;return (t.match(/[A-Za-z]/g)||[]).length>=2?.34:mapped>=5&&/^[0-9=\-\s]+$/.test(t)?.18:0;}, decode:decodeKeyboardShift }
 ];
 
 // These formats have no encoded space. Keep single spaces as optional grouping,
@@ -297,49 +355,166 @@ for(const decoder of decoders){
     };
 }
 
+// These probes describe specific input structures. Broad alphabet matches such as
+// unpadded Base64 are too common to predict whether another layer will be useful.
+const strongFollowupIds=new Set(['adfgx','binary','bacon','morse','polybius','tap','hex','url','html','unicode','a1z26','octal','decimal']);
+const strongFollowups=decoders.filter(decoder=>strongFollowupIds.has(decoder.id));
+
+function followupPotential(text,quality,englishWords){
+    let best=0;
+    for(const decoder of strongFollowups){
+        const confidence=decoder.probe(text);
+        if(confidence<.6)continue;
+        for(const result of decoder.decode(text)){
+            if(!result.text||result.text===text)continue;
+            const decodedQuality=textQuality(result.text,englishWords);
+            const segmented=autoSegmentEnglish(result.text,englishWords,decodedQuality.trigramSignal);
+            const decodedScore=segmented?Math.max(decodedQuality.score,textQuality(segmented,englishWords).score):decodedQuality.score;
+            const gain=Math.max(0,decodedScore-quality.score);
+            best=Math.max(best,(confidence-.55)*40+gain*1.5);
+        }
+    }
+    return best;
+}
+
+const modulo26=value=>(value%26+26)%26;
+// Character substitutions commute with Rail Fence and Reverse. Reduce their
+// combined affine map before spending another search depth on an equivalent path.
+const isPermutation=id=>id==='railfence'||id==='reverse';
+const isAffine=id=>id==='caesar'||id==='atbash';
+
+function redundantAffineStep(node,decoder,result){
+    const operations=[{decoder:decoder.id,parameter:result.parameter}];
+    for(let cursor=node;cursor?.step;cursor=cursor.parent){
+        if(cursor.step.segmented)break;
+        if(isAffine(cursor.step.decoder))operations.unshift(cursor.step);
+        else if(!isPermutation(cursor.step.decoder))break;
+    }
+    if(operations.length<2)return false;
+    let sign=1,offset=0;
+    for(const operation of operations){
+        const nextSign=operation.decoder==='atbash'?-1:1;
+        const nextOffset=operation.decoder==='atbash'?25:-operation.parameter;
+        offset=modulo26(nextSign*offset+nextOffset);
+        sign*=nextSign;
+    }
+    const minimum=sign===1?(offset===0?0:1):(offset===25?1:2);
+    return operations.length>minimum;
+}
+
+function keyboardVector(parameter){
+    return typeof parameter==='number'?{axis:'horizontal',offset:parameter}:{axis:'vertical',offset:(parameter.direction==='up'?-1:1)*parameter.steps};
+}
+
+function redundantKeyboardStep(node,result){
+    const current=keyboardVector(result.parameter),permutations=[];
+    let cursor=node;
+    while(cursor?.step&&!cursor.step.segmented&&isPermutation(cursor.step.decoder)){
+        permutations.unshift(cursor.step);
+        cursor=cursor.parent;
+    }
+    if(cursor?.step?.segmented||cursor?.step?.decoder!=='keyboardshift')return false;
+    const previous=keyboardVector(cursor.step.parameter);
+    if(previous.axis!==current.axis)return false;
+    const offset=previous.offset+current.offset;
+    if(Math.abs(offset)>2)return false;
+    // Keyboard rows have different lengths and can change case at the digit
+    // boundary, so confirm the shorter route actually produces the same text.
+    let shorter=cursor.parent.text;
+    if(offset){
+        const variant=decodeKeyboardShift(shorter).find(candidate=>{
+            const vector=keyboardVector(candidate.parameter);
+            return vector.axis===current.axis&&vector.offset===offset;
+        });
+        if(!variant)return false;
+        shorter=variant.text;
+    }
+    for(const step of permutations){
+        if(step.decoder==='railfence'&&!probeRailFence(shorter))return false;
+        shorter=step.decoder==='reverse'?[...shorter].reverse().join(''):decodeRailFence(shorter).find(candidate=>candidate.parameter===step.parameter)?.text;
+        if(shorter==null)return false;
+    }
+    return shorter.toLowerCase()===result.text.toLowerCase();
+}
+
+function redundantReverseStep(node){
+    for(let cursor=node;cursor?.step;cursor=cursor.parent){
+        if(cursor.step.segmented)return false;
+        if(cursor.step.decoder==='reverse')return true;
+        if(!isAffine(cursor.step.decoder)&&cursor.step.decoder!=='keyboardshift')return false;
+    }
+    return false;
+}
+
+function redundantTransform(node,decoder,result){
+    if(isAffine(decoder.id))return redundantAffineStep(node,decoder,result);
+    if(decoder.id==='keyboardshift')return redundantKeyboardStep(node,result);
+    if(decoder.id==='reverse')return redundantReverseStep(node);
+    return false;
+}
+
 export async function search(input, options={}) {
     const maxDepth=options.maxDepth??3, maxNodes=options.maxNodes??300, signal=options.signal, englishWords=options.englishWords??null;
-    const rootQuality=textQuality(input,englishWords), open=[{text:input,path:[],depth:0,score:rootQuality.score,priority:rootQuality.score,evidence:rootQuality.evidence,plainTextLikely:rootQuality.plainTextLikely}], seen=new Set([input]), candidates=[];
-    let expanded=0, generated=1;
-    while(open.length&&expanded<maxNodes&&!signal?.aborted){
-        open.sort((a,b)=>b.priority-a.priority); const node=open.shift(); expanded++;
-        if(node.depth>0||node.plainTextLikely)candidates.push(node);
-        if(node.depth>=maxDepth||node.plainTextLikely)continue;
-        const probes=decoders.map(decoder=>({decoder,confidence:decoder.probe(node.text)})).filter(x=>x.confidence>0).sort((a,b)=>b.confidence-a.confidence);
-        for(const {decoder,confidence} of probes){
-            for(const result of decoder.decode(node.text)){
-                if(!result.text||same(result.text,node.text)||seen.has(result.text))continue;
-                seen.add(result.text);generated++;
-                const quality=textQuality(result.text,englishWords), depth=node.depth+1;
-                const progress=quality.score-node.score;
-                const child={text:result.text,path:[...node.path,{decoder:decoder.id,label:result.label,confidence}],depth,score:quality.score,evidence:quality.evidence,plainTextLikely:quality.plainTextLikely};
-                child.priority=quality.score+confidence*18+Math.max(-12,progress*.25)-depth*4;
-                open.push(child);
-                const segmented=autoSegmentEnglish(result.text,englishWords);
-                if(segmented&&!seen.has(segmented)){
-                    seen.add(segmented);generated++;
-                    const segmentedQuality=textQuality(segmented,englishWords);
-                    const wordChild={text:segmented,path:[...node.path,{decoder:decoder.id,label:result.label+' · 自动分词',confidence}],depth,score:segmentedQuality.score,evidence:[...segmentedQuality.evidence,'自动分词'],plainTextLikely:segmentedQuality.plainTextLikely};
-                    wordChild.priority=segmentedQuality.score+confidence*18+Math.max(-12,(segmentedQuality.score-node.score)*.25)-depth*4;
-                    open.push(wordChild);
+    const rootQuality=textQuality(input,englishWords), frontiers=Array.from({length:maxDepth+1},()=>[]), seen=new Set([input]), candidates=[];
+    frontiers[0].push({text:input,path:[],depth:0,score:rootQuality.score,priority:rootQuality.score,evidence:rootQuality.evidence,plainTextLikely:rootQuality.plainTextLikely,parent:null,step:null});
+    let expanded=0, generated=1, queued=1, redundantPruned=0;
+    // Leave part of the node budget for later layers, so a wide shallow layer
+    // cannot consume the entire search before deeper paths are considered.
+    const reservePerLayer=Math.max(1,Math.floor(maxNodes/(maxDepth*3)));
+    for(let level=0;level<maxDepth&&expanded<maxNodes&&!signal?.aborted;level++){
+        const frontier=frontiers[level];
+        const levelLimit=maxNodes-reservePerLayer*(maxDepth-level-1);
+        frontier.sort((a,b)=>b.priority-a.priority);
+        for(const node of frontier){
+            if(expanded>=levelLimit||signal?.aborted)break;
+            expanded++;queued--;
+            if(node.plainTextLikely)continue;
+            const probes=decoders.map(decoder=>({decoder,confidence:decoder.probe(node.text)})).filter(x=>x.confidence>0).sort((a,b)=>b.confidence-a.confidence);
+            for(const {decoder,confidence} of probes){
+                for(const result of decoder.decode(node.text)){
+                    if(!result.text||same(result.text,node.text))continue;
+                    if(redundantTransform(node,decoder,result)){redundantPruned++;continue;}
+                    if(seen.has(result.text))continue;
+                    seen.add(result.text);generated++;
+                    const quality=textQuality(result.text,englishWords), depth=node.depth+1;
+                    const progress=quality.score-node.score;
+                    const step={decoder:decoder.id,label:result.label,confidence,parameter:result.parameter};
+                    const child={text:result.text,path:[...node.path,step],depth,score:quality.score,evidence:quality.evidence,plainTextLikely:quality.plainTextLikely,parent:node,step};
+                    const nextPotential=depth<maxDepth?followupPotential(result.text,quality,englishWords):0;
+                    child.priority=quality.score+confidence*18+Math.max(-12,progress*.25)-depth*4+nextPotential;
+                    child.rankScore=quality.score+confidence*8-depth*2;
+                    frontiers[depth].push(child);candidates.push(child);queued++;
+                    const segmented=autoSegmentEnglish(result.text,englishWords,quality.trigramSignal);
+                    if(segmented&&!seen.has(segmented)){
+                        seen.add(segmented);generated++;
+                        const segmentedQuality=textQuality(segmented,englishWords);
+                        const segmentedScore=Math.min(100,Math.max(segmentedQuality.score,quality.score+2));
+                        const wordStep={...step,label:result.label+' · 自动分词',segmented:true};
+                        const wordChild={text:segmented,path:[...node.path,wordStep],depth,score:segmentedScore,evidence:[...segmentedQuality.evidence,'自动分词'],plainTextLikely:segmentedQuality.plainTextLikely,parent:node,step:wordStep};
+                        wordChild.priority=segmentedScore+confidence*18+Math.max(-12,(segmentedScore-node.score)*.25)-depth*4;
+                        wordChild.rankScore=segmentedScore+confidence*8-depth*2;
+                        frontiers[depth].push(wordChild);candidates.push(wordChild);queued++;
+                    }
                 }
             }
+            if(expanded%20===0){options.onProgress?.({expanded,generated,queued});await new Promise(resolve=>setTimeout(resolve,0));}
         }
-        if(expanded%20===0){options.onProgress?.({expanded,generated,queued:open.length});await new Promise(resolve=>setTimeout(resolve,0));}
-        if(open.length>maxNodes*3)open.sort((a,b)=>b.priority-a.priority).splice(maxNodes*3);
+        const next=frontiers[level+1];
+        if(next.length>maxNodes*4){next.sort((a,b)=>b.priority-a.priority);queued-=next.length-maxNodes*4;next.splice(maxNodes*4);}
     }
-    const ranked=[...candidates,...open.filter(node=>node.depth>0)].sort((a,b)=>b.priority-a.priority);
+    const ranked=candidates.sort((a,b)=>b.rankScore-a.rankScore);
     const selected=[],represented=new Set(),counts=new Map(),maxResults=20;
-    const add=candidate=>{selected.push(candidate);const id=candidate.path[0]?.decoder;counts.set(id,(counts.get(id)||0)+1);};
+    const add=candidate=>{selected.push(candidate);const id=candidate.path[0]?.decoder;counts.set(id,(counts.get(id)||0)+1);represented.add(id);};
+    for(const candidate of ranked.slice(0,Math.min(10,maxResults)))add(candidate);
     for(const candidate of ranked){
         const id=candidate.path[0]?.decoder;
         if(selected.length>=maxResults)break;
-        if(!represented.has(id)){add(candidate);represented.add(id);}
+        if(!represented.has(id))add(candidate);
     }
     for(const candidate of [...selected]){
-        if(selected.length>=maxResults||!candidate.evidence.includes('自动分词'))continue;
-        const original=ranked.find(item=>item.depth===candidate.depth&&item.path[0]?.decoder===candidate.path[0]?.decoder&&item.text===candidate.text.replace(/ /g,''));
-        if(original&&!selected.includes(original))add(original);
+        if(selected.length>=maxResults)break;
+        const counterpart=ranked.find(item=>item!==candidate&&item.depth===candidate.depth&&item.path[0]?.decoder===candidate.path[0]?.decoder&&item.text.replace(/ /g,'')===candidate.text.replace(/ /g,'')&&item.evidence.includes('自动分词')!==candidate.evidence.includes('自动分词'));
+        if(counterpart&&!selected.includes(counterpart))add(counterpart);
     }
     for(const candidate of ranked){
         if(selected.length>=maxResults)break;
@@ -347,8 +522,8 @@ export async function search(input, options={}) {
         const limit=({caesar:6,railfence:6,keyboardshift:4})[id]??2;
         if((counts.get(id)||0)<limit&&!selected.includes(candidate))add(candidate);
     }
-    selected.sort((a,b)=>b.priority-a.priority);
-    return {candidates:selected,stats:{expanded,generated,queued:open.length,aborted:!!signal?.aborted}};
+    selected.sort((a,b)=>b.rankScore-a.rankScore);
+    return {candidates:selected.map(({parent,step,...candidate})=>candidate),stats:{expanded,generated,queued,redundantPruned,aborted:!!signal?.aborted}};
 }
 
-export { textQuality };
+export { textQuality, redundantTransform };
