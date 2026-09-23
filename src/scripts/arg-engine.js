@@ -37,6 +37,24 @@ const same = (a, b) => a === b;
 const clean = text => text.trim();
 const one = (text, label) => text == null ? [] : [{ text, label }];
 const utf8 = bytes => new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(bytes));
+const commonWords=new Set('a i am an as at be by do go he hi if in is it me my no of on or so to up us we all and any are but can day did end for get got had has her him his how its let may new not now off old one our out own say see she the too two use was way who why yes yet you your after again about been being come could every first found from give going good great have here into just know like little look make many more most much must name never only other over part people right said same some such take than that their them then there these they thing think this those time under want were what when where which while will with word work would years hello world secret message discover discovered flee once'.split(' '));
+
+function autoSegmentEnglish(text,englishWords){
+    if(!englishWords||!/^[A-Za-z]{10,80}$/.test(text)||englishWords.has(text.toLowerCase()))return null;
+    const lower=text.toLowerCase(),best=Array(lower.length+1).fill(null);
+    best[0]={score:0,parts:[],common:0};
+    for(let end=1;end<=lower.length;end++){
+        for(let start=Math.max(0,end-20);start<end;start++){
+            const previous=best[start];if(!previous)continue;
+            const word=lower.slice(start,end),common=commonWords.has(word);
+            if((word.length===1&&!['a','i'].includes(word))||(!common&&!englishWords.has(word)))continue;
+            const score=previous.score+word.length+Math.min(word.length,8)*.35+(common?3:0)-2.5-(word.length===1?3:0);
+            if(!best[end]||score>best[end].score)best[end]={score,parts:[...previous.parts,text.slice(start,end)],common:previous.common+Number(common)};
+        }
+    }
+    const result=best[lower.length];
+    return result?.parts.length>=2&&result.common>=1&&result.score>=lower.length*.85?result.parts.join(' '):null;
+}
 
 function decodeBase32(text){
     const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',source=text.toUpperCase().replace(/[\s=]/g,'');let bits='';
@@ -197,6 +215,39 @@ function decodeAdfgx(text){
     const square='ABCDEFGHIKLMNOPQRSTUVWXYZ',axis='ADFGX';
     return one((source.match(/../g)||[]).map(pair=>square[axis.indexOf(pair[0])*5+axis.indexOf(pair[1])]).join(''),'ADFGX（无换位）');
 }
+function decodeRailFence(text){
+    const chars=[...text],results=[];
+    for(let rails=2;rails<=Math.min(10,Math.floor(chars.length/2));rails++){
+        const pattern=[],counts=Array(rails).fill(0);let row=0,direction=1;
+        for(let i=0;i<chars.length;i++){
+            pattern.push(row);counts[row]++;
+            if(row===0)direction=1;
+            else if(row===rails-1)direction=-1;
+            row+=direction;
+        }
+        const rows=[];let offset=0;
+        for(const count of counts){rows.push(chars.slice(offset,offset+count));offset+=count;}
+        const positions=Array(rails).fill(0);
+        results.push({text:pattern.map(index=>rows[index][positions[index]++]).join(''),label:'Rail Fence '+rails+' rails',parameter:rails});
+    }
+    return results;
+}
+const keyboardRows=['1234567890-=','qwertyuiop[]\\',"asdfghjkl;'",'zxcvbnm,./'];
+function decodeKeyboardShift(text){
+    const results=[];
+    for(const offset of [-2,-1,1,2]){
+        let valid=true;
+        const decoded=[...text].map(char=>{
+            const lower=char.toLowerCase(),row=keyboardRows.find(keys=>keys.includes(lower));
+            if(!row)return char;
+            const target=row[row.indexOf(lower)+offset];
+            if(!target){valid=false;return char;}
+            return char!==lower&&/[a-z]/.test(lower)?target.toUpperCase():target;
+        }).join('');
+        if(valid)results.push({text:decoded,label:'Keyboard Shift '+(offset<0?'left ':'right ')+Math.abs(offset),parameter:offset});
+    }
+    return results;
+}
 
 export const decoders = [
     { id:'url', name:'URL Decode', probe:t=>/%[0-9a-f]{2}/i.test(t)?0.98:0, decode:t=>{try{return one(decodeURIComponent(t),'URL Decode');}catch{return[];}} },
@@ -220,8 +271,31 @@ export const decoders = [
     { id:'tap', name:'Tap Code', probe:t=>{const runs=splitCodeWords(t).flatMap(word=>word.trim().split(/[ \t]+/));return runs.length>=4&&decodeTapCode(t).length?(runs.every(run=>/^\.+$/.test(run))?.9:.68):0;}, decode:decodeTapCode },
     { id:'atbash', name:'Atbash', probe:t=>/[A-Za-z]{4}/.test(t)?.24:0, decode:t=>one(t.replace(/[A-Za-z]/g,c=>String.fromCharCode((c<='Z'?155:219)-c.charCodeAt(0))),'Atbash') },
     { id:'reverse', name:'Reverse', probe:t=>t.length>=4?.14:0, decode:t=>one([...t].reverse().join(''),'Reverse') },
-    { id:'caesar', name:'Caesar', probe:t=>(t.match(/[A-Za-z]/g)||[]).length>=6?.3:0, decode:t=>Array.from({length:25},(_,i)=>{const shift=i+1;return{text:t.replace(/[A-Za-z]/g,c=>{const a=c<='Z'?65:97;return String.fromCharCode((c.charCodeAt(0)-a-shift+26)%26+a)}),label:shift===13?'ROT13':`Caesar -${shift}`,parameter:shift};}) }
+    { id:'caesar', name:'Caesar', probe:t=>(t.match(/[A-Za-z]/g)||[]).length>=4?.3:0, decode:t=>Array.from({length:25},(_,i)=>{const shift=i+1;return{text:t.replace(/[A-Za-z]/g,c=>{const a=c<='Z'?65:97;return String.fromCharCode((c.charCodeAt(0)-a-shift+26)%26+a)}),label:shift===13?'ROT13':`Caesar -${shift}`,parameter:shift};}) },
+    { id:'railfence', name:'Rail Fence', probe:t=>{const s=t.trim();return s.length>=8&&s.length<=500&&/^[A-Za-z\s]+$/.test(s)?.28:0;}, decode:decodeRailFence },
+    { id:'keyboardshift', name:'Keyboard Shift', probe:t=>{const chars=[...t],mapped=chars.filter(c=>keyboardRows.some(row=>row.includes(c.toLowerCase()))).length;return chars.length>=5&&chars.length<=500&&(t.match(/[A-Za-z]/g)||[]).length>=2&&mapped/chars.length>=.75?.34:0;}, decode:decodeKeyboardShift }
 ];
+
+// These formats have no encoded space. Keep single spaces as optional grouping,
+// and restore explicit word boundaries shared with Morse, Bacon, Binary and Tap Code.
+const wordEncodedIds=new Set(['base64','base32','base58','ascii85','base85','base91','hex','octal','decimal','a1z26','polybius','adfgx']);
+for(const decoder of decoders){
+    if(!wordEncodedIds.has(decoder.id))continue;
+    const probe=decoder.probe,decode=decoder.decode;
+    const normalize=word=>['base64','base32','base58','ascii85','base85','base91'].includes(decoder.id)?word.replace(/[ \t]/g,''):word;
+    decoder.probe=text=>{
+        const direct=probe(text),words=splitCodeWords(text);
+        return words.length>1&&words.every(word=>decode(normalize(word)).length)?Math.max(direct,.65):direct;
+    };
+    decoder.decode=text=>{
+        const direct=decode(text),words=splitCodeWords(text);
+        if(words.length<2||words.some(word=>!word.trim()))return direct;
+        const parts=words.map(word=>decode(normalize(word)));
+        if(parts.some(results=>results.length!==1))return direct;
+        const combined=parts.map(results=>results[0].text).join(' ');
+        return direct.some(result=>result.text===combined)?direct:[...direct,{text:combined,label:parts[0][0].label}];
+    };
+}
 
 export async function search(input, options={}) {
     const maxDepth=options.maxDepth??3, maxNodes=options.maxNodes??300, signal=options.signal, englishWords=options.englishWords??null;
@@ -241,23 +315,40 @@ export async function search(input, options={}) {
                 const child={text:result.text,path:[...node.path,{decoder:decoder.id,label:result.label,confidence}],depth,score:quality.score,evidence:quality.evidence,plainTextLikely:quality.plainTextLikely};
                 child.priority=quality.score+confidence*18+Math.max(-12,progress*.25)-depth*4;
                 open.push(child);
+                const segmented=autoSegmentEnglish(result.text,englishWords);
+                if(segmented&&!seen.has(segmented)){
+                    seen.add(segmented);generated++;
+                    const segmentedQuality=textQuality(segmented,englishWords);
+                    const wordChild={text:segmented,path:[...node.path,{decoder:decoder.id,label:result.label+' · 自动分词',confidence}],depth,score:segmentedQuality.score,evidence:[...segmentedQuality.evidence,'自动分词'],plainTextLikely:segmentedQuality.plainTextLikely};
+                    wordChild.priority=segmentedQuality.score+confidence*18+Math.max(-12,(segmentedQuality.score-node.score)*.25)-depth*4;
+                    open.push(wordChild);
+                }
             }
         }
         if(expanded%20===0){options.onProgress?.({expanded,generated,queued:open.length});await new Promise(resolve=>setTimeout(resolve,0));}
         if(open.length>maxNodes*3)open.sort((a,b)=>b.priority-a.priority).splice(maxNodes*3);
     }
-    candidates.sort((a,b)=>b.priority-a.priority);
-    const selected=[],represented=new Set();
-    for(const candidate of candidates){
-        const decoder=candidate.path[0]?.decoder;
-        if(!represented.has(decoder)){selected.push(candidate);represented.add(decoder);}
+    const ranked=[...candidates,...open.filter(node=>node.depth>0)].sort((a,b)=>b.priority-a.priority);
+    const selected=[],represented=new Set(),counts=new Map(),maxResults=20;
+    const add=candidate=>{selected.push(candidate);const id=candidate.path[0]?.decoder;counts.set(id,(counts.get(id)||0)+1);};
+    for(const candidate of ranked){
+        const id=candidate.path[0]?.decoder;
+        if(selected.length>=maxResults)break;
+        if(!represented.has(id)){add(candidate);represented.add(id);}
     }
-    for(const candidate of candidates){
-        if(selected.length>=12)break;
-        if(!selected.includes(candidate))selected.push(candidate);
+    for(const candidate of [...selected]){
+        if(selected.length>=maxResults||!candidate.evidence.includes('自动分词'))continue;
+        const original=ranked.find(item=>item.depth===candidate.depth&&item.path[0]?.decoder===candidate.path[0]?.decoder&&item.text===candidate.text.replace(/ /g,''));
+        if(original&&!selected.includes(original))add(original);
+    }
+    for(const candidate of ranked){
+        if(selected.length>=maxResults)break;
+        const id=candidate.path[0]?.decoder;
+        const limit=({caesar:6,railfence:6,keyboardshift:4})[id]??2;
+        if((counts.get(id)||0)<limit&&!selected.includes(candidate))add(candidate);
     }
     selected.sort((a,b)=>b.priority-a.priority);
-    return {candidates:selected.slice(0,12),stats:{expanded,generated,queued:open.length,aborted:!!signal?.aborted}};
+    return {candidates:selected,stats:{expanded,generated,queued:open.length,aborted:!!signal?.aborted}};
 }
 
 export { textQuality };

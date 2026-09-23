@@ -67,9 +67,13 @@
         '正在生成并排序搜索节点…':'Generating and ranking search nodes…','正在加载英文词库…':'Loading the English dictionary…','已展开 {expanded} 个节点，生成 {generated} 个不同状态，队列中还有 {queued} 个。':'Expanded {expanded} nodes, generated {generated} distinct states, with {queued} still queued.','搜索完成。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。':'Search complete. Expanded {expanded} nodes, generated {generated} distinct states, and showing the top {count} candidates.','搜索已停止。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。':'Search stopped. Expanded {expanded} nodes, generated {generated} distinct states, and showing the top {count} candidates.','搜索组件加载失败，请刷新页面后重试。':'The search component failed to load. Refresh the page and try again.','空输出':'Empty output','正常中文，视为明文':'Natural Chinese detected; treated as plaintext','检测到典型中文乱码':'Typical Chinese mojibake detected','有效 JSON':'Valid JSON','包含 URL':'Contains a URL','英文词命中':'Common English word found'
     });
     Object.assign(english, {
-        '按用途展开查看；当前支持 22 类解码器。':'Browse by category. 22 decoders are supported.',
+        '按用途展开查看；当前支持 24 类解码器。':'Browse by category. 24 decoders are supported.',
+        '不含空格的编码可用 /、|、换行或多个空格显式分词；单个空格仍用于编码分组。':'For encodings without spaces, /, |, a newline, or multiple spaces mark word breaks; one space remains available for grouping.',
+        '未显式分词时，较长的连续英文解码结果会参考英语词表尝试自动分词。':'Long decoded English letter runs without explicit word breaks are also segmented using the English dictionary.',
         '编码（固定映射）':'Encodings (fixed mapping)','密码（需要密钥）':'Ciphers (key required)','特殊领域':'Specialized','数学与代码':'Math and code',
-        '21 项':'21 entries','1 项':'1 entry','暂未收录':'Coming later','后续增加这一类时会在这里列出。':'New decoders in this category will appear here.',
+        '21 项':'21 entries','3 项':'3 entries','暂未收录':'Coming later','后续增加这一类时会在这里列出。':'New decoders in this category will appear here.',
+        '按标准之字形栅栏还原，枚举 2–10 栏；短文本不会枚举超过字符数一半的栏数。保留原文中的空格。':'Decodes the standard zigzag rail fence with 2–10 rails, capped at half the character count for short texts. Spaces remain in place.',
+        '按美式 QWERTY 键盘的同行位置，枚举左移或右移 1、2 个键。保留字母大小写；移到行边界之外的方案不作为候选。':'Tries shifting each key one or two positions left or right on a US QWERTY row. Letter case is preserved; shifts past a row edge are discarded.',
         '支持 RFC 1924 字母表，也称 b85；每五个字符还原四个字节，结果必须是有效 UTF-8。':'Uses the RFC 1924 alphabet, also known as b85. Each five characters decode to four bytes; output must be valid UTF-8.',
         '与 ASCII85 同属 85 进制编码，但使用不同的字母表；此项支持 RFC 1924 / Git 风格，解码结果必须是有效 UTF-8。':'Like ASCII85, it uses radix 85, but with a different alphabet. This entry supports the RFC 1924 / Git variant; output must be valid UTF-8.',
         '使用 91 字符字母表进行可变长度位打包，结果必须是有效 UTF-8。':'Uses a 91-character alphabet with variable-length bit packing; output must be valid UTF-8.',

@@ -18,6 +18,7 @@ async function expectCandidate(input, expected, options={}) {
 await expectCandidate('U0dWc2JHOGdWMjl5YkdRPQ==', 'Hello World');
 await expectCandidate('48656c6c6f20576f726c64', 'Hello World');
 await expectCandidate('Uryyb Jbeyq', 'Hello World', { maxDepth: 1 });
+await expectCandidate('Uryyb', 'Hello', { maxDepth: 2, maxNodes: 500, englishWords });
 await expectCandidate('Hello%2520World', 'Hello World');
 await expectCandidate('&#72;&#105;', 'Hi', { maxDepth: 1 });
 await expectCandidate('&amp;#72;&amp;#105;', 'Hi', { maxDepth: 2 });
@@ -31,6 +32,20 @@ await expectCandidate('110 145 154 154 157', 'Hello', { maxDepth: 1 });
 await expectCandidate('NM&qnZy;B1a%^M', 'Hello World', { maxDepth: 1 });
 await expectCandidate('fPNKd', 'test', { maxDepth: 1 });
 await expectCandidate('fPNKd', 'test', { maxDepth: 2, maxNodes: 500, englishWords });
+const rail = decoders.find(decoder => decoder.id === 'railfence');
+assert.deepEqual(rail.decode('WECRLTEERDSOEEFEAOCAIVDEN').map(result => result.parameter), [2,3,4,5,6,7,8,9,10]);
+assert(rail.decode('WECRLTEERDSOEEFEAOCAIVDEN').some(result => result.parameter === 3 && result.text === 'WEAREDISCOVEREDFLEEATONCE'));
+await expectCandidate('WECRLTEERDSOEEFEAOCAIVDEN', 'WEAREDISCOVEREDFLEEATONCE', { maxDepth: 2, maxNodes: 500, englishWords });
+await expectCandidate('WECRLTEERDSOEEFEAOCAIVDEN', 'WE ARE DISCOVERED FLEE AT ONCE', { maxDepth: 2, maxNodes: 500, englishWords });
+await expectCandidate('UryybJbeyq', 'Hello World', { maxDepth: 2, maxNodes: 500, englishWords });
+await expectCandidate('dGhpc2lzYXNlY3JldG1lc3NhZ2U=', 'this is a secret message', { maxDepth: 2, maxNodes: 500, englishWords });
+const noDictionary = await search('UryybJbeyq', { maxDepth: 1, maxNodes: 100 });
+assert(!noDictionary.candidates.some(candidate=>candidate.text==='Hello World'), 'Automatic word segmentation requires the English dictionary');
+const keyboard = decoders.find(decoder => decoder.id === 'keyboardshift');
+for (const [ciphertext, offset] of [['Jr;;p',-1],['Gwkki',1],["Kt''[",-2],['Fqjju',2]]) {
+    assert(keyboard.decode(ciphertext).some(result => result.parameter === offset && result.text === 'Hello'), `Keyboard Shift ${offset} failed for ${ciphertext}`);
+    await expectCandidate(ciphertext, 'Hello', { maxDepth: 2, maxNodes: 500, englishWords });
+}
 await expectCandidate('○●○○●○○○ ○●●○●○○●', 'Hi', { maxDepth: 1 });
 await expectCandidate('01001000 | 01101001', 'H i', { maxDepth: 1 });
 await expectCandidate('01001000 / 01101001', 'H i', { maxDepth: 1 });
@@ -47,6 +62,21 @@ await expectCandidate('.... .. | - .... . .-. .', 'HI THERE', { maxDepth: 1 });
 await expectCandidate('.... ..  - .... .', 'HI THE', { maxDepth: 1 });
 await expectCandidate('•••• •• / —', 'HI T', { maxDepth: 1 });
 await expectCandidate('0011100100010110101101110', 'HELLO', { maxDepth: 1 });
+for(const [id,encoded,decoded] of [
+    ['base64','SGVsbG8=','Hello'],['base32','JBSWY3DP','Hello'],
+    ['base58','JxF12TrwUP45BMd','Hello World'],['ascii85','<~87cURD]i,"Ebo7~>','Hello World'],
+    ['base85','NM&qnZy;B1a%^M','Hello World'],['base91','fPNKd','test'],
+    ['hex','48 65 6c 6c 6f','Hello'],['octal','110 145 154 154 157','Hello'],
+    ['decimal','72 101 108 108 111','Hello'],['a1z26','8 5 12 12 15','HELLO'],
+    ['polybius','23 15 31 31 34','HELLO'],['adfgx','DF AX FA FA FG','HELLO']
+]) {
+    const decoder=decoders.find(item=>item.id===id);
+    for(const separator of [' | ','  ','\n',' / ']) {
+        const input=encoded+separator+encoded;
+        assert(decoder.probe(input)>0,`${id} did not detect explicit word separator`);
+        assert(decoder.decode(input).some(result=>result.text===decoded+' '+decoded),`${id} lost word boundary for ${JSON.stringify(separator)}`);
+    }
+}
 for (const [id, input] of [
     ['morse','••••:••:—'],
     ['bacon','aab bbaabaaababbababbabbba'],
