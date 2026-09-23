@@ -373,7 +373,7 @@
             <section id="decoder-unicode"><h4>Unicode / Hex Escape</h4><p>还原 JavaScript 和 JSON 文本中常见的 \uXXXX 与 \xXX 转义。</p><code class="arg-example">\u0048\u0069 → Hi</code></section>
             <section id="decoder-a1z26"><h4>A1Z26</h4><p>把 1–26 映射为 A–Z，支持空格及常见标点作为数字分隔符。</p><code class="arg-example">8 5 12 12 15 → HELLO</code></section>
             <section id="decoder-bacon"><h4>Bacon Cipher</h4><p>每五个二元符号映射到 A–Z。支持 A/B 或任意两种符号；字母组用单个空格分隔或连续书写，单词用 /、|、换行或多个空格分隔。</p><code class="arg-example">aabbb aabaa ababb ababb abbba → HELLO</code></section>
-            <section id="decoder-morse"><h4>Morse 摩尔斯电码</h4><p>支持拉丁字母与数字。点、划可用任意两种符号表示；字母用单个空格分隔，单词用 /、|、换行或多个空格分隔。</p><code class="arg-example">.... .. / - .... . .-. . → HI THERE</code></section>
+            <section id="decoder-morse"><h4>Morse 摩尔斯电码</h4><p>支持拉丁字母与数字。点、划可用任意两种可打印符号表示；字母用单个空格分隔，单词用 /、|、换行或多个空格分隔。</p><code class="arg-example">.... .. / - .... . .-. . → HI THERE</code></section>
             <section id="decoder-polybius"><h4>Polybius 5×5</h4><p>无密钥标准方阵，I/J 共用一格；每两个 1–5 数字表示行和列。</p><code class="arg-example">23 15 31 31 34 → HELLO</code></section>
             <section id="decoder-adfgx"><h4>ADFGX（无换位）</h4><p>使用标准 5×5 方阵将 A、D、F、G、X 字母对映射为文字，不处理需要密钥的列换位层。</p><code class="arg-example">DF AX FA FA FG → HELLO</code></section>
             <section id="decoder-tap"><h4>Tap Code 敲击码</h4><p>每两串敲击组成一个字母，点或其他重复字符均可，敲击串之间用单个空格分隔；单词用 /、|、换行或多个空格分隔，C/K 共用一格。</p><code class="arg-example">xx xxx x xxxxx → HE</code></section>
@@ -880,5 +880,5 @@
 <script type="module" src="src/scripts/particle-title.js?v=f2badaae0c"></script>
 <script src="src/scripts/site.js?v=9dbe7129dc"></script>
 <script id="freshcup-tool-script" data-tool="calculator" src="/src/scripts/freshcup/calculator.js?v=9599a913bf"></script>
-<script src="/src/scripts/aicu.js?v=086a9ec5a0"></script><script defer src="/src/scripts/arg.js?v=8c5f5b5335"></script></body>
+<script src="/src/scripts/aicu.js?v=086a9ec5a0"></script><script defer src="/src/scripts/arg.js?v=7196ac65dc"></script></body>
 </html>

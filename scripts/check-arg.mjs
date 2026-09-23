@@ -34,6 +34,16 @@ assert.deepEqual(matchAcgNames('AI',archiveData),[],'Removed two-letter ACG part
 assert(englishWords.size>270000,'ARG dictionary must contain the full npm word-list, not Wordle-length entries');
 for(const word of ['path','scan','can','look','structured']) assert(englishWords.has(word),`ARG dictionary is missing ${word}`);
 const quality=(text)=>textQuality(text,englishWords,archiveData.words);
+const garbledChinese='菜\u0018\u0008\u000b軤\u0008';
+assert(quality(garbledChinese).score<25&&quality(garbledChinese).readableCoverage<.5,'Control characters must count against whole-text Chinese readability');
+assert(!quality('你好\u0008').plainTextLikely,'Chinese text with an embedded control character is not clean plaintext');
+assert(quality('A範¶A匚').score<50,'Two unrelated Han characters must not force a 96-point plaintext score');
+assert(!quality('中文线索 hello').plainTextLikely,'A short Han fragment beside Latin text is not complete Chinese plaintext');
+const morseSample='.---- / ..--- ..--- / .---- ....- / ---.. / ....- / ---.. / ..--- -.... / ---.. / .---- ---.. / .---- -.... / .---- ---.. / ..--- ..---';
+for(const acgWords of [null,archiveData.words]){
+    const outcome=await search(morseSample,{maxDepth:5,maxNodes:500,englishWords,acgWords});
+    assert(outcome.candidates.every(candidate=>candidate.score<80),`Morse sample produced an overconfident garbage candidate with ACG ${acgWords?'on':'off'}`);
+}
 const segmentedPlain='PUNCTUATION HIDES A VALID TRANSPOSITION';
 const fragmentedPlain='PUNCTUATION HIDES AVA LID TRANS POS IT ION';
 assert(quality(segmentedPlain).score>quality(fragmentedPlain).score,'Scoring should prefer complete words to excessive fragmentation');
@@ -233,6 +243,13 @@ await expectCandidate('aabbb aabaa\nababb ababb abbba', 'HE LLO', { maxDepth: 1 
 await expectCandidate('.... .. | - .... . .-. .', 'HI THERE', { maxDepth: 1 });
 await expectCandidate('.... ..  - .... .', 'HI THE', { maxDepth: 1 });
 await expectCandidate('•••• •• / —', 'HI T', { maxDepth: 1 });
+const morseDecoder=decoders.find(decoder=>decoder.id==='morse');
+for(const symbol of ['\u0001','\u0085','\u200B','\uFFFD']){
+    const input=`@@@@ @@ / ${symbol}${symbol}${symbol}`;
+    assert.equal(morseDecoder.probe(input),0,`Morse accepted an invalid binary symbol ${JSON.stringify(symbol)}`);
+    assert.deepEqual(morseDecoder.decode(input),[],`Morse decoded an invalid binary symbol ${JSON.stringify(symbol)}`);
+}
+assert(morseDecoder.decode('@@@@ @@ / ---').length>0,'Morse should still accept two printable symbols');
 await expectCandidate('0011100100010110101101110', 'HELLO', { maxDepth: 1 });
 for(const [id,encoded,decoded] of [
     ['base64','SGVsbG8=','Hello'],['base32','JBSWY3DP','Hello'],

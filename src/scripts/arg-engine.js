@@ -35,7 +35,8 @@ function entropy(text) {
 
 function textQuality(text, englishWords=null, acgWords=null) {
     if (!text) return { score: 0, evidence: ['空输出'] };
-    const chars = [...text], printable = chars.filter(c => !/\p{C}/u.test(c) || /[\n\r\t]/.test(c)).length / chars.length;
+    const chars = [...text], invalidControls = chars.filter(c => /\p{C}/u.test(c) && !/[\n\r\t]/.test(c)).length;
+    const printable = 1-invalidControls/chars.length;
     const latinWords = (text.match(/[A-Za-z]{2,}/g) || []).map(word=>word.toLowerCase());
     const eligibleWords = latinWords.filter(word=>word.length>=3);
     const shortRareHits=eligibleWords.filter(word=>word.length===3&&!commonWords.has(word)&&!acgWords?.full.has(word)&&englishWords?.has(word)).length;
@@ -55,9 +56,9 @@ function textQuality(text, englishWords=null, acgWords=null) {
     const wholeFullName=!!acgWords?.full.has(compact)&&/^[A-Za-z\s.'’·-]+$/.test(text);
     const partialHits=acgWords ? latinWords.filter(word=>acgWords.parts.has(word)).length : 0;
     // Score what the dictionaries explain in the whole output, including
-    // digits and unknown scripts in the denominator. Isolated names are clues,
+    // digits, controls and unknown scripts in the denominator. Isolated names are clues,
     // but cannot make a mostly unreadable intermediate state look like plaintext.
-    const contentLength=chars.filter(char=>/[\p{L}\p{N}\p{S}]/u.test(char)).length;
+    const contentLength=chars.filter(char=>/[\p{L}\p{N}\p{S}]/u.test(char)||(/\p{C}/u.test(char)&&!/[\n\r\t]/.test(char))).length;
     let readableLength=chineseMojibake?0:hanChars.length;
     const latinCredit=latinMatches.map(match=>{
         const word=match[0].toLowerCase();
@@ -87,14 +88,15 @@ function textQuality(text, englishWords=null, acgWords=null) {
     if(wholeFullName)readableLength=contentLength;
     const readableCoverage=contentLength?Math.min(1,readableLength/contentLength):0;
     const wholeTextWeight=readableCoverage**2;
-    const plainTextLikely=hanChars.length>=2&&!chineseMojibake&&printable>.9&&readableCoverage>=.98;
+    const hanShare=contentLength?hanChars.length/contentLength:0;
+    const plainTextLikely=hanChars.length>=4&&hanShare>=.8&&!chineseMojibake&&invalidControls===0&&readableCoverage>=.98;
     let score = printable*34 + (englishScore+(wholeFullName?16:fullNameHit?0:Math.min(4,partialHits*2)))*wholeTextWeight + Math.min(spaces,4)*.5*readableCoverage - Math.max(0,shortRareHits-1)*2.5*wholeTextWeight - replacement*12 - (chineseMojibake?12:0);
     const evidence = [`可打印字符 ${Math.round(printable * 100)}%`, `全文可读覆盖 ${Math.round(readableCoverage*100)}%`, `熵 ${entropy(text).toFixed(2)}`];
     if(englishWords&&eligibleWords.length)evidence.push(`英文词库命中 ${englishHits}/${eligibleWords.length}`);
     if(trigramScore>0)evidence.push(`英文字符组合 ${trigramScore.toFixed(1)}`);
     if(fullNameHit||partialHits)evidence.push('ACG Name 词库命中');
     if(plainTextLikely){score=Math.max(score,96);evidence.push('正常中文，视为明文');}
-    else if(hanChars.length>=2&&!chineseMojibake)score=Math.max(score,96*wholeTextWeight);
+    else if(hanChars.length>=4&&!chineseMojibake)score=Math.max(score,96*wholeTextWeight*printable*printable*hanShare);
     else if(hanChars.length>=2&&chineseMojibake)evidence.push('检测到典型中文乱码');
     if (/^\s*[\[{].*[\]}]\s*$/s.test(text)) { try { JSON.parse(text); score += 30*wholeTextWeight; evidence.push('有效 JSON'); } catch {} }
     if (/https?:\/\/[^\s]+/i.test(text)) { score += 18*wholeTextWeight; evidence.push('包含 URL'); }
@@ -136,13 +138,13 @@ function autoSegmentEnglish(text,englishWords,trigramScore=englishTrigramScore(t
             const previous=best[start];if(!previous)continue;
             const word=lower.slice(start,end),common=commonWords.has(word),fullName=!!acgWords?.full.has(word),partName=!!acgWords?.parts.has(word),english=!!englishWords?.has(word);
             if(!common&&!english&&!fullName&&!partName)continue;
-            const uniqueName=fullName&&!english,shortRare=word.length<=3&&!common&&!uniqueName;
-            const score=previous.score+word.length+Math.min(word.length,8)*.35+(english?wordPrefixBonus(word,englishWords):0)+(common?3:0)+(uniqueName?4:0)-4.5-(word.length===1?3:0)-(shortRare?2:0)-(partName&&!fullName&&!english?5:0);
+            const uniqueName=fullName&&!english,shortRare=word.length<=3&&!common;
+            const score=previous.score+word.length+Math.min(word.length,8)*.35+(english?wordPrefixBonus(word,englishWords):0)+(common?3:0)+(uniqueName&&word.length>=6?4:0)-4.5-(word.length===1?3:0)-(shortRare?2:0)-(partName&&!fullName&&!english?5:0);
             if(!best[end]||score>best[end].score)best[end]={score,parts:[...previous.parts,text.slice(start,end)]};
         }
     }
     const result=best[lower.length];
-    return result?.parts.length>=2&&result.score>=lower.length*.5&&(trigramScore>=7||result.parts.some(part=>acgWords?.full.has(part.toLowerCase())))?result.parts.join(' '):null;
+    return result?.parts.length>=2&&result.score>=lower.length*.5&&(trigramScore>=7||result.parts.some(part=>part.length>=6&&acgWords?.full.has(part.toLowerCase())))?result.parts.join(' '):null;
 }
 
 function decodeBase32(text){
@@ -194,6 +196,7 @@ function decodeBase91(text){
     try{return utf8(bytes);}catch{return null;}
 }
 const morseMap={'.-':'A','-...':'B','-.-.':'C','-..':'D','.':'E','..-.':'F','--.':'G','....':'H','..':'I','.---':'J','-.-':'K','.-..':'L','--':'M','-.':'N','---':'O','.--.':'P','--.-':'Q','.-.':'R','...':'S','-':'T','..-':'U','...-':'V','.--':'W','-..-':'X','-.--':'Y','--..':'Z','-----':'0','.----':'1','..---':'2','...--':'3','....-':'4','.....':'5','-....':'6','--...':'7','---..':'8','----.':'9'};
+const validMorseCharacters=text=>[...text].every(c=>!/[\p{C}\uFFFD]/u.test(c)||/[\r\n\t]/.test(c));
 const splitCodeWords=text=>text.trim().split(/[ \t]*[\/|][ \t]*|\r?\n+|[ \t]{2,}/);
 function fixedCodeWords(text,size,minUnits){
     const words=splitCodeWords(text),result=[];let units=0;
@@ -208,6 +211,7 @@ function fixedCodeWords(text,size,minUnits){
     return units>=minUnits?result:null;
 }
 function decodeMorse(text){
+    if(!validMorseCharacters(text))return[];
     const source=text.trim();const direct=/^[.\-_\/|\s]+$/.test(source)&&/[.\-_]{2}/.test(source);
     const variants=[];
     if(direct)variants.push({dot:'.',dash:source.includes('_')?'_':'-',standard:true});
@@ -370,7 +374,7 @@ export const decoders = [
     { id:'unicode', name:'Unicode Escape', probe:t=>/(?:\\u[0-9a-f]{4}|\\x[0-9a-f]{2})/i.test(t)?.97:0, decode:t=>one(t.replace(/\\u([0-9a-f]{4})/gi,(_,n)=>String.fromCharCode(parseInt(n,16))).replace(/\\x([0-9a-f]{2})/gi,(_,n)=>String.fromCharCode(parseInt(n,16))),'Unicode Escape') },
     { id:'a1z26', name:'A1Z26', probe:t=>{const parts=t.trim().split(/[\s,:;|/-]+/);return parts.length>=3&&parts.every(n=>/^\d{1,2}$/.test(n)&&+n>=1&&+n<=26)?.86:0;}, decode:t=>one(t.trim().split(/[\s,:;|/-]+/).map(n=>String.fromCharCode(64+Number(n))).join(''),'A1Z26') },
     { id:'bacon', name:'Bacon Cipher', probe:t=>{const words=fixedCodeWords(t,5,2);if(!words||!decodeBacon(t).length)return 0;const symbols=new Set(words.flat().map(c=>c.toLowerCase()));return symbols.has('a')&&symbols.has('b')?.88:.62;}, decode:decodeBacon },
-    { id:'morse', name:'Morse', probe:t=>{const s=t.trim(),symbols=new Set([...s].filter(c=>! /[\s/|]/.test(c)));return /^[.\-_\/|\s]+$/.test(s)&&/[.\-_]{2}/.test(s)?.9:s.length>=8&&symbols.size===2&&decodeMorse(s).length?.62:0;}, decode:decodeMorse },
+    { id:'morse', name:'Morse', probe:t=>{if(!validMorseCharacters(t))return 0;const s=t.trim(),symbols=new Set([...s].filter(c=>! /[\s/|]/.test(c)));return /^[.\-_\/|\s]+$/.test(s)&&/[.\-_]{2}/.test(s)?.9:s.length>=8&&symbols.size===2&&decodeMorse(s).length?.62:0;}, decode:decodeMorse },
     { id:'polybius', name:'Polybius', probe:t=>/^[1-5\s,:;|/-]+$/.test(t)&&t.replace(/[^1-5]/g,'').length>=4&&t.replace(/[^1-5]/g,'').length%2===0?.76:0, decode:decodePolybius },
     { id:'adfgx', name:'ADFGX', probe:t=>{const s=t.replace(/[\s/]/g,'');return s.length>=4&&s.length%2===0&&/^[ADFGX]+$/i.test(s)?.7:0;}, decode:decodeAdfgx },
     { id:'tap', name:'Tap Code', probe:t=>{const runs=splitCodeWords(t).flatMap(word=>word.trim().split(/[ \t]+/));return runs.length>=4&&decodeTapCode(t).length?(runs.every(run=>/^\.+$/.test(run))?.9:.68):0;}, decode:decodeTapCode },
