@@ -4,10 +4,56 @@ import { readFile } from 'node:fs/promises';
 const source = await readFile(new URL('../src/scripts/arg-engine.js', import.meta.url), 'utf8');
 const { search, decoders, textQuality, redundantTransform } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 const reference = await readFile(new URL('../src/pages/arg.html', import.meta.url), 'utf8');
+const searchMarkup=reference.split('<div id="arg-search-panel">')[1].split('<article class="arg-reference"')[0];
+assert(!searchMarkup.includes('arg-acg-toggle'),'The ACG switch belongs on the reference page only');
+assert.equal((reference.match(/id="arg-acg-toggle"/g)||[]).length,1,'There must be one ACG switch shared by search and reference views');
 const dictionaryText = await readFile(new URL('../assets/data/arg-english-words.txt', import.meta.url), 'utf8');
 const englishWords = new Set(dictionaryText.toLowerCase().split(/\s+/).filter(Boolean));
+const acgSource = await readFile(new URL('../src/scripts/arg-acg.js', import.meta.url), 'utf8');
+const { createAcgData, matchAcgNames } = await import(`data:text/javascript;base64,${Buffer.from(acgSource).toString('base64')}`);
+const acgData=createAcgData([
+    {roman:'Oomura Yumi',chinese:'大村裕美',url:'https://bangumi.tv/character/39'},
+    {roman:'Mai',chinese:'舞',url:'https://bangumi.tv/character/3'},
+    {roman:'Sakurajima Mai',chinese:'樱岛麻衣',url:'https://bangumi.tv/character/1'},
+    {roman:'Sakurajima Mai',chinese:'另一角色',url:'https://bangumi.tv/character/2'}
+], 'full\tai\nfull\tmai\nfull\toomurayumi\nfull\tsakurajimamai\npart\tai\npart\toomura\npart\tyumi\npart\tsakurajima\n');
+assert(!acgData.words.full.has('ai')&&!acgData.words.parts.has('ai'),'Two-letter ACG names must be rejected even in supplied data');
+assert.deepEqual(matchAcgNames('OOMURAYUMI',acgData).map(hit=>hit.text),['OOMURAYUMI'],'Full names must hide overlapping surname/given-name hits');
+assert.equal(matchAcgNames('Oomura Yumi',acgData)[0].entry?.chinese,'大村裕美');
+assert.equal(matchAcgNames('Sakurajima Mai',acgData)[0].entry,null,'Ambiguous full names must have no link target');
+assert.deepEqual(matchAcgNames('Mai',acgData).map(hit=>[hit.text,hit.entry]),[['Mai',null]],'A full name that is also a name part must not carry a link');
+const archiveNames=JSON.parse(await readFile(new URL('../assets/data/arg-acg-names.json',import.meta.url),'utf8'));
+const archiveWords=await readFile(new URL('../assets/data/arg-acg-words.txt',import.meta.url),'utf8');
+assert(archiveWords.trim().split(/\r?\n/).every(line=>line.split('\t')[1]?.length>=3),'Generated ACG words must exclude two-letter names and parts');
+assert(archiveNames.length>50000,'The generated ACG display table is incomplete');
+assert(archiveNames.every(entry=>/^[A-Za-z ]+$/.test(entry.roman)&&/[\u3400-\u9fff]/u.test(entry.chinese)&&/^https:\/\/bangumi\.tv\/character\/\d+$/.test(entry.url)),'ACG entries must have valid romanization, Chinese names, and Bangumi character URLs');
+const archiveData=createAcgData(archiveNames,archiveWords);
+assert.equal(matchAcgNames('Furukawa Nagisa',archiveData)[0].entry?.url,'https://bangumi.tv/character/4');
+assert.equal(matchAcgNames('Alice',archiveData)[0].entry,null,'Duplicate real Archive names must not resolve to one character');
+assert.deepEqual(matchAcgNames('AI',archiveData),[],'Removed two-letter ACG parts must not appear in results');
 assert(englishWords.size>270000,'ARG dictionary must contain the full npm word-list, not Wordle-length entries');
 for(const word of ['path','scan','can','look','structured']) assert(englishWords.has(word),`ARG dictionary is missing ${word}`);
+const quality=(text)=>textQuality(text,englishWords,archiveData.words);
+const segmentedPlain='PUNCTUATION HIDES A VALID TRANSPOSITION';
+const fragmentedPlain='PUNCTUATION HIDES AVA LID TRANS POS IT ION';
+assert(quality(segmentedPlain).score>quality(fragmentedPlain).score,'Scoring should prefer complete words to excessive fragmentation');
+for(const acgWords of [null,archiveData.words]){
+    const outcome=await search(Buffer.from(segmentedPlain.replace(/ /g,'')).toString('base64'),{maxDepth:1,maxNodes:200,englishWords,acgWords});
+    assert.equal(outcome.candidates[0]?.text,segmentedPlain,`Automatic segmentation should keep complete words with ACG ${acgWords?'on':'off'}`);
+}
+for(const [plain,mixed] of [
+    ['this is a secret message','HELLO qxz4@mvjxqp'],
+    ['这是一个完整的中文答案','这是答案 qxz49?ASDZ'],
+    ['Furukawa Nagisa','Furukawa qxz49?ASDZ']
+]){
+    assert(quality(plain).score>quality(mixed).score+12,`A local word match raised mixed gibberish above whole-text plaintext: ${mixed}`);
+    assert(quality(mixed).readableCoverage<.7,`Mixed gibberish must have low readable coverage: ${mixed}`);
+}
+assert(!quality('这是答案 qxz49?ASDZ').plainTextLikely,'A Chinese fragment in gibberish must not stop search as plaintext');
+assert(quality('这是一个完整的中文答案').plainTextLikely,'Fully readable Chinese should still stop search as plaintext');
+assert(!quality('这是一个完整的中文答案这是一个完整的中文答案qxz').plainTextLikely,'A mostly Chinese intermediate state with an unreadable tail is not complete plaintext');
+assert(quality('This is Furukawa Nagisa').readableCoverage>.95,'A complete ACG name inside readable text should count toward whole-text coverage');
+assert(quality('Furukawa Nagisa').score>quality('Furukawa qxz49?ASDZ').score+12,'A complete spaced ACG name should outweigh an isolated part in gibberish');
 for (const decoder of decoders) {
     assert(reference.includes(`id="decoder-${decoder.id}"`), `Missing reference entry for decoder ${decoder.id}`);
 }
@@ -18,6 +64,7 @@ async function expectCandidate(input, expected, options={}) {
 }
 
 await expectCandidate('U0dWc2JHOGdWMjl5YkdRPQ==', 'Hello World');
+await expectCandidate(Buffer.from('HELLOOOMURAYUMIWORLD').toString('base64'),'HELLO OOMURAYUMI WORLD',{maxDepth:1,englishWords,acgWords:acgData.words});
 await expectCandidate('48656c6c6f20576f726c64', 'Hello World');
 await expectCandidate('Uryyb Jbeyq', 'Hello World', { maxDepth: 1 });
 await expectCandidate('Uryyb', 'Hello', { maxDepth: 2, maxNodes: 500, englishWords });
@@ -35,6 +82,11 @@ await expectCandidate('NM&qnZy;B1a%^M', 'Hello World', { maxDepth: 1 });
 await expectCandidate('fPNKd', 'test', { maxDepth: 1 });
 await expectCandidate('fPNKd', 'test', { maxDepth: 2, maxNodes: 500, englishWords });
 const rail = decoders.find(decoder => decoder.id === 'railfence');
+assert(rail.probe('WEAREDISCOVEREDFLEEATONCE')>rail.probe('HELLO123WORLD'));
+assert(rail.probe('HELLO123WORLD')>rail.probe('HELLO!WORLD'));
+assert(rail.probe('HELLO!WORLD')>rail.probe('A1B2C3!D4?'));
+assert(rail.probe('○●○●○●○●')>0,'Rail Fence must accept non-ASCII encoding symbols');
+assert.equal(rail.probe('HELLO\u0001WORLD'),0,'Rail Fence must reject control characters');
 assert.deepEqual(rail.decode('WECRLTEERDSOEEFEAOCAIVDEN').map(result => result.parameter), [2,3,4,5,6,7,8,9,10]);
 assert(rail.decode('WECRLTEERDSOEEFEAOCAIVDEN').some(result => result.parameter === 3 && result.text === 'WEAREDISCOVEREDFLEEATONCE'));
 await expectCandidate('WECRLTEERDSOEEFEAOCAIVDEN', 'WEAREDISCOVEREDFLEEATONCE', { maxDepth: 2, maxNodes: 500, englishWords });
@@ -55,6 +107,12 @@ for(const [plaintext,rails] of [['0123456789',3],['A1B2C3D4E5F6G7H8',4],['12 34 
     assert(rail.decode(encoded).some(result=>result.parameter===rails&&result.text===plaintext));
     await expectCandidate(encoded,plaintext,{maxDepth:1,maxNodes:100,englishWords});
 }
+for(const [plaintext,rails] of [['HELLO:WORLD!?',3],['○●○○●○○○ | ○●●○●○○●',4],['🔺🔹🔺🔹🔺🔹🔺🔹',3]]){
+    const encoded=encodeRail(plaintext,rails);
+    assert(rail.probe(encoded)>0,`Rail Fence did not detect symbols in ${encoded}`);
+    assert(rail.decode(encoded).some(result=>result.parameter===rails&&result.text===plaintext),`Rail Fence did not preserve symbols in ${encoded}`);
+}
+await expectCandidate(encodeRail('○●○○●○○○ | ○●●○●○○●',4),'H i',{maxDepth:2,maxNodes:500});
 const square='ABCDEFGHIKLMNOPQRSTUVWXYZ',axis='ADFGX';
 function encodeLayered(text,rails,shift) {
     const pairs=[...text].map(char=>{
@@ -207,4 +265,4 @@ const chineseResult = await search(Buffer.from('这是一个中文答案').toStr
 const chineseCandidate = chineseResult.candidates.find(candidate => candidate.text === '这是一个中文答案');
 assert(chineseCandidate?.plainTextLikely, 'Decoded Chinese should be returned as plaintext');
 assert.equal(chineseCandidate.depth, 1, 'Plain Chinese should stop expanding after it is found');
-console.log('OK ARG engine: decoders, ARG dictionary scoring and Chinese plaintext detection');
+console.log('OK ARG engine: decoders, English/ACG dictionaries, matching, and Chinese plaintext detection');

@@ -33,31 +33,73 @@ function entropy(text) {
     return value;
 }
 
-function textQuality(text, englishWords=null) {
+function textQuality(text, englishWords=null, acgWords=null) {
     if (!text) return { score: 0, evidence: ['空输出'] };
     const chars = [...text], printable = chars.filter(c => !/\p{C}/u.test(c) || /[\n\r\t]/.test(c)).length / chars.length;
     const latinWords = (text.match(/[A-Za-z]{2,}/g) || []).map(word=>word.toLowerCase());
     const eligibleWords = latinWords.filter(word=>word.length>=3);
-    const dictionaryHits = englishWords ? eligibleWords.filter(word=>englishWords.has(word)).length : 0;
+    const shortRareHits=eligibleWords.filter(word=>word.length===3&&!commonWords.has(word)&&!acgWords?.full.has(word)&&englishWords?.has(word)).length;
+    const englishHits = englishWords ? eligibleWords.filter(word=>englishWords.has(word)).length : 0;
+    const dictionaryHits = eligibleWords.filter(word=>englishWords?.has(word)||acgWords?.full.has(word)).length;
     const hanChars = text.match(/\p{Script=Han}/gu) || [];
     const chineseMojibake = /锟斤拷|烫{2,}|屯{2,}|�|銆|鈥|鐨|鍚|鏄|浣犲|鎴戝|涓€/.test(text);
-    const plainTextLikely = hanChars.length>=2 && !chineseMojibake && printable>.9;
     const spaces = (text.match(/\s/g) || []).length;
     const replacement = (text.match(/�/g) || []).length;
     const dictionaryRatio = eligibleWords.length ? dictionaryHits/eligibleWords.length : 0;
     const trigramSignal=englishTrigramScore(text,englishWords);
     const trigramScore=trigramSignal*.5;
-    const englishScore = englishWords ? Math.max(Math.min(38,dictionaryHits*6+dictionaryRatio*14),trigramScore) : Math.min(latinWords.length,8)*2;
-    let score = printable * 34 + englishScore + Math.min(spaces, 8) * 1.2 - replacement * 12;
-    const evidence = [`可打印字符 ${Math.round(printable * 100)}%`, `熵 ${entropy(text).toFixed(2)}`];
-    if(englishWords&&eligibleWords.length)evidence.push(`英文词库命中 ${dictionaryHits}/${eligibleWords.length}`);
+    const englishScore = englishWords||acgWords ? Math.max(Math.min(38,dictionaryHits*6+dictionaryRatio*14),trigramScore) : Math.min(latinWords.length,8)*2;
+    const compact=text.toLowerCase().replace(/[^a-z]/g,'');
+    const latinMatches=[...text.matchAll(/[A-Za-z]+/g)];
+    let fullNameHit=!!(acgWords?.full.has(compact)||latinWords.some(word=>acgWords?.full.has(word)));
+    const wholeFullName=!!acgWords?.full.has(compact)&&/^[A-Za-z\s.'’·-]+$/.test(text);
+    const partialHits=acgWords ? latinWords.filter(word=>acgWords.parts.has(word)).length : 0;
+    // Score what the dictionaries explain in the whole output, including
+    // digits and unknown scripts in the denominator. Isolated names are clues,
+    // but cannot make a mostly unreadable intermediate state look like plaintext.
+    const contentLength=chars.filter(char=>/[\p{L}\p{N}\p{S}]/u.test(char)).length;
+    let readableLength=chineseMojibake?0:hanChars.length;
+    const latinCredit=latinMatches.map(match=>{
+        const word=match[0].toLowerCase();
+        if(commonWords.has(word)||(word.length>=3&&englishWords?.has(word))||acgWords?.full.has(word))return 1;
+        return acgWords?.parts.has(word)?.35:0;
+    });
+    if(acgWords){
+        for(let start=0;start<latinMatches.length;start++){
+            let joined=latinMatches[start][0].toLowerCase();
+            for(let end=start+1;end<Math.min(latinMatches.length,start+5);end++){
+                const separator=text.slice(latinMatches[end-1].index+latinMatches[end-1][0].length,latinMatches[end].index);
+                if(!/^[\s.'’·-]+$/.test(separator))break;
+                joined+=latinMatches[end][0].toLowerCase();
+                if(joined.length>acgWords.maxLength)break;
+                if(acgWords.full.has(joined)){
+                    fullNameHit=true;
+                    for(let index=start;index<=end;index++)latinCredit[index]=1;
+                }
+            }
+        }
+    }
+    for(let index=0;index<latinMatches.length;index++)readableLength+=latinMatches[index][0].length*latinCredit[index];
+    for(const match of text.matchAll(/\d+/g)){
+        const before=text[match.index-1]||'',after=text[match.index+match[0].length]||'';
+        if(!/[A-Za-z]/.test(before)&&!/[A-Za-z]/.test(after))readableLength+=match[0].length;
+    }
+    if(wholeFullName)readableLength=contentLength;
+    const readableCoverage=contentLength?Math.min(1,readableLength/contentLength):0;
+    const wholeTextWeight=readableCoverage**2;
+    const plainTextLikely=hanChars.length>=2&&!chineseMojibake&&printable>.9&&readableCoverage>=.98;
+    let score = printable*34 + (englishScore+(wholeFullName?16:fullNameHit?0:Math.min(4,partialHits*2)))*wholeTextWeight + Math.min(spaces,4)*.5*readableCoverage - Math.max(0,shortRareHits-1)*2.5*wholeTextWeight - replacement*12 - (chineseMojibake?12:0);
+    const evidence = [`可打印字符 ${Math.round(printable * 100)}%`, `全文可读覆盖 ${Math.round(readableCoverage*100)}%`, `熵 ${entropy(text).toFixed(2)}`];
+    if(englishWords&&eligibleWords.length)evidence.push(`英文词库命中 ${englishHits}/${eligibleWords.length}`);
     if(trigramScore>0)evidence.push(`英文字符组合 ${trigramScore.toFixed(1)}`);
+    if(fullNameHit||partialHits)evidence.push('ACG Name 词库命中');
     if(plainTextLikely){score=Math.max(score,96);evidence.push('正常中文，视为明文');}
+    else if(hanChars.length>=2&&!chineseMojibake)score=Math.max(score,96*wholeTextWeight);
     else if(hanChars.length>=2&&chineseMojibake)evidence.push('检测到典型中文乱码');
-    if (/^\s*[\[{].*[\]}]\s*$/s.test(text)) { try { JSON.parse(text); score += 30; evidence.push('有效 JSON'); } catch {} }
-    if (/https?:\/\/[^\s]+/i.test(text)) { score += 18; evidence.push('包含 URL'); }
-    if (/\b(?:the|and|that|this|with|from|hello|flag|secret|password)\b/i.test(text)) { score += 18; evidence.push('英文词命中'); }
-    return { score: Math.max(0, Math.min(100, score)), evidence, plainTextLikely, trigramSignal };
+    if (/^\s*[\[{].*[\]}]\s*$/s.test(text)) { try { JSON.parse(text); score += 30*wholeTextWeight; evidence.push('有效 JSON'); } catch {} }
+    if (/https?:\/\/[^\s]+/i.test(text)) { score += 18*wholeTextWeight; evidence.push('包含 URL'); }
+    if (/\b(?:the|and|that|this|with|from|hello|flag|secret|password)\b/i.test(text)) { score += 18*wholeTextWeight; evidence.push('英文词命中'); }
+    return { score: Math.max(0, Math.min(100, score)), evidence, plainTextLikely, trigramSignal, readableCoverage };
 }
 
 const same = (a, b) => a === b;
@@ -84,21 +126,23 @@ function wordPrefixBonus(word,englishWords){
     return bonus;
 }
 
-function autoSegmentEnglish(text,englishWords,trigramScore=englishTrigramScore(text,englishWords)){
-    if(!englishWords||!/^[A-Za-z]{10,80}$/.test(text)||englishWords.has(text.toLowerCase())||trigramScore<7)return null;
+function autoSegmentEnglish(text,englishWords,trigramScore=englishTrigramScore(text,englishWords),acgWords=null){
+    if((!englishWords&&!acgWords)||!/^[A-Za-z]{10,80}$/.test(text)||englishWords?.has(text.toLowerCase())||acgWords?.full.has(text.toLowerCase()))return null;
     const lower=text.toLowerCase(),best=Array(lower.length+1).fill(null);
+    if(new Set(lower).size<4)return null;
     best[0]={score:0,parts:[]};
     for(let end=1;end<=lower.length;end++){
-        for(let start=Math.max(0,end-20);start<end;start++){
+        for(let start=Math.max(0,end-Math.max(20,acgWords?.maxLength||0));start<end;start++){
             const previous=best[start];if(!previous)continue;
-            const word=lower.slice(start,end),common=commonWords.has(word);
-            if(!common&&!englishWords.has(word))continue;
-            const score=previous.score+word.length+Math.min(word.length,8)*.35+wordPrefixBonus(word,englishWords)+(common?3:0)-2.5-(word.length===1?3:0);
+            const word=lower.slice(start,end),common=commonWords.has(word),fullName=!!acgWords?.full.has(word),partName=!!acgWords?.parts.has(word),english=!!englishWords?.has(word);
+            if(!common&&!english&&!fullName&&!partName)continue;
+            const uniqueName=fullName&&!english,shortRare=word.length<=3&&!common&&!uniqueName;
+            const score=previous.score+word.length+Math.min(word.length,8)*.35+(english?wordPrefixBonus(word,englishWords):0)+(common?3:0)+(uniqueName?4:0)-4.5-(word.length===1?3:0)-(shortRare?2:0)-(partName&&!fullName&&!english?5:0);
             if(!best[end]||score>best[end].score)best[end]={score,parts:[...previous.parts,text.slice(start,end)]};
         }
     }
     const result=best[lower.length];
-    return result?.parts.length>=2&&result.score>=lower.length*.85?result.parts.join(' '):null;
+    return result?.parts.length>=2&&result.score>=lower.length*.5&&(trigramScore>=7||result.parts.some(part=>acgWords?.full.has(part.toLowerCase())))?result.parts.join(' '):null;
 }
 
 function decodeBase32(text){
@@ -279,11 +323,14 @@ function decodeRailFence(text){
 }
 function probeRailFence(text){
     const source=text.trim();
-    if(source.length<8||source.length>500||!/^[A-Za-z0-9\s]+$/.test(source)||!/[A-Za-z0-9]/.test(source))return 0;
+    const chars=[...source];
+    if(chars.length<8||chars.length>500||!chars.some(char=>!/\s/u.test(char))||/[\p{C}]/u.test(source.replace(/[\n\r\t]/g,'')))return 0;
+    const hasDigits=/\p{N}/u.test(source),hasSymbols=/[^\p{L}\p{N}\s]/u.test(source);
+    const confidence=hasSymbols?(hasDigits?0.10:0.16):(hasDigits?0.22:0.28);
     // A confirmed byte/code decode is more specific than a transposition;
     // keep Rail Fence available, but search the confirmed decode first.
     const confirmed=strongFollowups.some(decoder=>decoder.probe(source)>=.85&&decoder.decode(source).length>0);
-    return confirmed?.08:.28;
+    return confirmed?confidence*.28:confidence;
 }
 const keyboardRows=['1234567890-=','qwertyuiop[]\\',"asdfghjkl;'",'zxcvbnm,./'];
 function decodeKeyboardShift(text){
@@ -360,16 +407,16 @@ for(const decoder of decoders){
 const strongFollowupIds=new Set(['adfgx','binary','bacon','morse','polybius','tap','hex','url','html','unicode','a1z26','octal','decimal']);
 const strongFollowups=decoders.filter(decoder=>strongFollowupIds.has(decoder.id));
 
-function followupPotential(text,quality,englishWords){
+function followupPotential(text,quality,englishWords,acgWords){
     let best=0;
     for(const decoder of strongFollowups){
         const confidence=decoder.probe(text);
         if(confidence<.6)continue;
         for(const result of decoder.decode(text)){
             if(!result.text||result.text===text)continue;
-            const decodedQuality=textQuality(result.text,englishWords);
-            const segmented=autoSegmentEnglish(result.text,englishWords,decodedQuality.trigramSignal);
-            const decodedScore=segmented?Math.max(decodedQuality.score,textQuality(segmented,englishWords).score):decodedQuality.score;
+            const decodedQuality=textQuality(result.text,englishWords,acgWords);
+            const segmented=autoSegmentEnglish(result.text,englishWords,decodedQuality.trigramSignal,acgWords);
+            const decodedScore=segmented?Math.max(decodedQuality.score,textQuality(segmented,englishWords,acgWords).score):decodedQuality.score;
             const gain=Math.max(0,decodedScore-quality.score);
             best=Math.max(best,(confidence-.55)*40+gain*1.5);
         }
@@ -454,8 +501,8 @@ function redundantTransform(node,decoder,result){
 }
 
 export async function search(input, options={}) {
-    const maxDepth=options.maxDepth??3, maxNodes=options.maxNodes??300, signal=options.signal, englishWords=options.englishWords??null;
-    const rootQuality=textQuality(input,englishWords), frontiers=Array.from({length:maxDepth+1},()=>[]), seen=new Set([input]), candidates=[];
+    const maxDepth=options.maxDepth??3, maxNodes=options.maxNodes??300, signal=options.signal, englishWords=options.englishWords??null, acgWords=options.acgWords??null;
+    const rootQuality=textQuality(input,englishWords,acgWords), frontiers=Array.from({length:maxDepth+1},()=>[]), seen=new Set([input]), candidates=[];
     frontiers[0].push({text:input,path:[],depth:0,score:rootQuality.score,priority:rootQuality.score,evidence:rootQuality.evidence,plainTextLikely:rootQuality.plainTextLikely,parent:null,step:null});
     let expanded=0, generated=1, queued=1, redundantPruned=0;
     // Leave part of the node budget for later layers, so a wide shallow layer
@@ -476,18 +523,18 @@ export async function search(input, options={}) {
                     if(redundantTransform(node,decoder,result)){redundantPruned++;continue;}
                     if(seen.has(result.text))continue;
                     seen.add(result.text);generated++;
-                    const quality=textQuality(result.text,englishWords), depth=node.depth+1;
+                    const quality=textQuality(result.text,englishWords,acgWords), depth=node.depth+1;
                     const progress=quality.score-node.score;
                     const step={decoder:decoder.id,label:result.label,confidence,parameter:result.parameter};
                     const child={text:result.text,path:[...node.path,step],depth,score:quality.score,evidence:quality.evidence,plainTextLikely:quality.plainTextLikely,parent:node,step};
-                    const nextPotential=depth<maxDepth?followupPotential(result.text,quality,englishWords):0;
+                    const nextPotential=depth<maxDepth?followupPotential(result.text,quality,englishWords,acgWords):0;
                     child.priority=quality.score+confidence*18+Math.max(-12,progress*.25)-depth*4+nextPotential;
                     child.rankScore=quality.score+confidence*8-depth*2;
                     frontiers[depth].push(child);candidates.push(child);queued++;
-                    const segmented=autoSegmentEnglish(result.text,englishWords,quality.trigramSignal);
+                    const segmented=autoSegmentEnglish(result.text,englishWords,quality.trigramSignal,acgWords);
                     if(segmented&&!seen.has(segmented)){
                         seen.add(segmented);generated++;
-                        const segmentedQuality=textQuality(segmented,englishWords);
+                        const segmentedQuality=textQuality(segmented,englishWords,acgWords);
                         const segmentedScore=Math.min(100,Math.max(segmentedQuality.score,quality.score+2));
                         const wordStep={...step,label:result.label+' · 自动分词',segmented:true};
                         const wordChild={text:segmented,path:[...node.path,wordStep],depth,score:segmentedScore,evidence:[...segmentedQuality.evidence,'自动分词'],plainTextLikely:segmentedQuality.plainTextLikely,parent:node,step:wordStep};

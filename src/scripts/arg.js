@@ -3,20 +3,34 @@ let controller;
 const engineUrl = new URL('./arg-engine.js', document.currentScript.src);
 engineUrl.search = new URL(document.currentScript.src).search;
 const enginePromise = import(engineUrl.href);
+const acgUrl=new URL('./arg-acg.js',document.currentScript.src);
+acgUrl.search=engineUrl.search;
+const dataVersion=engineUrl.search;
+const acgModulePromise=()=>import(acgUrl.href);
 let dictionaryPromise;
+let acgPromise;
 const bindText=(element,source,params={})=>window.MELSI18n?window.MELSI18n.bind(element,source,params):element.textContent=source.replace(/\{(\w+)\}/g,(match,key)=>Object.hasOwn(params,key)?params[key]:match);
 function loadEnglishDictionary(){
     if(!dictionaryPromise)dictionaryPromise=fetch('/assets/data/arg-english-words.txt').then(response=>{if(!response.ok)throw new Error(`Dictionary HTTP ${response.status}`);return response.text();}).then(text=>new Set(text.toLowerCase().split(/\s+/).filter(Boolean)));
     return dictionaryPromise;
 }
+function loadAcgData(){
+    if(!acgPromise)acgPromise=Promise.all([
+        acgModulePromise(),
+        fetch('/assets/data/arg-acg-names.json'+dataVersion).then(response=>{if(!response.ok)throw new Error(`ACG JSON HTTP ${response.status}`);return response.json();}),
+        fetch('/assets/data/arg-acg-words.txt'+dataVersion).then(response=>{if(!response.ok)throw new Error(`ACG words HTTP ${response.status}`);return response.text();})
+    ]).then(([module,entries,words])=>module.createAcgData(entries,words)).catch(error=>{acgPromise=null;throw error;});
+    return acgPromise;
+}
 
-function render(results, container) {
+function render(results, container, acgData=null, matchAcgNames=null) {
     if (!results.length) { container.innerHTML='<p class="arg-empty"></p>';bindText(container.firstElementChild,'没有找到可信候选。可提高深度或节点预算后重试。');return; }
     container.innerHTML=results.map((item,index)=>`<article class="arg-result">
         <div class="arg-result-head"><span class="arg-result-rank"></span><span class="arg-score"></span></div>
         <pre class="arg-output" translate="no">${escapeHtml(item.text)}</pre>
         <div class="arg-recipe" aria-label="解码路径">${item.path.map((step,i)=>`${i?'<span class="arg-arrow">→</span>':''}<a class="arg-step" href="/tools/arg/reference/#decoder-${encodeURIComponent(step.decoder)}" title="查看 ${escapeHtml(step.label)} 介绍">${escapeHtml(step.label)} · ${Math.round(step.confidence*100)}%</a>`).join('')}</div>
         <p class="arg-evidence">${item.evidence.map(evidence=>`<span class="arg-evidence-item">${escapeHtml(evidence)}</span>`).join('<span aria-hidden="true"> · </span>')}</p>
+        ${acgData ? (()=>{const matches=matchAcgNames(item.text,acgData);return matches.length?`<p class="arg-acg"><span>？可能的ACG Name：</span>${matches.map(match=>match.entry&&/^https:\/\/bangumi\.tv\/character\/\d+$/.test(match.entry.url)?`<a translate="no" href="${escapeHtml(match.entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(match.text)}（${escapeHtml(match.entry.chinese)}）</a>`:`<span translate="no" class="arg-acg-bare">${escapeHtml(match.text)}</span>`).join('、')}</p>`:'';})() : ''}
         <button class="game-btn arg-copy" type="button" data-copy="${index}"></button>
     </article>`).join('');
     container.querySelectorAll('.arg-result').forEach((article,index)=>{const item=results[index];bindText(article.querySelector('.arg-result-rank'),'候选 {index}',{index:index+1});bindText(article.querySelector('.arg-score'),'文本评分 {score} · 深度 {depth}',{score:item.score.toFixed(1),depth:item.depth});article.querySelectorAll('.arg-evidence-item').forEach((element,i)=>bindText(element,item.evidence[i]));});
@@ -24,7 +38,7 @@ function render(results, container) {
 }
 
 function init() {
-    const form=document.getElementById('arg-form'),input=document.getElementById('arg-input'),results=document.getElementById('arg-results'),summary=document.getElementById('arg-summary'),run=document.getElementById('arg-run'),stop=document.getElementById('arg-stop');
+    const form=document.getElementById('arg-form'),input=document.getElementById('arg-input'),results=document.getElementById('arg-results'),summary=document.getElementById('arg-summary'),run=document.getElementById('arg-run'),stop=document.getElementById('arg-stop'),acgToggle=document.getElementById('arg-acg-toggle');
     if(!form)return;
     const searchPanel=document.getElementById('arg-search-panel'),referencePanel=document.getElementById('arg-reference-panel');
     const showArgPage=()=>{
@@ -65,13 +79,14 @@ function init() {
         controller?.abort();controller=new AbortController();run.disabled=true;stop.hidden=false;results.setAttribute('aria-busy','true');bindText(summary,'正在生成并排序搜索节点…');
         try {
             bindText(summary,'正在加载英文词库…');
-            const [{search},englishWords]=await Promise.all([enginePromise,loadEnglishDictionary().catch(error=>{console.warn('English dictionary unavailable; using fallback scoring',error);return null;})]);
+            const useAcg=acgToggle.checked;
+            const [{search},englishWords,acgData,acgModule]=await Promise.all([enginePromise,loadEnglishDictionary().catch(error=>{console.warn('English dictionary unavailable; using fallback scoring',error);return null;}),useAcg?loadAcgData():null,useAcg?acgModulePromise():null]);
             bindText(summary,'正在生成并排序搜索节点…');
-            const outcome=await search(text,{maxDepth:+document.getElementById('arg-depth').value,maxNodes:+document.getElementById('arg-budget').value,signal:controller.signal,englishWords,onProgress:s=>bindText(summary,'已展开 {expanded} 个节点，生成 {generated} 个不同状态，队列中还有 {queued} 个。',s)});
-            render(outcome.candidates,results);const s=outcome.stats;bindText(summary,s.aborted?'搜索已停止。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。':'搜索完成。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。',{...s,count:outcome.candidates.length});
+            const outcome=await search(text,{maxDepth:+document.getElementById('arg-depth').value,maxNodes:+document.getElementById('arg-budget').value,signal:controller.signal,englishWords,acgWords:acgData?.words,onProgress:s=>bindText(summary,'已展开 {expanded} 个节点，生成 {generated} 个不同状态，队列中还有 {queued} 个。',s)});
+            render(outcome.candidates,results,acgData,acgModule?.matchAcgNames);const s=outcome.stats;bindText(summary,s.aborted?'搜索已停止。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。':'搜索完成。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。',{...s,count:outcome.candidates.length});
         } catch (error) {
             console.error('ARG engine failed to load or run', error);
-            bindText(summary,'搜索组件加载失败，请刷新页面后重试。');
+            bindText(summary,acgToggle.checked?'ACG Name 数据加载失败，请稍后重试。':'搜索组件加载失败，请刷新页面后重试。');
         } finally {
             run.disabled=false;stop.hidden=true;results.setAttribute('aria-busy','false');
         }

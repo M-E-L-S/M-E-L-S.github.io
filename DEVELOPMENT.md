@@ -18,6 +18,12 @@
 
 修改后在仓库根目录运行 `node scripts/build.cjs`，生成各路由的 HTML 和工具主题样式。不要分别修改生成的 `index.html`，否则下次构建会覆盖它们。脚本为静态资源加入内容哈希，更新后浏览器会加载新版脚本与样式。
 
+## ARG 的 ACG Name 词库
+
+`python scripts/build-arg-acg.py` 会读取 Bangumi Archive 的 `aux/latest.json`，下载其中指向的最新 ZIP，校验 SHA-256，仅提取 `character.jsonlines`。已有 ZIP 时可运行 `python scripts/build-arg-acg.py --archive <dump.zip>`。Archive 通常每周三北京时间 05:00 更新；词库是构建时快照，更新后提交 `assets/data/arg-acg-names.json` 和 `assets/data/arg-acg-words.txt`，再运行 `node scripts/build.cjs` 部署到 GitHub Pages。
+
+只收录 `role=1` 且 infobox 中有“简体中文名”、原名或别名中有拉丁字母姓名的角色。罗马字取角色原名或“罗马字 / 罗马音 / 英文名”别名；每个来源姓名保留 Bangumi 角色页 URL。同一罗马字对应多个角色时，前端不展示中文名和链接。分词文本每行是 `full<TAB>连写完整姓名` 或 `part<TAB>单独姓或名`；完整姓名在搜索里按正常词权重，片段降权。完整姓名至少三个字母，独立姓名片段也至少三个字母，以免两字母片段误命中编码。完整姓名连写是为了识别无空格的解码结果，页面也能匹配带空格的写法。开关默认关闭，只有开启时浏览器才加载两份角色数据。
+
 ## 路由
 
 首页 `/`；关于 `/about/`；小功能 `/tools/`；小游戏 `/minigame/`；鲜蔬杯 `/freshcup/`。

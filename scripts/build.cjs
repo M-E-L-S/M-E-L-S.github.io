@@ -17,7 +17,7 @@ function freshcup(tool) {
 function render(tool='scoreboard_5') {
   return shell.replace('<!-- FRESHCUP_PAGE -->',freshcup(tool)).replace('</head>',`<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/${tool}.theme.css"><link rel="stylesheet" href="/src/styles/freshcup-native.css"></head>`).replace('<!-- TOOL_SCRIPT -->',`<script id="freshcup-tool-script" data-tool="${tool}" src="/src/scripts/freshcup/${tool}.js"></script>`).replace(/(src|href)="(\/?(?:src|vendor)\/[^"?]+)(?:\?[^" ]*)?"/g,(_,attr,file)=>{
     const source=read(file.replace(/^\//,''));
-    const versionSource=file.replace(/^\//,'')==='src/scripts/arg.js'?source+read('src/scripts/arg-engine.js'):source;
+    const versionSource=file.replace(/^\//,'')==='src/scripts/arg.js'?source+read('src/scripts/arg-engine.js')+read('src/scripts/arg-acg.js')+read('assets/data/arg-acg-names.json')+read('assets/data/arg-acg-words.txt'):source;
     return `${attr}="${file}?v=${crypto.createHash('sha256').update(versionSource).digest('hex').slice(0,10)}"`;
   });
 }

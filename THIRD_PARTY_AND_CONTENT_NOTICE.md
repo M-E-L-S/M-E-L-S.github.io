@@ -129,6 +129,14 @@ Sorhus's `word-list` npm package, version 4.1.0. It is not limited by the
 Wordle game's word lengths. The package is distributed under the MIT License;
 its license is retained at `assets/data/arg-english-words-LICENSE.txt`.
 
+The optional ARG ACG Name data at `assets/data/arg-acg-names.json` and
+`assets/data/arg-acg-words.txt` is extracted from the public
+[`bangumi/Archive`](https://github.com/bangumi/Archive) character wiki dump.
+The data contains contributed character names, Chinese names, and links to
+Bangumi character pages. M-E-L-S does not claim authorship or ownership of
+these contributed records. See `scripts/build-arg-acg.py` for extraction and
+`DEVELOPMENT.md` for updates.
+
 The classic-mode answer data at `assets/data/wordle-classic-answers.txt`
 reproduces the 2,315-word answer set embedded in the original pre-NYT Wordle
 web application. The checked copy was obtained from
