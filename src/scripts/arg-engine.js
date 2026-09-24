@@ -412,6 +412,8 @@ const strongFollowupIds=new Set(['adfgx','binary','bacon','morse','polybius','ta
 const strongFollowups=decoders.filter(decoder=>strongFollowupIds.has(decoder.id));
 const structuredEncodings=decoders.filter(decoder=>decoder.id==='base32'||decoder.id==='base64');
 const byteFollowups=decoders.filter(decoder=>['base58','ascii85','base85','base91'].includes(decoder.id));
+const byteFollowupIds=new Set(byteFollowups.map(decoder=>decoder.id));
+const base58Decoder=decoders.find(decoder=>decoder.id==='base58');
 const caesarDecoder=decoders.find(decoder=>decoder.id==='caesar');
 const structuralBridgeIds=new Set(['railfence','reverse','atbash','keyboardshift']);
 
@@ -462,6 +464,36 @@ function layeredFollowupPotential(text,remaining,bridge){
     if(remaining<3||!bridge||text.length>500||!/^[A-Za-z0-9+/]{24,}={0,2}$/.test(text)||!/[A-Z]/i.test(text))return best;
     for(const result of caesarDecoder.decode(text))best=Math.max(best,structuredFollowupPotential(result.text)*.85);
     return best;
+}
+
+// A transposition can conceal an otherwise exact byte decode. Look for a
+// validated code after one Reverse, and (only for Base58-shaped output of a
+// byte decoder) after Rail Fence + Reverse. The decoded code must itself be
+// usable; alphabet matches alone are far too common to justify a large bonus.
+function hiddenStructurePotential(text,remaining,decoderId,previousDecoderId){
+    if(remaining<3||text.length<40||text.length>500)return 0;
+    const afterByteShift=decoderId==='caesar'&&byteFollowupIds.has(previousDecoderId)&&remaining>=4&&text.length<=150;
+    const afterByteDecode=byteFollowupIds.has(decoderId)&&remaining>=4&&base58Decoder.probe(text);
+    if(decoderId!=='railfence'&&!afterByteShift&&!afterByteDecode)return 0;
+    const decodedCodePotential=source=>{
+        for(const decoder of byteFollowups){
+            if(decoder.probe(source)<.35)continue;
+            for(const result of decoder.decode(source)){
+                if(result.text.length<16)continue;
+                for(const next of strongFollowups){
+                    if(next.probe(result.text)>=.65&&next.decode(result.text).some(output=>output.text.length>=8))return 105;
+                }
+            }
+        }
+        return 0;
+    };
+    if(decoderId==='railfence')return decodedCodePotential([...text].reverse().join(''));
+    if(afterByteShift||afterByteDecode){
+        for(const rail of decodeRailFence(text)){
+            if(decodedCodePotential([...rail.text].reverse().join('')))return 105;
+        }
+    }
+    return 0;
 }
 
 const modulo26=value=>(value%26+26)%26;
@@ -555,10 +587,10 @@ export function expandNodeTransitions(node,{maxDepth,englishWords=null,acgWords=
             const step={decoder:decoder.id,label:result.label,confidence,parameter:result.parameter};
             const child={text:result.text,path:[...node.path,step],depth,score:quality.score,evidence:quality.evidence,plainTextLikely:quality.plainTextLikely,parent:node,step};
             const remaining=maxDepth-depth;
-            const nextPotential=remaining?Math.max(followupPotential(result.text,quality,englishWords,acgWords),layeredFollowupPotential(result.text,remaining,structuralBridgeIds.has(decoder.id))):0;
+            const nextPotential=remaining?Math.max(followupPotential(result.text,quality,englishWords,acgWords),layeredFollowupPotential(result.text,remaining,structuralBridgeIds.has(decoder.id)),hiddenStructurePotential(result.text,remaining,decoder.id,node.step?.decoder)):0;
             child.priority=quality.score+confidence*18+Math.max(-12,progress*.25)-depth*4+nextPotential;
             const pathUncertainty=child.path.reduce((sum,item)=>sum+Math.max(0,.6-item.confidence),0)*15;
-            child.rankScore=quality.score+confidence*8-depth*2-pathUncertainty;
+            child.rankScore=quality.score+confidence*8-depth*2-pathUncertainty*(quality.score>=65&&quality.readableCoverage>=.95&&result.text.length>=24?.5:1);
             let segmentedChild=null;
             const segmented=autoSegmentEnglish(result.text,englishWords,quality.trigramSignal,acgWords);
             if(segmented){
@@ -567,7 +599,7 @@ export function expandNodeTransitions(node,{maxDepth,englishWords=null,acgWords=
                 const wordStep={...step,label:result.label+' · 自动分词',segmented:true};
                 segmentedChild={text:segmented,path:[...node.path,wordStep],depth,score:segmentedScore,evidence:[...segmentedQuality.evidence,'自动分词'],plainTextLikely:segmentedQuality.plainTextLikely,parent:node,step:wordStep};
                 segmentedChild.priority=segmentedScore+confidence*18+Math.max(-12,(segmentedScore-node.score)*.25)-depth*4;
-                segmentedChild.rankScore=segmentedScore+confidence*8-depth*2-pathUncertainty;
+                segmentedChild.rankScore=segmentedScore+confidence*8-depth*2-pathUncertainty*(segmentedScore>=65&&segmentedQuality.readableCoverage>=.95&&segmented.length>=24?.5:1);
             }
             transitions.push({child,segmentedChild});
         }

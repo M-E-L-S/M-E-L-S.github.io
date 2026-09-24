@@ -304,11 +304,15 @@ const chineseCandidate = chineseResult.candidates.find(candidate => candidate.te
 assert(chineseCandidate?.plainTextLikely, 'Decoded Chinese should be returned as plaintext');
 assert.equal(chineseCandidate.depth, 1, 'Plain Chinese should stop expanding after it is found');
 const layeredCases=JSON.parse(await readFile(new URL('./fixtures/arg-layered-cases.json',import.meta.url),'utf8'));
-assert.equal(layeredCases.length,25,'The supplied layered regression set is incomplete');
+assert.equal(layeredCases.length,30,'The supplied layered regression set is incomplete');
 for(const item of layeredCases){
     const outcome=await search(item.input,{maxDepth:item.depth,maxNodes:item.maxNodes,englishWords});
     assert.equal(outcome.candidates[0]?.text,item.expected,`Layered case ${item.id} failed at depth ${item.depth} with ${item.maxNodes} nodes`);
-    if(item.id===25)assert.equal(outcome.candidates[0].depth,8,'The final case should follow all eight decoding layers');
+    if(item.depth===8){
+        assert.equal(outcome.candidates[0].depth,8,`Layered case ${item.id} should follow all eight decoding layers`);
+        // Caesar and Rail Fence commute, so either order is an equivalent route.
+        if(item.path)assert.deepEqual(outcome.candidates[0].path.map(step=>step.decoder).sort(),[...item.path].sort(),`Layered case ${item.id} used the wrong decoders`);
+    }
 }
 const parallelFixture=layeredCases[7];
 const fixedOptions={maxDepth:parallelFixture.depth,maxNodes:parallelFixture.maxNodes,englishWords};
@@ -319,4 +323,10 @@ const batchedResult=await search(parallelFixture.input,{
 });
 assert.deepEqual(batchedResult.stats,serialResult.stats,'Batched expansion changed search accounting');
 assert.deepEqual(batchedResult.candidates,serialResult.candidates,'Batched expansion changed ranking or paths');
-console.log('OK ARG engine: decoders, dictionaries, and 25 layered regression cases');
+const deepParallelFixture=layeredCases.find(item=>item.id===29);
+const deepBatchedResult=await search(deepParallelFixture.input,{
+    maxDepth:deepParallelFixture.depth,maxNodes:deepParallelFixture.maxNodes,englishWords,batchSize:32,
+    expandBatch:async(nodes,{maxDepth,plaintextGrace})=>nodes.map(node=>node.plainTextLikely&&node.depth>=plaintextGrace?null:expandNodeTransitions(node,{maxDepth,englishWords}))
+});
+assert.equal(deepBatchedResult.candidates[0]?.text,deepParallelFixture.expected,'Batched expansion pruned the eight-layer route');
+console.log(`OK ARG engine: decoders, dictionaries, and ${layeredCases.length} layered regression cases`);

@@ -173,5 +173,60 @@
     "maxNodes": 10000,
     "input": "21freSw4bV4LvSXjDDq8ZwVLQW1bQ59uDqiKm9HjLYsScUcjgx1dXt4r6UEL6gz2JzVgznWhtdey37CQMygsxw2wn2dPZubZXFi5saPpstogb2Lmz4svMnr4cLZ5HSDYSjZDRQha8Rt5mTUj6LVvmc78iVfh1fGL6rCkGbVCcq7TYEtfCQeFdiHS6EDdvBARMq4CGP989S3NeCCMJVNFPSLMWqGoBXdPFS6uFUQzmySqbTuUM8sv4cWVAQH1HEEBo2S1CPUXyiHipjTeD9dh48VDG2NK7ebJGHvxodJ92dw8eTwPMqPEHVoduaWhgiWjp2MwSAEJjFJctZNGTumgFLh74NszkSaefpVDo1YnP8oNvbBttmjkdvsa6aqu9fh",
     "expected": "THE RIGHT PATH CAN LOOK WRONG FOR MANY LAYERS"
+  },
+  {
+    "id": 26,
+    "depth": 6,
+    "maxNodes": 1000,
+    "input": "25ssseZQFX18uzNTzpdD9aCWm2TFT4cNG2XkAQTvwmmff4EMKYmKCney1Km1nqDpNJjozBsTRWKj35HbgcyKGB7DKKZB5xbLTzo",
+    "expected": "BREADTH CAN HIDE THE ONLY TRUE PATH"
+  },
+  {
+    "id": 27,
+    "depth": 6,
+    "maxNodes": 1000,
+    "input": "fFA3QChLUDkpKFB8PFBgNjA9fDBPfDhVMTZkPTZkaXwwT0s2UEA2KDFUWlB8Nz0pN2RLS09PNjYtPVo0S3xQP1AoNU0tTzA2Sy1PZDZLe09kNzB8fE9PNjZAKTlkS3xVTzw2KT1LKFBLN1ApNmRIfDBQVDdPQDUoTz04MC18ZFB8PVBAPDR9SzBPfDZgZHxQNns5S1A=",
+    "expected": "KEEP THE QUIET BRANCH ALIVE"
+  },
+  {
+    "id": 28,
+    "depth": 6,
+    "maxNodes": 10000,
+    "input": "RR3QUVVOHLZ2GBJMVZ42ERRGQ2MCEVZNDSSMHMFHBT44WDVKED4MXYMJWBZCE2UMXLQSF3RMWS4QWJJNVSQMDMBPRKQUUKBKH3TST45OV32KTDBOUSYEHTJIHCSWWRRIRBZMGXBPHSTEHYJNYJOQXRZKDCWIW2IPIL3MEM5MIS2WGRJJVBNIUANJN2NAF4EKT3RIHZJNYC3SGVZKEL2OE3NIWTVQDMZIXKQAFHRG",
+    "expected": "GOOD CLUES MAY APPEAR VERY LATE"
+  },
+  {
+    "id": 29,
+    "depth": 8,
+    "maxNodes": 3000,
+    "input": "DLT3JieMsLxFnfSYQ1JCHZEUvbaH82Y15sw5ZXSSyZfYWwPtwUCm9mRiNJaNcabwo4baUZcSvzVh2LpDqGPRACnqWHacks9pAN8q9qnScSeTmcTRx5a7paAWEDDTCEkU4wfta2oa6UxMLxaDoU1qa",
+    "expected": "WEAK SIGNALS MAY SURVIVE MANY WRONG TURNS",
+    "path": [
+      "base58",
+      "atbash",
+      "base91",
+      "caesar",
+      "railfence",
+      "reverse",
+      "base85",
+      "polybius"
+    ]
+  },
+  {
+    "id": 30,
+    "depth": 8,
+    "maxNodes": 3000,
+    "input": "SJCFwZ8{zTWNF.sOM#[G\"2ceQMdYSFUbMafGC.gI%Ge3|CLUwoI2;k{MbLdG5E%e\"nNH.:O0eS.ITmcYEzpzD8[?LL!1e*Jmw%M3~,K0)22&QvLbR2kdM}.S+z0/**<alJ,ZM<CMi29Eg,ua+DXGWa\"M:OjVyBARm?{xh99Be#(I5k;aUJi.|7]:KLGiob<a.X.xQ<Q0j$z^I_7d_%;Ft|HNU5KGLy}q|LQ;@:*B$1kfvm1d+)G/+d]060_Z0^bq;<iD(pw@91MDS[3d:!t<Mru@zJ(IBwOi~OEK^*oeAW.xb,CYql&1L^&SWNH)XDSVpiu3_7gS4RH%YvON\"+<:j@AS<4^L\"[RbxRwGI{4$xGtO5@:mB5KbO^FN36qj8Djr0GW0+!vv/6rV!Z`jIM}z\"935=I`SfaZkyXdE,k[505(+CNvVV8Y;7nO6?5}FQP(kcB",
+    "expected": "THE BEST PATH MAY LOOK WORSE BEFORE IT LOOKS RIGHT",
+    "path": [
+      "base91",
+      "railfence",
+      "caesar",
+      "base85",
+      "railfence",
+      "reverse",
+      "base58",
+      "bacon"
+    ]
   }
 ]
