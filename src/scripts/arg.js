@@ -3,6 +3,9 @@ let controller;
 const engineUrl = new URL('./arg-engine.js', document.currentScript.src);
 engineUrl.search = new URL(document.currentScript.src).search;
 const enginePromise = import(engineUrl.href);
+const parallelUrl=new URL('./arg-parallel.js',document.currentScript.src);
+parallelUrl.search=engineUrl.search;
+const parallelModulePromise=()=>import(parallelUrl.href);
 const acgUrl=new URL('./arg-acg.js',document.currentScript.src);
 acgUrl.search=engineUrl.search;
 const dataVersion=engineUrl.search;
@@ -40,6 +43,16 @@ function render(results, container, acgData=null, matchAcgNames=null) {
 function init() {
     const form=document.getElementById('arg-form'),input=document.getElementById('arg-input'),results=document.getElementById('arg-results'),summary=document.getElementById('arg-summary'),run=document.getElementById('arg-run'),stop=document.getElementById('arg-stop'),acgToggle=document.getElementById('arg-acg-toggle');
     if(!form)return;
+    const depthSelect=document.getElementById('arg-depth'),budgetSelect=document.getElementById('arg-budget'),modeSelect=document.getElementById('arg-mode'),workerSelect=document.getElementById('arg-workers'),effortSelect=document.getElementById('arg-effort');
+    const reportedThreads=Math.max(1,Math.floor(navigator.hardwareConcurrency||4));
+    for(let count=1;count<=reportedThreads;count++)workerSelect.add(new Option(String(count),String(count),false,count===Math.min(4,reportedThreads)));
+    bindText(document.getElementById('arg-thread-info'),navigator.hardwareConcurrency?'检测到 {count} 个可用逻辑线程；搜索力度会按路径评分和候选数量调整搜索宽度。':'浏览器未报告逻辑线程数，暂按 {count} 个提供选项；搜索力度会自适应调整搜索宽度。',{count:reportedThreads});
+    const updateMode=()=>{
+        const parallel=modeSelect.value==='parallel';
+        document.querySelectorAll('.arg-standard-control').forEach(element=>element.hidden=parallel);
+        document.querySelectorAll('.arg-parallel-control').forEach(element=>element.hidden=!parallel);
+    };
+    modeSelect.addEventListener('change',updateMode);updateMode();
     const searchPanel=document.getElementById('arg-search-panel'),referencePanel=document.getElementById('arg-reference-panel');
     const showArgPage=()=>{
         if(!location.pathname.startsWith('/tools/arg'))return;
@@ -76,19 +89,23 @@ function init() {
     });
     form.addEventListener('submit',async event=>{
         event.preventDefault();const text=input.value.trim();if(!text){input.focus();return;}
-        controller?.abort();controller=new AbortController();run.disabled=true;stop.hidden=false;results.setAttribute('aria-busy','true');bindText(summary,'正在生成并排序搜索节点…');
+        controller?.abort();controller=new AbortController();const current=controller;run.disabled=true;stop.hidden=false;results.setAttribute('aria-busy','true');bindText(summary,'正在生成并排序搜索节点…');
         try {
             bindText(summary,'正在加载英文词库…');
-            const useAcg=acgToggle.checked;
-            const [{search},englishWords,acgData,acgModule]=await Promise.all([enginePromise,loadEnglishDictionary().catch(error=>{console.warn('English dictionary unavailable; using fallback scoring',error);return null;}),useAcg?loadAcgData():null,useAcg?acgModulePromise():null]);
+            const useAcg=acgToggle.checked,parallel=modeSelect.value==='parallel',maxDepth=+depthSelect.value,maxNodes=+budgetSelect.value,workerCount=+workerSelect.value,effort=effortSelect.value;
+            const [module,englishWords,acgData,acgModule]=await Promise.all([parallel?parallelModulePromise():enginePromise,loadEnglishDictionary().catch(error=>{console.warn('English dictionary unavailable; using fallback scoring',error);return null;}),useAcg?loadAcgData():null,useAcg?acgModulePromise():null]);
+            if(current.signal.aborted)return;
             bindText(summary,'正在生成并排序搜索节点…');
-            const outcome=await search(text,{maxDepth:+document.getElementById('arg-depth').value,maxNodes:+document.getElementById('arg-budget').value,signal:controller.signal,englishWords,acgWords:acgData?.words,onProgress:s=>bindText(summary,'已展开 {expanded} 个节点，生成 {generated} 个不同状态，队列中还有 {queued} 个。',s)});
+            const outcome=await (parallel?module.searchParallel(text,{maxDepth,effort,workerCount,signal:current.signal,englishWords,acgWords:acgData?.words,onProgress:s=>{if(controller===current)bindText(summary,'{workers} 个 Worker：已展开 {expanded} 个节点，生成 {generated} 个不同状态。',{...s,workers:workerCount});}}):module.search(text,{maxDepth,maxNodes,signal:current.signal,englishWords,acgWords:acgData?.words,onProgress:s=>{if(controller===current)bindText(summary,'已展开 {expanded} 个节点，生成 {generated} 个不同状态，队列中还有 {queued} 个。',s);}}));
+            if(controller!==current)return;
             render(outcome.candidates,results,acgData,acgModule?.matchAcgNames);const s=outcome.stats;bindText(summary,s.aborted?'搜索已停止。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。':'搜索完成。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。',{...s,count:outcome.candidates.length});
         } catch (error) {
+            if(controller!==current)return;
+            if(error?.name==='AbortError'){bindText(summary,'搜索已停止。');return;}
             console.error('ARG engine failed to load or run', error);
             bindText(summary,acgToggle.checked?'ACG Name 数据加载失败，请稍后重试。':'搜索组件加载失败，请刷新页面后重试。');
         } finally {
-            run.disabled=false;stop.hidden=true;results.setAttribute('aria-busy','false');
+            if(controller===current){run.disabled=false;stop.hidden=true;results.setAttribute('aria-busy','false');}
         }
     });
     stop.addEventListener('click',()=>controller?.abort());

@@ -14,15 +14,26 @@
         <textarea id="arg-input" rows="7" maxlength="20000" spellcheck="false" translate="no"
             placeholder="粘贴各类编码、密码甚至多层嵌套密码……"></textarea>
         <div class="arg-controls">
-            <label>最大深度
-                <select id="arg-depth"><option>1</option><option>2</option><option selected>5</option><option>10</option></select>
+            <label>搜索模式
+                <select id="arg-mode"><option value="standard">标准模式</option><option value="parallel">并行模式</option></select>
             </label>
-            <label>节点预算
-                <select id="arg-budget"><option>100</option><option selected>500</option><option>1000</option><option>2000</option></select>
+            <label>最大深度
+                <select id="arg-depth"><option>1</option><option>2</option><option selected>5</option><option>6</option><option>8</option><option>10</option></select>
+            </label>
+            <label class="arg-standard-control">节点预算
+                <select id="arg-budget"><option>100</option><option selected>500</option><option>1000</option><option>2000</option><option value="10000">10,000</option></select>
+            </label>
+            <label class="arg-parallel-control" hidden>Worker 数量
+                <select id="arg-workers"></select>
+            </label>
+            <label class="arg-parallel-control" hidden>搜索力度
+                <select id="arg-effort"><option value="少">少</option><option value="中" selected>中</option><option value="多">多</option><option value="极多">极多</option></select>
             </label>
             <button class="game-btn primary" id="arg-run" type="submit"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> 开始解密</button>
             <button class="game-btn" id="arg-stop" type="button" hidden>停止</button>
         </div>
+        <p class="arg-depth-note">最大深度越高，搜索越倾向继续探索看似明文的中间结果。</p>
+        <p class="arg-depth-note arg-parallel-control" id="arg-thread-info" hidden></p>
     </form>
     <div class="arg-summary" id="arg-summary" role="status" aria-live="polite">输入文本后开始分析；所有计算都在此设备完成。不会上传云端。</div>
     <div class="arg-results" id="arg-results" aria-live="polite" aria-busy="false">

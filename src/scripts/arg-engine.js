@@ -410,6 +410,10 @@ for(const decoder of decoders){
 // unpadded Base64 are too common to predict whether another layer will be useful.
 const strongFollowupIds=new Set(['adfgx','binary','bacon','morse','polybius','tap','hex','url','html','unicode','a1z26','octal','decimal']);
 const strongFollowups=decoders.filter(decoder=>strongFollowupIds.has(decoder.id));
+const structuredEncodings=decoders.filter(decoder=>decoder.id==='base32'||decoder.id==='base64');
+const byteFollowups=decoders.filter(decoder=>['base58','ascii85','base85','base91'].includes(decoder.id));
+const caesarDecoder=decoders.find(decoder=>decoder.id==='caesar');
+const structuralBridgeIds=new Set(['railfence','reverse','atbash','keyboardshift']);
 
 function followupPotential(text,quality,englishWords,acgWords){
     let best=0;
@@ -425,6 +429,38 @@ function followupPotential(text,quality,englishWords,acgWords){
             best=Math.max(best,(confidence-.55)*40+gain*1.5);
         }
     }
+    return best;
+}
+
+// A broad alphabet match matters only when decoding it reveals a second,
+// specific code structure. A Caesar bridge can expose that structure
+// after a transposition without promoting every unpadded Base32-looking string.
+function structuredFollowupPotential(text){
+    let best=0;
+    for(const decoder of structuredEncodings){
+        if(decoder.probe(text)<.75)continue;
+        for(const result of decoder.decode(text)){
+            for(const next of strongFollowups){
+                const confidence=next.probe(result.text);
+                if(confidence>=.65&&next.decode(result.text).length)best=Math.max(best,50+confidence*15);
+            }
+        }
+    }
+    return best;
+}
+function layeredFollowupPotential(text,remaining,bridge){
+    let best=remaining>=2?structuredFollowupPotential(text):0;
+    if(bridge&&remaining>=2&&text.length>=16&&text.length<=500){
+        for(const decoder of byteFollowups){
+            const confidence=decoder.probe(text);
+            if(confidence<.35)continue;
+            for(const result of decoder.decode(text)){
+                if(result.text.length>=12&&/^[\x20-\x7e\r\n\t]+$/.test(result.text))best=Math.max(best,55+confidence*10);
+            }
+        }
+    }
+    if(remaining<3||!bridge||text.length>500||!/^[A-Za-z0-9+/]{24,}={0,2}$/.test(text)||!/[A-Z]/i.test(text))return best;
+    for(const result of caesarDecoder.decode(text))best=Math.max(best,structuredFollowupPotential(result.text)*.85);
     return best;
 }
 
@@ -504,54 +540,101 @@ function redundantTransform(node,decoder,result){
     return false;
 }
 
+// Expansion is pure: workers can evaluate nodes independently, while the
+// coordinator retains ownership of deduplication, ranking and beam pruning.
+export function expandNodeTransitions(node,{maxDepth,englishWords=null,acgWords=null}){
+    const transitions=[];
+    let redundantPruned=0;
+    const probes=decoders.map(decoder=>({decoder,confidence:decoder.probe(node.text)})).filter(x=>x.confidence>0).sort((a,b)=>b.confidence-a.confidence);
+    for(const {decoder,confidence} of probes){
+        for(const result of decoder.decode(node.text)){
+            if(!result.text||same(result.text,node.text))continue;
+            if(redundantTransform(node,decoder,result)){redundantPruned++;continue;}
+            const quality=textQuality(result.text,englishWords,acgWords),depth=node.depth+1;
+            const progress=quality.score-node.score;
+            const step={decoder:decoder.id,label:result.label,confidence,parameter:result.parameter};
+            const child={text:result.text,path:[...node.path,step],depth,score:quality.score,evidence:quality.evidence,plainTextLikely:quality.plainTextLikely,parent:node,step};
+            const remaining=maxDepth-depth;
+            const nextPotential=remaining?Math.max(followupPotential(result.text,quality,englishWords,acgWords),layeredFollowupPotential(result.text,remaining,structuralBridgeIds.has(decoder.id))):0;
+            child.priority=quality.score+confidence*18+Math.max(-12,progress*.25)-depth*4+nextPotential;
+            const pathUncertainty=child.path.reduce((sum,item)=>sum+Math.max(0,.6-item.confidence),0)*15;
+            child.rankScore=quality.score+confidence*8-depth*2-pathUncertainty;
+            let segmentedChild=null;
+            const segmented=autoSegmentEnglish(result.text,englishWords,quality.trigramSignal,acgWords);
+            if(segmented){
+                const segmentedQuality=textQuality(segmented,englishWords,acgWords);
+                const segmentedScore=Math.min(100,Math.max(segmentedQuality.score,quality.score+2));
+                const wordStep={...step,label:result.label+' · 自动分词',segmented:true};
+                segmentedChild={text:segmented,path:[...node.path,wordStep],depth,score:segmentedScore,evidence:[...segmentedQuality.evidence,'自动分词'],plainTextLikely:segmentedQuality.plainTextLikely,parent:node,step:wordStep};
+                segmentedChild.priority=segmentedScore+confidence*18+Math.max(-12,(segmentedScore-node.score)*.25)-depth*4;
+                segmentedChild.rankScore=segmentedScore+confidence*8-depth*2-pathUncertainty;
+            }
+            transitions.push({child,segmentedChild});
+        }
+    }
+    return {transitions,redundantPruned};
+}
+
 export async function search(input, options={}) {
-    const maxDepth=options.maxDepth??3, maxNodes=options.maxNodes??300, signal=options.signal, englishWords=options.englishWords??null, acgWords=options.acgWords??null;
+    const maxDepth=options.maxDepth??3;
+    const maxNodes=options.maxNodes??300, signal=options.signal, englishWords=options.englishWords??null, acgWords=options.acgWords??null;
     const rootQuality=textQuality(input,englishWords,acgWords), frontiers=Array.from({length:maxDepth+1},()=>[]), seen=new Set([input]), candidates=[];
     frontiers[0].push({text:input,path:[],depth:0,score:rootQuality.score,priority:rootQuality.score,evidence:rootQuality.evidence,plainTextLikely:rootQuality.plainTextLikely,parent:null,step:null});
-    let expanded=0, generated=1, queued=1, redundantPruned=0;
-    // Leave part of the node budget for later layers, so a wide shallow layer
-    // cannot consume the entire search before deeper paths are considered.
-    const reservePerLayer=Math.max(1,Math.floor(maxNodes/(maxDepth*3)));
-    for(let level=0;level<maxDepth&&expanded<maxNodes&&!signal?.aborted;level++){
+    let expanded=0, generated=1, queued=1, redundantPruned=0, nodeBudget=maxNodes;
+    // A larger requested depth leaves early plaintext-looking states eligible
+    // for more layers before treating them as terminal.
+    const plaintextGrace=Math.max(0,maxDepth-3);
+    const expandNode=async(node,expansion=null)=>{
+        expanded++;queued--;
+        if(node.plainTextLikely&&node.depth>=plaintextGrace)return;
+        const result=expansion??expandNodeTransitions(node,{maxDepth,englishWords,acgWords});
+        redundantPruned+=result.redundantPruned;
+        for(const {child,segmentedChild} of result.transitions){
+            if(seen.has(child.text))continue;
+            seen.add(child.text);generated++;
+            child.parent=node;
+            frontiers[child.depth].push(child);candidates.push(child);queued++;
+            if(segmentedChild&&!seen.has(segmentedChild.text)){
+                seen.add(segmentedChild.text);generated++;
+                segmentedChild.parent=node;
+                frontiers[segmentedChild.depth].push(segmentedChild);candidates.push(segmentedChild);queued++;
+            }
+        }
+        if(expanded%20===0){options.onProgress?.({expanded,generated,queued});await new Promise(resolve=>setTimeout(resolve,0));}
+    };
+    const trimFrontier=level=>{
+        const next=frontiers[level+1];
+        if(next.length>nodeBudget*4){next.sort((a,b)=>b.priority-a.priority);queued-=next.length-nodeBudget*4;next.splice(nodeBudget*4);}
+    };
+    // Higher maximum depths shift a larger share of the same node budget to
+    // later layers, without changing the search into a separate mode.
+    const depthWeight=Math.min(1,Math.max(0,(maxDepth-2)/8));
+    for(let level=0;level<maxDepth&&expanded<nodeBudget&&!signal?.aborted;level++){
         const frontier=frontiers[level];
-        const levelLimit=maxNodes-reservePerLayer*(maxDepth-level-1);
+        if(options.adjustBudget)nodeBudget=Math.max(expanded+1,Math.round(options.adjustBudget({level,frontier,expanded,generated,nodeBudget})));
+        const reservePerLayer=Math.max(1,Math.floor(nodeBudget/(maxDepth*3)));
+        const breadthLimit=nodeBudget-reservePerLayer*(maxDepth-level-1);
+        const deepLimit=Math.floor(nodeBudget*(level+1)*(level+2)/(maxDepth*(maxDepth+1)));
+        const levelLimit=Math.max(1,Math.round(breadthLimit*(1-depthWeight)+deepLimit*depthWeight));
         frontier.sort((a,b)=>b.priority-a.priority);
-        for(const node of frontier){
-            if(expanded>=levelLimit||signal?.aborted)break;
-            expanded++;queued--;
-            if(node.plainTextLikely)continue;
-            const probes=decoders.map(decoder=>({decoder,confidence:decoder.probe(node.text)})).filter(x=>x.confidence>0).sort((a,b)=>b.confidence-a.confidence);
-            for(const {decoder,confidence} of probes){
-                for(const result of decoder.decode(node.text)){
-                    if(!result.text||same(result.text,node.text))continue;
-                    if(redundantTransform(node,decoder,result)){redundantPruned++;continue;}
-                    if(seen.has(result.text))continue;
-                    seen.add(result.text);generated++;
-                    const quality=textQuality(result.text,englishWords,acgWords), depth=node.depth+1;
-                    const progress=quality.score-node.score;
-                    const step={decoder:decoder.id,label:result.label,confidence,parameter:result.parameter};
-                    const child={text:result.text,path:[...node.path,step],depth,score:quality.score,evidence:quality.evidence,plainTextLikely:quality.plainTextLikely,parent:node,step};
-                    const nextPotential=depth<maxDepth?followupPotential(result.text,quality,englishWords,acgWords):0;
-                    child.priority=quality.score+confidence*18+Math.max(-12,progress*.25)-depth*4+nextPotential;
-                    child.rankScore=quality.score+confidence*8-depth*2;
-                    frontiers[depth].push(child);candidates.push(child);queued++;
-                    const segmented=autoSegmentEnglish(result.text,englishWords,quality.trigramSignal,acgWords);
-                    if(segmented&&!seen.has(segmented)){
-                        seen.add(segmented);generated++;
-                        const segmentedQuality=textQuality(segmented,englishWords,acgWords);
-                        const segmentedScore=Math.min(100,Math.max(segmentedQuality.score,quality.score+2));
-                        const wordStep={...step,label:result.label+' · 自动分词',segmented:true};
-                        const wordChild={text:segmented,path:[...node.path,wordStep],depth,score:segmentedScore,evidence:[...segmentedQuality.evidence,'自动分词'],plainTextLikely:segmentedQuality.plainTextLikely,parent:node,step:wordStep};
-                        wordChild.priority=segmentedScore+confidence*18+Math.max(-12,(segmentedScore-node.score)*.25)-depth*4;
-                        wordChild.rankScore=segmentedScore+confidence*8-depth*2;
-                        frontiers[depth].push(wordChild);candidates.push(wordChild);queued++;
-                    }
+        if(options.expandBatch){
+            const count=Math.min(frontier.length,Math.max(0,levelLimit-expanded));
+            const batchSize=Math.max(1,options.batchSize??32);
+            for(let start=0;start<count&&!signal?.aborted;start+=batchSize){
+                const nodes=frontier.slice(start,Math.min(count,start+batchSize));
+                const expansions=await options.expandBatch(nodes,{maxDepth,plaintextGrace});
+                for(let index=0;index<nodes.length;index++){
+                    if(signal?.aborted)break;
+                    await expandNode(nodes[index],expansions[index]);
                 }
             }
-            if(expanded%20===0){options.onProgress?.({expanded,generated,queued});await new Promise(resolve=>setTimeout(resolve,0));}
+        }else{
+            for(const node of frontier){
+                if(expanded>=levelLimit||signal?.aborted)break;
+                await expandNode(node);
+            }
         }
-        const next=frontiers[level+1];
-        if(next.length>maxNodes*4){next.sort((a,b)=>b.priority-a.priority);queued-=next.length-maxNodes*4;next.splice(maxNodes*4);}
+        trimFrontier(level);
     }
     const ranked=candidates.sort((a,b)=>b.rankScore-a.rankScore);
     const selected=[],represented=new Set(),counts=new Map(),maxResults=20;

@@ -2,3 +2,5 @@
 .arg-category{margin-top:14px;border:1px solid var(--border);border-radius:14px;background:var(--surface);padding:0 16px 16px}.arg-category>summary{cursor:pointer;padding:16px 2px;font-weight:700}.arg-category>summary span{float:right;color:var(--secondary);font-size:13px;font-weight:400}.arg-category>.arg-reference-grid{margin-top:0}.arg-category>p{padding:0 2px 4px}
 .arg-domain-toggle{display:flex!important;align-items:center;gap:8px;width:max-content;max-width:100%;font-size:14px!important;font-weight:600!important;color:var(--text)!important;cursor:pointer}.arg-domain-toggle input{width:17px;height:17px;accent-color:var(--accent);cursor:pointer}.arg-acg{margin:10px 0 0;font-size:13px;color:var(--secondary);line-height:1.7}.arg-acg a{color:var(--accent-strong)}.arg-acg-bare{color:var(--text)}.arg-reference .arg-source{margin-top:12px;font-size:12px}
 .arg-reference-grid #decoder-acg-name{grid-column:1/-1}
+.arg-depth-note{margin:-5px 0 0;color:var(--secondary);font-size:13px}
+.arg-controls [hidden],.arg-form>[hidden]{display:none!important}

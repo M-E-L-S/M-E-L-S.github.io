@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('../src/scripts/arg-engine.js', import.meta.url), 'utf8');
-const { search, decoders, textQuality, redundantTransform } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+const { search, decoders, textQuality, redundantTransform, expandNodeTransitions } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 const reference = await readFile(new URL('../src/pages/arg.html', import.meta.url), 'utf8');
 const searchMarkup=reference.split('<div id="arg-search-panel">')[1].split('<article class="arg-reference"')[0];
 assert(!searchMarkup.includes('arg-acg-toggle'),'The ACG switch belongs on the reference page only');
@@ -156,6 +156,22 @@ for(const [plaintext,rails,shift] of [
 assert.equal(encodeLayered('WRONGPATHSCANSTILLLOOKSTRUCTURED',9,7),'EKMNKNMNHNKNNNNKMNNHKHMNHMEEMHHNMNHHNEMMHEMKMMHNMKNNMKHMNNNEKMMN');
 const nested=Buffer.from(Buffer.from(encodeLayered('FOLLOWTHEHIDDENPATH',4,11)).toString('hex')).toString('base64');
 await expectCandidate(nested,'FOLLOWTHEHIDDENPATH',{maxDepth:5,maxNodes:500,englishWords});
+const fiveLayerPlaintext='FIVE LAYERS DEEP';
+let fiveLayerCiphertext=fiveLayerPlaintext;
+for(let layer=0;layer<5;layer++)fiveLayerCiphertext=Buffer.from(fiveLayerCiphertext).toString('base64');
+const fiveLayerOutcome=await search(fiveLayerCiphertext,{maxDepth:5,maxNodes:500,englishWords});
+assert(fiveLayerOutcome.candidates.some(candidate=>candidate.text===fiveLayerPlaintext&&candidate.depth===5),'The selected depth should allow a five-layer answer');
+const sixLayerCiphertext='MOj5cMOZ~vN=;N!RWedkN>xx&RaizrPf%D-Ls?WuPexf)Qc^N9QczV*Qc^N9PDVpiSVToxSVcxgG*3@MOHwvVO;%A=OHouZSWiV*Mngq3SWiV*P*h7&OHM;l';
+const fiveLayerPuzzle=decoders.find(decoder=>decoder.id==='base85').decode(sixLayerCiphertext)[0].text;
+for(const [ciphertext,maxDepth,expectedPath] of [
+    [fiveLayerPuzzle,5,['reverse','railfence','caesar','base32','polybius']],
+    [sixLayerCiphertext,6,['base85','reverse','railfence','caesar','base32','polybius']],
+    [sixLayerCiphertext,10,['base85','reverse','railfence','caesar','base32','polybius']]
+]){
+    const outcome=await search(ciphertext,{maxDepth,maxNodes:2000,englishWords});
+    assert.equal(outcome.candidates[0]?.text,'DEPTH REWARDS PATIENCE NOT GREED',`Search lost the ${expectedPath.length}-layer path at maximum depth ${maxDepth}`);
+    assert.deepEqual(outcome.candidates[0].path.map(step=>step.decoder),expectedPath);
+}
 const baconPlaintext='KEEPBADSTATESALIVELONGER';
 const baconCipher=[...baconPlaintext].map(char=>(char.charCodeAt(0)-65).toString(2).padStart(5,'0').replace(/0/g,'A').replace(/1/g,'B')).join('');
 const baconRows=Array.from({length:9},()=>[]);
@@ -277,9 +293,30 @@ assert(textQuality('this is a secret message', englishWords).score > textQuality
 const unsegmentedQuality=textQuality('PRUNELATEORLOSETHESIGNAL',englishWords);
 assert(unsegmentedQuality.trigramSignal>0&&unsegmentedQuality.score<=54,'Letter-pattern scoring should remain a weak signal until words are segmented');
 assert.equal(textQuality('这是一个正常的中文线索', englishWords).plainTextLikely, true, 'Normal Chinese should be accepted as plaintext');
+const earlyPlaintext='这是一个正常的中文线索';
+const shallowPlaintextSearch=await search(earlyPlaintext,{maxDepth:3,maxNodes:40,englishWords});
+const deeperPlaintextSearch=await search(earlyPlaintext,{maxDepth:10,maxNodes:40,englishWords});
+assert.equal(shallowPlaintextSearch.stats.generated,1,'A shallow search should stop at clear plaintext');
+assert(deeperPlaintextSearch.stats.generated>1,'A deeper selection should continue exploring early plaintext-looking text');
 assert.equal(textQuality('锟斤拷烫烫烫', englishWords).plainTextLikely, false, 'Typical Chinese mojibake should not be accepted as plaintext');
 const chineseResult = await search(Buffer.from('这是一个中文答案').toString('base64'), { maxDepth: 3, maxNodes: 100, englishWords });
 const chineseCandidate = chineseResult.candidates.find(candidate => candidate.text === '这是一个中文答案');
 assert(chineseCandidate?.plainTextLikely, 'Decoded Chinese should be returned as plaintext');
 assert.equal(chineseCandidate.depth, 1, 'Plain Chinese should stop expanding after it is found');
-console.log('OK ARG engine: decoders, English/ACG dictionaries, matching, and Chinese plaintext detection');
+const layeredCases=JSON.parse(await readFile(new URL('./fixtures/arg-layered-cases.json',import.meta.url),'utf8'));
+assert.equal(layeredCases.length,25,'The supplied layered regression set is incomplete');
+for(const item of layeredCases){
+    const outcome=await search(item.input,{maxDepth:item.depth,maxNodes:item.maxNodes,englishWords});
+    assert.equal(outcome.candidates[0]?.text,item.expected,`Layered case ${item.id} failed at depth ${item.depth} with ${item.maxNodes} nodes`);
+    if(item.id===25)assert.equal(outcome.candidates[0].depth,8,'The final case should follow all eight decoding layers');
+}
+const parallelFixture=layeredCases[7];
+const fixedOptions={maxDepth:parallelFixture.depth,maxNodes:parallelFixture.maxNodes,englishWords};
+const serialResult=await search(parallelFixture.input,fixedOptions);
+const batchedResult=await search(parallelFixture.input,{
+    ...fixedOptions,batchSize:12,
+    expandBatch:async(nodes,{maxDepth,plaintextGrace})=>nodes.map(node=>node.plainTextLikely&&node.depth>=plaintextGrace?null:expandNodeTransitions(node,{maxDepth,englishWords}))
+});
+assert.deepEqual(batchedResult.stats,serialResult.stats,'Batched expansion changed search accounting');
+assert.deepEqual(batchedResult.candidates,serialResult.candidates,'Batched expansion changed ranking or paths');
+console.log('OK ARG engine: decoders, dictionaries, and 25 layered regression cases');
