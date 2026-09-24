@@ -45,8 +45,11 @@ function init() {
     if(!form)return;
     const depthSelect=document.getElementById('arg-depth'),budgetSelect=document.getElementById('arg-budget'),modeSelect=document.getElementById('arg-mode'),workerSelect=document.getElementById('arg-workers'),effortSelect=document.getElementById('arg-effort');
     const reportedThreads=Math.max(1,Math.floor(navigator.hardwareConcurrency||4));
-    for(let count=1;count<=reportedThreads;count++)workerSelect.add(new Option(String(count),String(count),false,count===Math.min(4,reportedThreads)));
-    bindText(document.getElementById('arg-thread-info'),navigator.hardwareConcurrency?'检测到 {count} 个可用逻辑线程；搜索力度会按路径评分和候选数量调整搜索宽度。':'浏览器未报告逻辑线程数，暂按 {count} 个提供选项；搜索力度会自适应调整搜索宽度。',{count:reportedThreads});
+    const workerCounts=[];
+    for(let count=1;count<=reportedThreads;count*=2)workerCounts.push(count);
+    if(workerCounts.at(-1)!==reportedThreads)workerCounts.push(reportedThreads);
+    for(const count of workerCounts)workerSelect.add(new Option(String(count),String(count),false,count===Math.min(4,reportedThreads)));
+    bindText(document.getElementById('arg-thread-info'),navigator.hardwareConcurrency?'检测到本机有 {count} 个可用逻辑线程；搜索力度会按照实际情况自动调整总节点数。':'浏览器未报告逻辑线程数，暂按 {count} 个提供选项；搜索力度会自适应调整搜索宽度。',{count:reportedThreads});
     const updateMode=()=>{
         const parallel=modeSelect.value==='parallel';
         document.querySelectorAll('.arg-standard-control').forEach(element=>element.hidden=parallel);

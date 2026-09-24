@@ -4,3 +4,4 @@
 .arg-reference-grid #decoder-acg-name{grid-column:1/-1}
 .arg-depth-note{margin:-5px 0 0;color:var(--secondary);font-size:13px}
 .arg-controls [hidden],.arg-form>[hidden]{display:none!important}
+.arg-parallel-warning{margin:0;padding:11px 13px;border-left:4px solid #e4a637;border-radius:4px 9px 9px 4px;background:color-mix(in srgb,#e4a637 13%,var(--surface));color:var(--text);font-size:14px;font-weight:650;line-height:1.6}

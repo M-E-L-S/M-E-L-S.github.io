@@ -32,7 +32,8 @@
             <button class="game-btn primary" id="arg-run" type="submit"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> 开始解密</button>
             <button class="game-btn" id="arg-stop" type="button" hidden>停止</button>
         </div>
-        <p class="arg-depth-note">最大深度越高，搜索越倾向继续探索看似明文的中间结果。</p>
+        <p class="arg-depth-note">请选择尽可能接近的加密深度。最大深度越高，工具越倾向于舍弃看似明文的中间结果。</p>
+        <p class="arg-parallel-warning arg-parallel-control" role="alert" hidden>⚠ 并行模式会使用 CPU 多线程同时计算。Worker 越多，CPU 负载越大，设备可能发热或出现卡顿。</p>
         <p class="arg-depth-note arg-parallel-control" id="arg-thread-info" hidden></p>
     </form>
     <div class="arg-summary" id="arg-summary" role="status" aria-live="polite">输入文本后开始分析；所有计算都在此设备完成。不会上传云端。</div>
