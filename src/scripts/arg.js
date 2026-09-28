@@ -46,9 +46,10 @@ function init() {
     const depthSelect=document.getElementById('arg-depth'),budgetSelect=document.getElementById('arg-budget'),modeSelect=document.getElementById('arg-mode'),workerSelect=document.getElementById('arg-workers'),effortSelect=document.getElementById('arg-effort');
     const reportedThreads=Math.max(1,Math.floor(navigator.hardwareConcurrency||4));
     const workerCounts=[];
-    for(let count=1;count<=reportedThreads;count*=2)workerCounts.push(count);
-    if(workerCounts.at(-1)!==reportedThreads)workerCounts.push(reportedThreads);
-    for(const count of workerCounts)workerSelect.add(new Option(String(count),String(count),false,count===Math.min(4,reportedThreads)));
+    const maxWorkers=Math.min(8,reportedThreads,navigator.deviceMemory&&navigator.deviceMemory<8?4:8);
+    for(let count=1;count<=maxWorkers;count*=2)workerCounts.push(count);
+    if(workerCounts.at(-1)!==maxWorkers)workerCounts.push(maxWorkers);
+    for(const count of workerCounts)workerSelect.add(new Option(String(count),String(count),false,count===Math.min(2,reportedThreads)));
     bindText(document.getElementById('arg-thread-info'),navigator.hardwareConcurrency?'检测到本机有 {count} 个可用逻辑线程；搜索力度会按照实际情况自动调整总节点数。':'浏览器未报告逻辑线程数，暂按 {count} 个提供选项；搜索力度会自适应调整搜索宽度。',{count:reportedThreads});
     const updateMode=()=>{
         const parallel=modeSelect.value==='parallel';
@@ -99,9 +100,9 @@ function init() {
             const [module,englishWords,acgData,acgModule]=await Promise.all([parallel?parallelModulePromise():enginePromise,loadEnglishDictionary().catch(error=>{console.warn('English dictionary unavailable; using fallback scoring',error);return null;}),useAcg?loadAcgData():null,useAcg?acgModulePromise():null]);
             if(current.signal.aborted)return;
             bindText(summary,'正在生成并排序搜索节点…');
-            const outcome=await (parallel?module.searchParallel(text,{maxDepth,effort,workerCount,signal:current.signal,englishWords,acgWords:acgData?.words,onProgress:s=>{if(controller===current)bindText(summary,'{workers} 个 Worker：已展开 {expanded} 个节点，生成 {generated} 个不同状态。',{...s,workers:workerCount});}}):module.search(text,{maxDepth,maxNodes,signal:current.signal,englishWords,acgWords:acgData?.words,onProgress:s=>{if(controller===current)bindText(summary,'已展开 {expanded} 个节点，生成 {generated} 个不同状态，队列中还有 {queued} 个。',s);}}));
+            const outcome=await (parallel?module.searchParallel(text,{maxDepth,effort,workerCount,signal:current.signal,englishWords,acgWords:acgData?.words,onProgress:s=>{if(controller===current)bindText(summary,'{workers} 个 Worker：已展开 {expanded} 个节点，生成 {generated} 个候选状态。',{...s,workers:workerCount});}}):module.search(text,{maxDepth,maxNodes,signal:current.signal,englishWords,acgWords:acgData?.words,onProgress:s=>{if(controller===current)bindText(summary,'已展开 {expanded} 个节点，生成 {generated} 个候选状态，队列中还有 {queued} 个。',s);}}));
             if(controller!==current)return;
-            render(outcome.candidates,results,acgData,acgModule?.matchAcgNames);const s=outcome.stats;bindText(summary,s.aborted?'搜索已停止。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。':'搜索完成。展开 {expanded} 个节点，生成 {generated} 个不同状态，显示前 {count} 个候选。',{...s,count:outcome.candidates.length});
+            render(outcome.candidates,results,acgData,acgModule?.matchAcgNames);const s=outcome.stats;bindText(summary,s.aborted?'搜索已停止。展开 {expanded} 个节点，生成 {generated} 个候选状态，显示前 {count} 个候选。':'搜索完成。展开 {expanded} 个节点，生成 {generated} 个候选状态，显示前 {count} 个候选。',{...s,count:outcome.candidates.length});
         } catch (error) {
             if(controller!==current)return;
             if(error?.name==='AbortError'){bindText(summary,'搜索已停止。');return;}

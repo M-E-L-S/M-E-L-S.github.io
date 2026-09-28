@@ -228,5 +228,44 @@
       "base58",
       "bacon"
     ]
+  },
+  {
+    "id": 31,
+    "depth": 7,
+    "maxNodes": 500,
+    "input": "QYCGUGYQ1D1E1EFQ1FFCGFFCFFFCFCFFCCFD1EGDwDGEGEvEGEGQCQUQCYYUUGYYGPQwQQQGEGQ1D1Q0GFGCCFFF",
+    "expected": "DEEP PATHS CAN STAY DARK FOR MANY LAYERS",
+    "path": ["reverse", "railfence", "caesar", "base64", "keyboardshift", "adfgx", "atbash"]
+  },
+  {
+    "id": 32,
+    "depth": 8,
+    "maxNodes": 500,
+    "input": "U,n/}7S0c7[Fn6dR6R7dhxmSwM;Ir+$YTJ#/lxmS;LBGn6FZp%w/%w#d/%UK:[0czwAefv20B8cKQPIZ$w\"gR5PpR5bYQvdR]tYzLygSgM;IB",
+    "expected": "DEEP PATHS CAN STAY DARK FOR MANY LAYERS",
+    "path": ["base91", "reverse", "railfence", "caesar", "base64", "keyboardshift", "adfgx", "atbash"]
+  },
+  {
+    "id": 33,
+    "depth": 6,
+    "maxNodes": 3000,
+    "input": "26b1ERrgnnAAaQcFVV4mLedK5i2e4W7X6iBbbSQnZbu26LG5HGqvsjUksZcdi9X4mZfQyTyEd8tQeX8tpRdMWfDdqkC4XSMJzSY",
+    "expected": "WEAK SIGNALS HIDE BEHIND NOISE"
+  },
+  {
+    "id": 34,
+    "depth": 6,
+    "maxNodes": 3000,
+    "input": "GNEHEVKMOZXGGWBZNRAVOZLBNQ2VO5DHPB3EIYTNIFWVE5COGE3EKY2HOZJW6UKON5GVIWBXKNQWI4DJOVGEIWDCJJHWOQTCJ5JE22DZPJHHONRTGZ4WOM2IGFATI3ZYJRFVMRDW",
+    "expected": "LOW RANK DOES NOT MEAN WRONG",
+    "path": ["base32", "caesar", "atbash", "railfence", "base58", "a1z26"]
+  },
+  {
+    "id": 35,
+    "depth": 8,
+    "maxNodes": 3000,
+    "input": "BkYb9JxT4PsBMMo8dQkcMEE9GMiVfAKwbHk2NUSEi4Z4E2vk27UzsmyFNrLFnkzsN2qohWeA7W4krNdUMyAUPJd9AekHZAELeTspJbeM7ru98m9fsZR7zHLEgHSJ8Dho1d5G1fxpM6jRJ1P5X1ucfP4mEwnatS2GNY8ZbfWyBHu6wMJ2DzfBqTHUgozGSYbhvrChKBYwsfLex8FFL82skdTmgWHfT6Mtc1QKbmGmimarHgU4ipwJXfmBpvvufGgkiiVHckWDUtkWvzHyvBUiX1URs4e7PaMf1255rJRqtrpNoathQiCigsc7oF73UiPrqNC9B1mhVTGuyhtaKLWv5Yyg83kDwNCj7LzMFPsAXJAhtoCKCVd8e2qfJp7mxDv9qh1R",
+    "expected": "BAD ROUTES CAN LOOK GOOD",
+    "path": ["base58", "caesar", "railfence", "base64", "base85", "tap", "atbash", "reverse"]
   }
 ]

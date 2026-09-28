@@ -16,19 +16,9 @@ self.onmessage=async event=>{
     }
     if(type!=='expand')return;
     try{
-        const {nodes,maxDepth,plaintextGrace}=event.data;
-        const {expandNodeTransitions}=await enginePromise;
-        const results=nodes.map(node=>{
-            if(node.plainTextLikely&&node.depth>=plaintextGrace)return null;
-            const expansion=expandNodeTransitions(node,{maxDepth,englishWords,acgWords});
-            // The coordinator owns each parent. Avoid cloning the full ancestry
-            // back once for every candidate in a wide expansion.
-            for(const transition of expansion.transitions){
-                transition.child.parent=null;
-                if(transition.segmentedChild)transition.segmentedChild.parent=null;
-            }
-            return expansion;
-        });
+        const {actions,maxDepth}=event.data;
+        const {expandSearchAction}=await enginePromise;
+        const results=actions.map(action=>expandSearchAction(action,{maxDepth,englishWords,acgWords}));
         self.postMessage({type:'expanded',id,results});
     }catch(error){
         self.postMessage({type:'error',id,message:String(error?.message??error)});
