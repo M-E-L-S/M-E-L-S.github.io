@@ -30,6 +30,8 @@
 
 缩写转义使用 `/tools/acronym/`。小游戏子路由为：连连看 `/minigame/link/`、扫雷 `/minigame/minesweeper/`、蜘蛛纸牌 `/minigame/spider/`、Wordle `/minigame/wordle/`。菜单切换会无刷新更新地址栏，所有子路由都可直接访问、刷新，并支持浏览器前进与后退。
 
+快捷文本工作台使用 `/tools/text/`。页面源文件是 `src/pages/text.html`、`src/styles/text.css`；`text-core.js` 负责嗅探、替换、清理、Markdown 解析和差异计算，`text-workbench.js` 负责可叠加操作的开关与实时结果，`text-worker.js` 为正则替换提供 2 秒超时隔离，`text-docx.js` 使用仓库已有的 JSZip 在浏览器内生成 DOCX。导出使用当前操作组合的结果。文本不上传，也不写入本地存储。运行 `node scripts/check-text.cjs` 检查文本处理和 DOCX 包结构。
+
 工具子路由：`/freshcup/sarkaz/`、`/freshcup/sami/`、`/freshcup/calculator/`。原来的根目录 `.html` 地址保留为轻量跳转页，不再生成第二套完整工具页面。
 
 所有页面共享顶栏、主题、设置与音乐组件；鲜蔬杯使用原生内容，没有 iframe。主栏目和鲜蔬杯工具切换都使用浏览器 History API，同一文档内切换可保持音乐播放。每个工具子路由仍会生成完整 HTML，因此可以直接输入网址访问、刷新，也支持浏览器前进与后退。

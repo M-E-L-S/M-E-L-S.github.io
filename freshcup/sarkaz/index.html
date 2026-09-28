@@ -18,7 +18,7 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="src/styles/site-design.css?v=93dd0cc469">
-<link rel="stylesheet" href="/src/styles/aicu.css?v=874d23fb3e"><link rel="stylesheet" href="/src/styles/arg.css?v=ed09c26db8"><link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/scoreboard_4.theme.css?v=63e9352904"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
+<link rel="stylesheet" href="/src/styles/aicu.css?v=874d23fb3e"><link rel="stylesheet" href="/src/styles/arg.css?v=ed09c26db8"><link rel="stylesheet" href="/src/styles/text.css?v=5432600b98"><link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/scoreboard_4.theme.css?v=63e9352904"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
 <body>
 <!-- 顶部导航栏 -->
 <a class="skip-link" href="#main-content">跳至主要内容</a>
@@ -247,6 +247,11 @@
                         <span class="game-picker-name">Favicon 图包</span>
                         <i class="fas fa-check game-picker-check" aria-hidden="true"></i>
                     </a>
+                    <a href="/tools/text/" class="game-picker-item utility-picker-item" role="option" data-utility="text" aria-selected="false">
+                        <span class="game-picker-emoji" aria-hidden="true">✍️</span>
+                        <span class="game-picker-name">快捷文本工作台</span>
+                        <i class="fas fa-check game-picker-check" aria-hidden="true"></i>
+                    </a>
                 </div>
             </div>
         </div>
@@ -402,6 +407,58 @@
         </div></details>
         <details class="arg-category"><summary>数学与代码 <span>暂未收录</span></summary><p>后续增加这一类时会在这里列出。</p></details>
     </article>
+</section>
+
+            <section class="utility-view text-workbench" id="text-view" aria-labelledby="text-title" hidden>
+    <header class="text-head">
+        <span class="acronym-kicker">QUICK TEXT WORKBENCH</span>
+        <h3 id="text-title">快捷文本工作台</h3>
+        <p>粘贴原文，按下需要的操作；再次按下即可取消。内容只在当前浏览器处理。</p>
+    </header>
+
+    <section class="text-workspace" aria-label="文本对比工作区">
+        <div class="text-compare-grid">
+            <div class="text-pane">
+                <div class="text-input-head"><label for="text-source">原文</label><button type="button" class="text-subtle" id="text-clear">清空</button></div>
+                <textarea id="text-source" class="text-input" rows="8" spellcheck="false" translate="no" placeholder="在这里粘贴需要处理的文字或 Markdown…"></textarea>
+                <p class="text-meta" id="text-source-meta">0 字符 · 粘贴后自动嗅探特殊信息</p>
+            </div>
+            <div class="text-pane">
+                <div class="text-input-head"><label for="text-output">处理后</label><button type="button" class="text-subtle" id="text-copy-output" disabled>复制结果</button></div>
+                <textarea id="text-output" class="text-output" rows="8" readonly translate="no" placeholder="按下一个操作后，这里会显示结果"></textarea>
+                <p class="text-meta" id="text-change-count">尚未处理</p>
+            </div>
+        </div>
+        <div class="text-diff-block">
+            <div class="text-diff-heading"><span class="text-step">DIFF</span><strong>修改标记</strong><span>− 原文　+ 处理后</span></div>
+            <div class="text-diff" id="text-diff" aria-label="原文与结果差异"><p class="text-empty">按下一个操作后显示修改部分。</p></div>
+        </div>
+    </section>
+
+    <section class="text-card" aria-labelledby="text-detect-title">
+        <div class="text-card-head"><div><span class="text-step">AUTO</span><h4 id="text-detect-title">自动提取</h4></div><span class="text-count" id="text-detect-count">等待输入</span></div>
+        <p class="text-card-help">自动嗅探网址、邮箱、电话及疑似邀请码或兑换码；低置信度结果会标明判断依据，请自行核对。</p>
+        <div class="text-detections" id="text-detections" aria-live="polite"><p class="text-empty">输入原文后，这里会自动显示结果。</p></div>
+    </section>
+    <section class="text-card text-actions" aria-labelledby="text-actions-title">
+        <div class="text-card-head"><div><span class="text-step">ONE CLICK</span><h4 id="text-actions-title">一键操作</h4></div></div>
+        <p class="text-card-help">按下可启用，再按一次取消。多个操作可同时启用，按替换 → 去 Markdown → 清理的顺序处理。</p>
+        <div class="text-replace-row">
+            <label>查找<input id="text-find" type="text" autocomplete="off" spellcheck="false" placeholder="输入文字或正则表达式"></label>
+            <label>替换为<input id="text-replacement" type="text" autocomplete="off" spellcheck="false" placeholder="留空即删除"></label>
+            <label>常用规则<select id="text-guide"><option value="">选择后填入查找框</option><option value="digits">连续数字</option><option value="spaces">连续空格 / Tab</option><option value="blank-lines">多余空行</option><option value="urls">URL</option><option value="emails">邮箱地址</option></select></label>
+            <button type="button" class="text-one-button" id="text-run-replace" aria-pressed="false">一键替换</button>
+        </div>
+        <p class="text-replace-hint">普通文字直接输入；支持正则表达式和 $1 捕获组。常用规则会自动填入查找框。替换内容可用 \n 表示换行。</p>
+        <div class="text-quick-buttons">
+            <button type="button" class="text-one-button" id="text-strip-markdown" aria-pressed="false">一键去 Markdown</button>
+            <button type="button" class="text-one-button" id="text-clean" aria-pressed="false">一键清理文本</button>
+            <button type="button" class="text-one-button text-export-button" id="text-export-docx">一键导出 DOCX <span aria-hidden="true">↓</span></button>
+        </div>
+        <p class="text-card-help">清理会合并多余空格与空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。DOCX 按当前处理结果导出；若结果仍含 Markdown，会尽量保留其表格等格式。</p>
+        <p id="text-status" class="text-status" role="status" aria-live="polite">按下操作后可在上方核对结果。</p>
+    </section>
+
 </section>
 
             <section class="utility-view favicon-view" id="favicon-view" aria-labelledby="favicon-title" hidden>
@@ -1350,7 +1407,7 @@
     <source src="assets/audio/没有如果.mp3" type="audio/mpeg">
 </audio>
 
-<script src="src/scripts/i18n.js?v=44cb55eb1b"></script>
+<script src="src/scripts/i18n.js?v=672f488dcb"></script>
 <script src="src/scripts/script.js?v=75a7b29289"></script>
 <script src="src/scripts/boss-battle.js?v=62c257ad94"></script>
 <script src="src/scripts/game.js?v=eadc706772"></script>
@@ -1359,7 +1416,10 @@
 <script src="src/scripts/wordle.js?v=e01284db42"></script>
 <script src="src/scripts/mini-games.js?v=962f853eb6"></script>
 <script src="vendor/jszip.min.js?v=acc7e41455"></script>
-<script src="src/scripts/utilities.js?v=7e2fb6a1ce"></script>
+<script src="src/scripts/utilities.js?v=8db687f071"></script>
+<script src="src/scripts/text-core.js?v=ded53f743f"></script>
+<script src="src/scripts/text-docx.js?v=4f11c15d86"></script>
+<script src="src/scripts/text-workbench.js?v=3c7f1cc45d"></script>
 <script src="src/scripts/boss-key.js?v=dac778437d"></script>
 <script src="vendor/flame-wrap.js?v=7ff0908dc6"></script>
 <script src="src/scripts/appearance.js?v=63e82d6f6e"></script>

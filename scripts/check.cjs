@@ -6,6 +6,7 @@ const routes = ['index.html','about/index.html','tools/index.html','tools/acrony
 routes.push('tools/aicu/index.html');
 routes.push('tools/arg/index.html');
 routes.push('tools/arg/reference/index.html');
+routes.push('tools/text/index.html');
 const requiredNotices = ['LICENSE.md','FRESHCUP-NONCOMMERCIAL-LICENSE.md','BOSS-NONCOMMERCIAL-LICENSE.md','LONG-WORDLE-NONCOMMERCIAL-LICENSE.md','THIRD_PARTY_AND_CONTENT_NOTICE.md','vendor/CanvasUI-LICENSE.md'];
 for (const notice of requiredNotices) {
  if(!fs.existsSync(path.join(root,notice))) throw Error(`Missing license or notice: ${notice}`);

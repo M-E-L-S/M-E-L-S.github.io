@@ -1,0 +1,46 @@
+const assert = require('node:assert/strict');
+const core = require('../src/scripts/text-core.js');
+const JSZip = require('../vendor/jszip.min.js');
+globalThis.JSZip = JSZip;
+require('../src/scripts/text-docx.js');
+
+async function main() {
+    assert.deepEqual(core.replace('a.b a.b', { mode: 'literal', find: 'a.b', replacement: '$1' }), { output: '$1 $1', count: 2, pattern: 'a\\.b' });
+    assert.equal(core.replace('foo-123', { mode: 'regex', find: '(foo)-(\\d+)', replacement: '$2/$1' }).output, '123/foo');
+    assert.equal(core.replace('foo.c fooXc', { find: 'foo.c', replacement: 'bar' }).output, 'bar fooXc');
+    assert.equal(core.replace('foo.c fooXc', { find: 'foo\\.c', replacement: 'bar' }).output, 'bar fooXc');
+    assert.equal(core.replace('foo-123', { find: '(foo)-(\\d+)', replacement: '$2/$1' }).output, '123/foo');
+    assert.equal(core.replace('a,b', { find: ',', replacement: '\\n' }).output, 'a\nb');
+    assert.equal(core.replace('a   b', { mode: 'guided', guide: 'spaces', replacement: ' ' }).output, 'a b');
+    assert.throws(() => core.replace('abc', { mode: 'regex', find: '[' }), SyntaxError);
+    const found = core.detect('邀请码：ABCD12，详见 https://example.com/a). 联系 a@example.com');
+    assert.deepEqual(found.map(item => [item.type, item.value]), [['邀请码', 'ABCD12'], ['网址', 'https://example.com/a'], ['邮箱', 'a@example.com']]);
+    const suspicious = core.detect('码 Q7K2P9L4；另见 [ABCD12] 和 xK9pQ2rT8v，普通文字 hello world');
+    assert(suspicious.some(item => item.value === 'Q7K2P9L4'));
+    assert(suspicious.some(item => item.value === 'ABCD12' && item.reason === '括号包裹'));
+    assert(suspicious.some(item => item.value === 'xK9pQ2rT8v' && item.reason === '高熵字符组合'));
+    assert(!suspicious.some(item => item.value === 'hello'));
+    assert.equal(core.cleanText('  A\u00A0  B\u200B \r\n\r\n\r\n C\u2028  D\t E  '), 'A B\n\nC\nD E');
+    const markdown = '# 标题\n\n- **加粗** [链接](https://example.com)\n\n```js\nconst a = 1;\n```';
+    assert.equal(core.stripMarkdown(markdown).output, '标题\n\n• 加粗 链接 (https://example.com)\n\nconst a = 1;');
+    assert.equal(core.stripMarkdown('2) second\n3) third\n\\*literal\\*').output, '2. second\n3. third\n*literal*');
+    assert.equal(core.stripMarkdown('| 名称 | 数量 |\n| --- | ---: |\n| 苹果 | **2** |').output, '名称\t数量\n苹果\t2');
+    assert.deepEqual(core.inlineParts('**bold *italic* text**').filter(part => part.text === 'italic')[0], { text: 'italic', italic: true, bold: true });
+    assert.equal(core.stripMarkdown('前缀 **`foo.c`** 后缀').output, '前缀 foo.c 后缀');
+    assert(core.diffLines('前\n旧', '前\n新').some(item => item.type === 'add' && item.text === '新'));
+    const blob = await globalThis.MELSTextDocx.exportDocx(markdown + '\n\n| Name | Count |\n| --- | --- |\n| Apple | 2 |');
+    const zip = await JSZip.loadAsync(await blob.arrayBuffer());
+    for (const name of ['[Content_Types].xml', '_rels/.rels', 'word/document.xml', 'word/styles.xml', 'word/_rels/document.xml.rels']) assert(zip.file(name), `${name} missing`);
+    const document = await zip.file('word/document.xml').async('string');
+    const rels = await zip.file('word/_rels/document.xml.rels').async('string');
+    assert.match(document, /Heading1/);
+    assert.match(document, /<w:b\/>/);
+    assert.match(document, /<w:hyperlink r:id="rId2">/);
+    assert.match(document, /<w:tbl>/);
+    assert.match(document, /<w:tblHeader w:val="true"\/>/);
+    assert.match(document, /<w:tcW w:w="4513" w:type="dxa"\/>/);
+    assert.equal((document.match(/<w:tr>/g) || []).length, 2);
+    assert.match(rels, /Target="https:\/\/example.com"/);
+    console.log('Text workbench checks passed.');
+}
+main().catch(error => { console.error(error); process.exitCode = 1; });

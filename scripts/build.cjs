@@ -7,6 +7,7 @@ const write = (p,s) => { const dest=path.join(root,p); fs.mkdirSync(path.dirname
 let shell = read('src/site.html');
 shell = shell.replace('<!-- AICU_VIEW -->', read('src/pages/aicu.html')).replace('</head>', '<link rel="stylesheet" href="/src/styles/aicu.css"></head>').replace('</body>', '<script src="/src/scripts/aicu.js"></script></body>');
 shell = shell.replace('<!-- ARG_VIEW -->', read('src/pages/arg.html')).replace('</head>', '<link rel="stylesheet" href="/src/styles/arg.css"></head>').replace('</body>', '<script defer src="/src/scripts/arg.js"></script></body>');
+shell = shell.replace('<!-- TEXT_VIEW -->', read('src/pages/text.html')).replace('</head>', '<link rel="stylesheet" href="/src/styles/text.css"></head>');
 const home = read('src/pages/home-sections.html');
 shell = shell.replace(/\n    <\/div>\s*\n    <!-- HOME_SECTIONS -->/, '\n'+home+'\n    </div>');
 const tools = [['scoreboard_5','界园计分器',''],['scoreboard_4','萨卡兹计分器','sarkaz/'],['scoreboard_3','萨米计分器','sami/'],['calculator','伤害计算器','calculator/']];
@@ -17,7 +18,7 @@ function freshcup(tool) {
 function render(tool='scoreboard_5') {
   return shell.replace('<!-- FRESHCUP_PAGE -->',freshcup(tool)).replace('</head>',`<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/${tool}.theme.css"><link rel="stylesheet" href="/src/styles/freshcup-native.css"></head>`).replace('<!-- TOOL_SCRIPT -->',`<script id="freshcup-tool-script" data-tool="${tool}" src="/src/scripts/freshcup/${tool}.js"></script>`).replace(/(src|href)="(\/?(?:src|vendor)\/[^"?]+)(?:\?[^" ]*)?"/g,(_,attr,file)=>{
     const source=read(file.replace(/^\//,''));
-    const versionSource=file.replace(/^\//,'')==='src/scripts/arg.js'?source+read('src/scripts/arg-engine.js')+read('src/scripts/arg-parallel.js')+read('src/scripts/arg-worker.js')+read('src/scripts/arg-acg.js')+read('assets/data/arg-acg-names.json')+read('assets/data/arg-acg-words.txt'):source;
+    const versionSource=file.replace(/^\//,'')==='src/scripts/arg.js'?source+read('src/scripts/arg-engine.js')+read('src/scripts/arg-parallel.js')+read('src/scripts/arg-worker.js')+read('src/scripts/arg-acg.js')+read('assets/data/arg-acg-names.json')+read('assets/data/arg-acg-words.txt'):file.replace(/^\//,'')==='src/scripts/text-workbench.js'?source+read('src/scripts/text-core.js')+read('src/scripts/text-worker.js')+read('src/scripts/text-docx.js'):source;
     return `${attr}="${file}?v=${crypto.createHash('sha256').update(versionSource).digest('hex').slice(0,10)}"`;
   });
 }
@@ -30,7 +31,7 @@ const palette = {
  '#d4e1f9':'var(--button-bg)', '#4a90e2':'var(--accent)', '#fff':'var(--surface)', '#ffffff':'var(--surface)'
 };
 for (const [tool] of tools) write(`src/styles/freshcup/${tool}.theme.css`, read(`src/styles/freshcup/${tool}.css`).replace(/#[a-f\d]{3,8}\b/gi,hex=>palette[hex.toLowerCase()]||hex));
-for (const route of ['','about','tools','tools/acronym','tools/favicon','tools/aicu','tools/arg','tools/arg/reference','minigame','minigame/link','minigame/minesweeper','minigame/spider','minigame/wordle','freshcup']) write((route?route+'/':'')+'index.html',render());
+for (const route of ['','about','tools','tools/acronym','tools/favicon','tools/aicu','tools/arg','tools/arg/reference','tools/text','minigame','minigame/link','minigame/minesweeper','minigame/spider','minigame/wordle','freshcup']) write((route?route+'/':'')+'index.html',render());
 for (const [id,,url] of tools) {
   if(url) write('freshcup/'+url+'index.html',render(id));
   // Original root-level public URLs remain usable as lightweight redirects.
