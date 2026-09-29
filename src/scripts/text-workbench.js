@@ -9,7 +9,7 @@
         strip: ['一键去 Markdown', '✓ 去 Markdown 已启用 · 点击取消'],
         clean: ['一键清理文本', '✓ 清理已启用 · 点击取消']
     };
-    let worker = null, workerTimer = null, workerReject = null, inputTimer = null, revision = 0, docxSource = null;
+    let worker = null, workerTimer = null, workerReject = null, inputTimer = null, revision = 0, docxSource = null, docxMathSpans = [];
     const copyFeedback = new WeakMap();
     function showCopied(button) {
         if (!button) return;
@@ -128,7 +128,7 @@
     }
     async function recompute() {
         const current = ++revision, source = $('text-source').value;
-        cancelWorker(); docxSource = null;
+        cancelWorker(); docxSource = null; docxMathSpans = [];
         $('text-export-docx').disabled = true;
         if (!source) { clearResult('请先输入原文。'); $('text-export-docx').disabled = false; return; }
         if (!Object.values(active).some(Boolean)) { clearResult('按下操作后可在上方核对结果。'); docxSource = source; $('text-export-docx').disabled = false; return; }
@@ -141,8 +141,14 @@
                 output = replaced.output;
             }
             if (current !== revision) return;
-            if (active.strip) output = core.stripMarkdown(output).output;
-            if (active.clean) output = core.cleanText(output);
+            if (active.strip) {
+                const stripped = core.stripMarkdown(output);
+                output = stripped.output; docxMathSpans = stripped.mathSpans;
+            }
+            if (active.clean) {
+                const cleaned = core.cleanWithMathSpans(output, docxMathSpans);
+                output = cleaned.output; docxMathSpans = cleaned.mathSpans;
+            }
             docxSource = output;
             $('text-output').value = output; $('text-copy-output').disabled = false;
             setDiff(source, output);
@@ -180,9 +186,10 @@
             if (!source.value) { status.textContent = '请先输入 Markdown 原文。'; source.focus(); return; }
             if (docxSource === null) { status.textContent = '请先修正替换规则。'; return; }
             const button = $('text-export-docx'), current = revision, text = docxSource;
+            const options = { plain: active.strip, mathSpans: docxMathSpans };
             button.disabled = true; status.textContent = '正在生成 DOCX…';
             try {
-                const blob = await globalThis.MELSTextDocx.exportDocx(text);
+                const blob = await globalThis.MELSTextDocx.exportDocx(text, options);
                 if (current !== revision) return;
                 const url = URL.createObjectURL(blob), link = document.createElement('a');
                 link.href = url; link.download = '快捷文本工作台.docx'; document.body.appendChild(link); link.click(); link.remove();

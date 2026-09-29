@@ -118,27 +118,142 @@
         }
         return merged.filter(Boolean).join('\n');
     }
-    function inlineParts(input) {
-        // Keep escaped Markdown punctuation literal while parsing other markers.
-        const text = input.replace(/\\([\\`*_{}\[\]()#+.!>~-])/g, (_, char) => `\uE000${char.codePointAt(0)}\uE001`);
-        const parts = [];
-        const token = /!\[([^\]]*)\]\(([^\s)]+)(?:\s+"[^"]*")?\)|\[([^\]]+)\]\(([^\s)]+)(?:\s+"[^"]*")?\)|`([^`]+)`|\*\*(.+?)\*\*(?!\*)|__(.+?)__(?!_)|~~(.+?)~~|\*([^*\n]+)\*|_([^_\n]+)_|<[^>\n]+>/g;
-        let cursor = 0, match;
-        while ((match = token.exec(text))) {
-            if (match.index > cursor) parts.push({ text: text.slice(cursor, match.index) });
-            if (match[1] !== undefined) parts.push({ text: `[图片: ${match[1]}] (${match[2]})` });
-            else if (match[3] !== undefined) parts.push({ text: match[3], link: match[4] });
-            else if (match[5] !== undefined) parts.push({ text: match[5], code: true });
-            else if (match[6] !== undefined || match[7] !== undefined) parts.push(...inlineParts(match[6] || match[7]).map(part => ({ ...part, bold: true })));
-            else if (match[8] !== undefined) parts.push(...inlineParts(match[8]).map(part => ({ ...part, strike: true })));
-            else if (match[9] !== undefined || match[10] !== undefined) parts.push(...inlineParts(match[9] || match[10]).map(part => ({ ...part, italic: true })));
-            cursor = token.lastIndex;
+    function cleanWithMathSpans(input, spans) {
+        if (!spans.length) return { output: cleanText(input), mathSpans: [] };
+        let marked = '', cursor = 0;
+        for (const span of spans) {
+            marked += input.slice(cursor, span.start) + (span.display ? '\uE002' : '\uE000') + input.slice(span.start, span.end) + '\uE001';
+            cursor = span.end;
         }
-        if (cursor < text.length) parts.push({ text: text.slice(cursor) });
-        return parts.map(part => ({ ...part, text: part.text.replace(/\uE000(\d+)\uE001/g, (_, code) => String.fromCodePoint(Number(code))) }));
+        marked += input.slice(cursor);
+        const cleaned = cleanText(marked);
+        let output = '';
+        const mathSpans = [];
+        for (let i = 0; i < cleaned.length; i++) {
+            if (cleaned[i] !== '\uE000' && cleaned[i] !== '\uE002') { output += cleaned[i]; continue; }
+            const end = cleaned.indexOf('\uE001', i + 1);
+            if (end < 0) { output += cleaned[i]; continue; }
+            const text = cleaned.slice(i + 1, end), start = output.length;
+            output += text;
+            mathSpans.push({ start, end: output.length, text, display: cleaned[i] === '\uE002' });
+            i = end;
+        }
+        return { output, mathSpans };
     }
-    function plainInline(input) {
-        return inlineParts(input).map(part => part.link && part.link !== part.text ? `${part.text} (${part.link})` : part.text).join('');
+    function inlineParts(input) {
+        const source = String(input);
+        const tokens = [];
+        function text(value) {
+            if (!value) return;
+            const last = tokens[tokens.length - 1];
+            if (last?.kind === 'text') last.text += value;
+            else tokens.push({ kind: 'text', text: value });
+        }
+        function closing(marker, start, singleLine = false) {
+            for (let at = start; at < source.length; at++) {
+                if (singleLine && source[at] === '\n') return -1;
+                if (source[at] === '\\') { at++; continue; }
+                if (source.startsWith(marker, at)) return at;
+            }
+            return -1;
+        }
+        for (let i = 0; i < source.length;) {
+            const char = source[i];
+            if (char === '\\' && /[\\`*_{}\[\]()#+.!>~$-]/.test(source[i + 1] || '')) {
+                text(source[i + 1]); i += 2; continue;
+            }
+            if (char === '`') {
+                const marker = /^`+/.exec(source.slice(i))[0];
+                const end = closing(marker, i + marker.length);
+                if (end !== -1) {
+                    tokens.push({ kind: 'atom', text: source.slice(i + marker.length, end), code: true });
+                    i = end + marker.length; continue;
+                }
+                text(marker); i += marker.length; continue;
+            }
+            if (char === '$') {
+                const marker = source[i + 1] === '$' ? '$$' : '$';
+                const end = closing(marker, i + marker.length, marker === '$');
+                if (end !== -1 && source.slice(i + marker.length, end).trim()) {
+                    tokens.push({ kind: 'atom', text: source.slice(i + marker.length, end).trim(), math: true, displayMath: marker === '$$' });
+                    i = end + marker.length; continue;
+                }
+                text(marker); i += marker.length; continue;
+            }
+            if (char === '[' || char === '!') {
+                const image = char === '!' && /^!\[([^\]]*)\]\(([^\s)]+)(?:\s+"[^"]*")?\)/.exec(source.slice(i));
+                const link = char === '[' && /^\[([^\]]+)\]\(([^\s)]+)(?:\s+"[^"]*")?\)/.exec(source.slice(i));
+                if (image) { tokens.push({ kind: 'atom', text: `[图片: ${image[1]}] (${image[2]})` }); i += image[0].length; continue; }
+                if (link) { tokens.push({ kind: 'parts', parts: inlineParts(link[1]).map(part => ({ ...part, link: link[2] })) }); i += link[0].length; continue; }
+            }
+            if (char === '<') {
+                const tag = /^<[^>\n]+>/.exec(source.slice(i));
+                if (tag) { i += tag[0].length; continue; }
+            }
+            if (char === '*' || char === '_' || char === '~' && source[i + 1] === '~') {
+                let end = i + 1;
+                while (source[end] === char) end++;
+                const count = end - i;
+                if (char === '~' && count < 2) text('~');
+                else tokens.push({ kind: 'delimiter', char, count, prev: source[i - 1] || '', next: source[end] || '', actions: [] });
+                i = end; continue;
+            }
+            text(char); i++;
+        }
+        const stack = [];
+        for (const token of tokens) {
+            if (token.kind !== 'delimiter') continue;
+            let remaining = token.count;
+            const word = character => /[\p{L}\p{N}]/u.test(character);
+            const intraword = token.char === '_' && word(token.prev) && word(token.next);
+            const canClose = !intraword && token.prev && !/\s/.test(token.prev);
+            const canOpen = !intraword && token.next && !/\s/.test(token.next);
+            while (canClose && stack.length && stack[stack.length - 1].char === token.char && stack[stack.length - 1].unit <= remaining) {
+                const opener = stack.pop();
+                opener.action.matched = true;
+                token.actions.push({ kind: 'close', unit: opener.unit, matched: true });
+                remaining -= opener.unit;
+            }
+            if (canOpen) while (remaining >= (token.char === '~' ? 2 : 1)) {
+                const unit = remaining >= 2 ? 2 : 1;
+                const action = { kind: 'open', unit, matched: false };
+                token.actions.push(action); stack.push({ char: token.char, unit, action });
+                remaining -= unit;
+            }
+            if (remaining) token.actions.push({ kind: 'literal', unit: remaining });
+        }
+        const parts = [], active = { bold: 0, italic: 0, strike: 0 };
+        function add(value, extra = {}) {
+            if (!value) return;
+            const flags = { ...extra };
+            if (active.bold) flags.bold = true;
+            if (active.italic) flags.italic = true;
+            if (active.strike) flags.strike = true;
+            const last = parts[parts.length - 1];
+            if (last && Object.keys(flags).every(key => last[key] === flags[key]) && Object.keys(last).every(key => key === 'text' || flags[key] === last[key])) last.text += value;
+            else parts.push({ text: value, ...flags });
+        }
+        for (const token of tokens) {
+            if (token.kind === 'text') add(token.text);
+            else if (token.kind === 'atom') {
+                const { kind, text: value, ...flags } = token;
+                add(value, flags);
+            } else if (token.kind === 'parts') for (const part of token.parts) {
+                const { text: value, ...flags } = part;
+                add(value, flags);
+            } else for (const action of token.actions) {
+                if (!action.matched) { add(token.char.repeat(action.unit)); continue; }
+                const flag = token.char === '~' ? 'strike' : action.unit === 2 ? 'bold' : 'italic';
+                active[flag] += action.kind === 'open' ? 1 : -1;
+            }
+        }
+        return parts;
+    }
+    function plainInline(input, markMath = false) {
+        return inlineParts(input).map(part => {
+            const content = part.link && part.link !== part.text ? `${part.text} (${part.link})` : part.text;
+            return markMath && part.math ? `${part.displayMath ? '\uE002' : '\uE000'}${content}\uE001` : content;
+        }).join('');
     }
     function parseMarkdown(input) {
         const lines = normalize(input).split('\n');
@@ -156,6 +271,16 @@
             }
             if (fence) { blocks.push({ kind: 'code', text: line }); continue; }
             if (/^\s*$/.test(line)) { blocks.push({ kind: 'blank', text: '' }); continue; }
+            const oneLineMath = /^\s*\$\$(.+?)\$\$\s*$/.exec(line);
+            if (oneLineMath) { blocks.push({ kind: 'math', text: oneLineMath[1].trim() }); continue; }
+            if (/^\s*\$\$\s*$/.test(line)) {
+                let end = i + 1;
+                while (end < lines.length && !/^\s*\$\$\s*$/.test(lines[end])) end++;
+                if (end < lines.length) {
+                    blocks.push({ kind: 'math', text: lines.slice(i + 1, end).join('\n').trim() });
+                    i = end; continue;
+                }
+            }
             if (i + 1 < lines.length && line.includes('|') && tableSeparator.test(lines[i + 1])) {
                 const rows = [cells(line)];
                 const align = cells(lines[i + 1]).map(cell => /^:.*:$/.test(cell) ? 'center' : /:$/.test(cell) ? 'right' : 'left');
@@ -183,16 +308,28 @@
             .replace(new RegExp(`^[ \\t]*${directive}[ \\t]*(?:\\n|$)`, 'gim'), '')
             .replace(new RegExp(`[ \\t]*${directive}[ \\t]*`, 'gi'), ' ');
         const blocks = parseMarkdown(source);
-        const output = blocks.map(block => {
+        const marked = blocks.map(block => {
             if (block.kind === 'blank') return '';
             if (block.kind === 'rule') return '────────';
             if (block.kind === 'code') return block.text;
-            if (block.kind === 'table') return block.rows.map(row => row.map(plainInline).join('\t')).join('\n');
-            if (block.kind === 'list') return `${'  '.repeat(block.depth)}${block.ordered ? block.marker.replace(/[)]$/, '.') : '•'} ${plainInline(block.text)}`;
-            if (block.kind === 'quote') return `引用：${plainInline(block.text)}`;
-            return plainInline(block.text);
+            if (block.kind === 'math') return `\uE002${block.text}\uE001`;
+            if (block.kind === 'table') return block.rows.map(row => row.map(cell => plainInline(cell, true)).join('\t')).join('\n');
+            if (block.kind === 'list') return `${'  '.repeat(block.depth)}${block.ordered ? block.marker.replace(/[)]$/, '.') : '•'} ${plainInline(block.text, true)}`;
+            if (block.kind === 'quote') return `引用：${plainInline(block.text, true)}`;
+            return plainInline(block.text, true);
         }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
-        return { output, blocks };
+        let output = '';
+        const mathSpans = [];
+        for (let i = 0; i < marked.length; i++) {
+            if (marked[i] !== '\uE000' && marked[i] !== '\uE002') { output += marked[i]; continue; }
+            const end = marked.indexOf('\uE001', i + 1);
+            if (end < 0) { output += marked[i]; continue; }
+            const text = marked.slice(i + 1, end), start = output.length;
+            output += text;
+            mathSpans.push({ start, end: output.length, text, display: marked[i] === '\uE002' });
+            i = end;
+        }
+        return { output, blocks, mathSpans };
     }
     function diffLines(before, after) {
         const oldLines = normalize(before).split('\n'), newLines = normalize(after).split('\n');
@@ -208,5 +345,5 @@
         }
         return changes;
     }
-    return { normalize, replace, detect, cleanText, parseMarkdown, stripMarkdown, inlineParts, diffLines, rules };
+    return { normalize, replace, detect, cleanText, cleanWithMathSpans, parseMarkdown, stripMarkdown, inlineParts, diffLines, rules };
 });
