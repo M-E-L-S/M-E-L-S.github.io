@@ -178,7 +178,11 @@
         return blocks;
     }
     function stripMarkdown(input) {
-        const blocks = parseMarkdown(input);
+        const directive = ':chatgpt-[a-z0-9-]+\\{[^{}\\n]*\\}';
+        const source = normalize(input)
+            .replace(new RegExp(`^[ \\t]*${directive}[ \\t]*(?:\\n|$)`, 'gim'), '')
+            .replace(new RegExp(`[ \\t]*${directive}[ \\t]*`, 'gi'), ' ');
+        const blocks = parseMarkdown(source);
         const output = blocks.map(block => {
             if (block.kind === 'blank') return '';
             if (block.kind === 'rule') return '────────';

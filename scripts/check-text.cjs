@@ -28,6 +28,9 @@ async function main() {
     assert.equal(core.stripMarkdown('| 名称 | 数量 |\n| --- | ---: |\n| 苹果 | **2** |').output, '名称\t数量\n苹果\t2');
     assert.deepEqual(core.inlineParts('**bold *italic* text**').filter(part => part.text === 'italic')[0], { text: 'italic', italic: true, bold: true });
     assert.equal(core.stripMarkdown('前缀 **`foo.c`** 后缀').output, '前缀 foo.c 后缀');
+    assert.equal(core.stripMarkdown('前文 **`foo.c`** :chatgpt-content-reference{index="0"}\t后文').output, '前文 foo.c 后文');
+    assert.equal(core.stripMarkdown('第一段\n:chatgpt-content-reference{index="0"}\t\n第二段').output, '第一段\n第二段');
+    assert.equal(core.stripMarkdown(':root{color:red}').output, ':root{color:red}');
     assert(core.diffLines('前\n旧', '前\n新').some(item => item.type === 'add' && item.text === '新'));
     const blob = await globalThis.MELSTextDocx.exportDocx(markdown + '\n\n| Name | Count |\n| --- | --- |\n| Apple | 2 |');
     const zip = await JSZip.loadAsync(await blob.arrayBuffer());

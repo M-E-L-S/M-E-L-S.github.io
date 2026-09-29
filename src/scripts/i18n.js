@@ -28,7 +28,13 @@
     Object.assign(english, {
         '开启音乐栏':'Show music player',
         '关闭音乐栏':'Hide music player',
-        '清理会合并多余空格、删除所有空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。DOCX 按当前处理结果导出；若结果仍含 Markdown，会尽量保留其表格等格式。':'Cleaning combines extra spaces, removes every blank line, trims lines, removes invisible characters, and normalizes special spaces and line breaks. DOCX exports the current result and preserves Markdown tables when markup remains.'
+        '清理会合并多余空格、删除所有空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。DOCX 按当前处理结果导出；若结果仍含 Markdown，会尽量保留其表格等格式。':'Cleaning combines extra spaces, removes every blank line, trims lines, removes invisible characters, and normalizes special spaces and line breaks. DOCX exports the current result and preserves Markdown tables when markup remains.',
+        '最大深度限定连续解码层数。':'Maximum depth limits the number of consecutive decoding layers.',
+        '粘贴文本，超快捷一键操作。所有内容只在本地浏览器处理，不上传云端。':'Paste text for quick one-click actions. Everything is processed locally in your browser and is never uploaded.',
+        '多个操作可同时启用，处理顺序：替换 → 去 Markdown → 清理。':'You can enable multiple actions at once. They run in this order: replace → strip Markdown → clean.',
+        '（可选）':'(Optional)',
+        '支持正则表达式和 $1 捕获组。常用规则会自动填入查找框。替换内容支持 \\n 等转义。':'Supports regular expressions and $1 capture groups. Common patterns fill the search field. Replacement text supports escapes such as \\n.',
+        '清理会合并多余空格、删除所有空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。DOCX 按当前处理结果导出；若结果含 Markdown，会尽量保留其格式。':'Cleaning combines extra spaces, removes every blank line, trims lines, removes invisible characters, and normalizes special spaces and line breaks. DOCX exports the current result and preserves Markdown formatting when present.'
     });
     Object.assign(english, {
         '经典 · 5 字母':'Classic · 5 letters','填满当前行，然后按回车提交':'Fill the current row, then press Enter','本次':'Current','拖动当前字母组调整对齐 · 第 1 位':'Drag the current letter group to align · Position 1','经典模式：答案来自原版 Wordle 的 2,315 词答案池，共六次机会。绿色表示字母与位置都正确，黄色表示答案中有该字母但位置不对，灰色表示答案中没有可用的该字母。':'Classic mode uses the original 2,315-word Wordle answer pool with six attempts. Green means the letter and position are correct, yellow means the letter appears elsewhere, and gray means no unused copy of that letter remains.','答案库来源':'Answer-list source','猜词库来源':'Guess-list source'

@@ -6,8 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
     document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => {
         if (button.dataset.action === 'music') {
-            if (document.getElementById('music-player')?.hidden) document.getElementById('music-quick-toggle')?.click();
-            document.getElementById('music-search-toggle')?.click();
+            const player = document.getElementById('music-player');
+            if (player?.hidden) document.getElementById('music-quick-toggle')?.click();
+            if (player?.classList.contains('is-collapsed')) document.getElementById('music-collapse-toggle')?.click();
+            if (document.getElementById('music-search-panel')?.hidden) document.getElementById('music-search-toggle')?.click();
         } else document.getElementById('settings-toggle')?.click();
     }));
 });

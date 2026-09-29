@@ -2,7 +2,7 @@
     <header class="text-head">
         <span class="acronym-kicker">QUICK TEXT WORKBENCH</span>
         <h3 id="text-title">快捷文本工作台</h3>
-        <p>粘贴原文，按下需要的操作；再次按下即可取消。内容只在当前浏览器处理。</p>
+        <p>粘贴文本，超快捷一键操作。所有内容只在本地浏览器处理，不上传云端。</p>
     </header>
 
     <section class="text-workspace" aria-label="文本对比工作区">
@@ -31,20 +31,20 @@
     </section>
     <section class="text-card text-actions" aria-labelledby="text-actions-title">
         <div class="text-card-head"><div><span class="text-step">ONE CLICK</span><h4 id="text-actions-title">一键操作</h4></div></div>
-        <p class="text-card-help">按下可启用，再按一次取消。多个操作可同时启用，按替换 → 去 Markdown → 清理的顺序处理。</p>
+        <p class="text-card-help">多个操作可同时启用，处理顺序：替换 → 去 Markdown → 清理。</p>
         <div class="text-replace-row">
             <label>查找<input id="text-find" type="text" autocomplete="off" spellcheck="false" placeholder="输入文字或正则表达式"></label>
             <label>替换为<input id="text-replacement" type="text" autocomplete="off" spellcheck="false" placeholder="留空即删除"></label>
-            <label>常用规则<select id="text-guide"><option value="">选择后填入查找框</option><option value="digits">连续数字</option><option value="spaces">连续空格 / Tab</option><option value="blank-lines">多余空行</option><option value="urls">URL</option><option value="emails">邮箱地址</option></select></label>
+            <label>常用规则<select id="text-guide"><option value="">（可选）</option><option value="digits">连续数字</option><option value="spaces">连续空格 / Tab</option><option value="blank-lines">多余空行</option><option value="urls">URL</option><option value="emails">邮箱地址</option></select></label>
             <button type="button" class="text-one-button" id="text-run-replace" aria-pressed="false">一键替换</button>
         </div>
-        <p class="text-replace-hint">普通文字直接输入；支持正则表达式和 $1 捕获组。常用规则会自动填入查找框。替换内容可用 \n 表示换行。</p>
+        <p class="text-replace-hint">支持正则表达式和 $1 捕获组。常用规则会自动填入查找框。替换内容支持 \n 等转义。</p>
         <div class="text-quick-buttons">
             <button type="button" class="text-one-button" id="text-strip-markdown" aria-pressed="false">一键去 Markdown</button>
             <button type="button" class="text-one-button" id="text-clean" aria-pressed="false">一键清理文本</button>
             <button type="button" class="text-one-button text-export-button" id="text-export-docx">一键导出 DOCX <span aria-hidden="true">↓</span></button>
         </div>
-        <p class="text-card-help">清理会合并多余空格、删除所有空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。DOCX 按当前处理结果导出；若结果仍含 Markdown，会尽量保留其表格等格式。</p>
+        <p class="text-card-help">清理会合并多余空格、删除所有空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。DOCX 按当前处理结果导出；若结果含 Markdown，会尽量保留其格式。</p>
         <p id="text-status" class="text-status" role="status" aria-live="polite">按下操作后可在上方核对结果。</p>
     </section>
 

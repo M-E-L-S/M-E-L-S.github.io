@@ -10,16 +10,37 @@
         clean: ['一键清理文本', '✓ 清理已启用 · 点击取消']
     };
     let worker = null, workerTimer = null, workerReject = null, inputTimer = null, revision = 0, docxSource = null;
-    function copy(value, status) {
-        if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(value).then(() => { status.textContent = '已复制到剪贴板。'; }).catch(() => fallbackCopy(value, status));
-        return fallbackCopy(value, status);
+    const copyFeedback = new WeakMap();
+    function showCopied(button) {
+        if (!button) return;
+        const previous = copyFeedback.get(button) || { text: button.textContent, label: button.getAttribute('aria-label') };
+        clearTimeout(previous.timer);
+        button.textContent = '已复制';
+        button.setAttribute('aria-label', '已复制');
+        previous.timer = setTimeout(() => {
+            button.textContent = previous.text;
+            if (previous.label === null) button.removeAttribute('aria-label');
+            else button.setAttribute('aria-label', previous.label);
+            copyFeedback.delete(button);
+        }, 1600);
+        copyFeedback.set(button, previous);
     }
-    function fallbackCopy(value, status) {
+    function copy(value, status, button) {
+        if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(value).then(() => {
+            status.textContent = '已复制到剪贴板。';
+            showCopied(button);
+        }).catch(() => fallbackCopy(value, status, button));
+        return fallbackCopy(value, status, button);
+    }
+    function fallbackCopy(value, status, button) {
         const input = document.createElement('textarea');
         input.value = value; input.style.position = 'fixed'; input.style.opacity = '0';
         document.body.appendChild(input); input.select();
-        const copied = document.execCommand('copy'); input.remove();
+        let copied = false;
+        try { copied = document.execCommand('copy'); } catch (_) {}
+        input.remove();
         status.textContent = copied ? '已复制到剪贴板。' : '复制失败，请手动选择文本。';
+        if (copied) showCopied(button);
     }
     function cancelWorker(message = '已取消旧操作。') {
         if (worker) worker.terminate();
@@ -100,7 +121,7 @@
             const value = document.createElement('span'); value.className = 'text-detection-value'; value.textContent = item.value; value.translate = false;
             const reason = document.createElement('span'); reason.className = 'text-detection-reason'; reason.textContent = item.reason || '';
             const button = document.createElement('button'); button.type = 'button'; button.className = 'text-subtle'; button.textContent = '复制'; button.setAttribute('aria-label', `复制${item.type}`);
-            button.addEventListener('click', () => copy(item.value, $('text-status')));
+            button.addEventListener('click', () => copy(item.value, $('text-status'), button));
             row.append(tag, value, reason, button); container.appendChild(row);
         }
         if (findings.length > 100) { const p = document.createElement('p'); p.className = 'text-card-help'; p.textContent = `只显示前 100 项，共发现 ${findings.length} 项。`; container.appendChild(p); }
@@ -139,7 +160,7 @@
             renderDetections(source.value); recompute();
         });
         $('text-clear').addEventListener('click', () => { source.value = ''; source.dispatchEvent(new Event('input')); source.focus(); });
-        $('text-copy-output').addEventListener('click', () => copy($('text-output').value, status));
+        $('text-copy-output').addEventListener('click', () => copy($('text-output').value, status, $('text-copy-output')));
         for (const [name, id] of [['replace', 'text-run-replace'], ['strip', 'text-strip-markdown'], ['clean', 'text-clean']]) {
             $(id).addEventListener('click', () => { active[name] = !active[name]; updateButtons(); recompute(); });
         }

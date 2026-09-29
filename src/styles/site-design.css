@@ -148,6 +148,7 @@ a {color:inherit;} button {cursor:pointer;}
 .game-btn.primary {background:var(--accent);color:#fff;border-color:var(--accent);}.game-btn.primary:hover {background:var(--accent-strong);border-color:var(--accent-strong);}
 .game-picker-btn {border-radius:50%;box-shadow:none;background:var(--button-bg);color:var(--text);border-color:var(--border);}
 .game-picker-menu {border-radius:16px;}
+.game-picker.open .game-picker-item:nth-child(5) {animation-delay:.2s;}
 .settings-dialog {background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:22px;box-shadow:0 28px 100px #0004;}
 .settings-header {padding:23px 28px;}.settings-header h2 {font-weight:550;}.settings-category {border-radius:10px;}
 .settings-close,.reset-settings {border-radius:9px;}.appearance-switch {accent-color:var(--accent);}
