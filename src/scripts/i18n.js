@@ -26,6 +26,11 @@
         '📢 更新公告':'📢 What’s new','1. 新增首页，关于，小道具，小游戏页面，原鲜蔬杯页面仍为单独页面。':'1. Added Home, About, Tools, and Games; F.V. Cup remains its own section.','2. 新增设置和音乐栏。重构并大幅升级了外观，并保持了设计统一。':'2. Added Settings and the music player, with a redesigned and unified visual system.','3. 「关于」页面用于存放更新公告，网站开源协议、第三方声明、用户隐私声明。会随网站更新实时更新。':'3. About now contains release notes, licensing, third-party notices, and privacy information.','4. 「小道具」页面用于提供M.E. 自制/收集到的开源 实用妙妙工具，你早晚会用到。':'4. Tools collects useful open-source utilities created or curated by M.E.','5. 「小游戏」页面用于提供':'5. Games provides','完全自制':'original','的各类游戏/经典游戏改，充满了作者的巧思。包括但不限于“连连看boss模式”“wordle长单词模式”。':'games and creative variations, including Tile Match BOSS Battle and Long Word Wordle.','6. 「鲜蔬杯」页面保持原有功能不变，仅做外观调整。':'6. F.V. Cup keeps its original functionality with refreshed visuals.','7. 「音乐」栏支持在线搜索、播放音乐，并支持同各家播放器一致的收藏和列表播放。':'7. The music player supports online search, playback, favorites, and playlists.','独家功能':'Exclusive feature','：粒子动态歌词，现可在首页标题下方体验。':': animated particle lyrics on the Home page.','8. 「设置」弹窗支持设置自定义外观，音乐相关和老板键的配置。':'8. Settings includes appearance, language, music, and boss-key controls.','C代码':'C source','。':'.'
     };
     Object.assign(english, {
+        '开启音乐栏':'Show music player',
+        '关闭音乐栏':'Hide music player',
+        '清理会合并多余空格、删除所有空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。DOCX 按当前处理结果导出；若结果仍含 Markdown，会尽量保留其表格等格式。':'Cleaning combines extra spaces, removes every blank line, trims lines, removes invisible characters, and normalizes special spaces and line breaks. DOCX exports the current result and preserves Markdown tables when markup remains.'
+    });
+    Object.assign(english, {
         '经典 · 5 字母':'Classic · 5 letters','填满当前行，然后按回车提交':'Fill the current row, then press Enter','本次':'Current','拖动当前字母组调整对齐 · 第 1 位':'Drag the current letter group to align · Position 1','经典模式：答案来自原版 Wordle 的 2,315 词答案池，共六次机会。绿色表示字母与位置都正确，黄色表示答案中有该字母但位置不对，灰色表示答案中没有可用的该字母。':'Classic mode uses the original 2,315-word Wordle answer pool with six attempts. Green means the letter and position are correct, yellow means the letter appears elsewhere, and gray means no unused copy of that letter remains.','答案库来源':'Answer-list source','猜词库来源':'Guess-list source'
     });
     english['鲜蔬杯官方(M.E.)唯一指定工具集。思路参考'] = 'The official F.V. Cup toolkit by M.E. Inspired by';

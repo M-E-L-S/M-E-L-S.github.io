@@ -62,6 +62,7 @@ a {color:inherit;} button {cursor:pointer;}
 .nav-icon-button {position:static;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--border);border-radius:50%;background:var(--surface);color:var(--text);font-size:16px;box-shadow:none;flex:none;transition:border-color .2s,color .2s,background .2s,transform .2s;}
 .nav-icon-button:hover {border-color:var(--accent);color:var(--accent-strong);background:color-mix(in srgb,var(--surface) 92%,var(--accent) 8%);transform:translateY(-1px);}
 .nav-icon-button i {font-size:16px;line-height:1;}
+.music-quick-toggle[aria-pressed="true"] {color:var(--accent-strong);border-color:var(--accent);background:color-mix(in srgb,var(--surface) 86%,var(--accent) 14%);}
 .page-container {width:min(1200px,calc(100% - 64px));margin:0 auto;padding:0;overflow:visible;position:relative;z-index:2;min-height:calc(100vh - 240px);}
 .page {display:none;opacity:1;min-height:0;width:100%;padding:64px 0 80px;overflow:visible;}
 .page.active {display:block;animation:none;}
@@ -167,6 +168,7 @@ a {color:inherit;} button {cursor:pointer;}
 .theme-color-presets button[data-theme-color="#d86f68"] {--swatch:#d86f68;}
 .theme-color-presets button[data-theme-color="#3f9b78"] {--swatch:#3f9b78;}
 .music-player {position:fixed;bottom:0;left:auto;right:0;width:100%;padding:12px 28px;background:var(--bar-bg);border-top:1px solid var(--divider);border-radius:0;box-shadow:none;backdrop-filter:blur(20px);z-index:900;transform-origin:right bottom;}
+.music-player[hidden] {display:none;}
 .music-player.is-collapsed {width:280px;left:auto;right:20px;bottom:16px;border:1px solid var(--border);border-radius:16px;padding:10px 14px;box-shadow:0 8px 30px #0002;}
 .music-btn {color:var(--text);border-radius:50%;}.music-btn:hover {background:var(--button-bg);color:var(--text);transform:none;}
 .music-cover {border-radius:10px;background:var(--button-bg);}

@@ -104,7 +104,7 @@
             .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
             .replace(/[\u00AD\u200B-\u200F\u2060\u2066-\u2069\uFEFF\u202A-\u202E\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
         output = output.split('\n').map(line => line.replace(/[ \t]+/g, ' ').trim()).join('\n');
-        output = output.replace(/\n{3,}/g, '\n\n').trim();
+        output = output.trim();
         const lines = output.split('\n'), merged = [];
         let inFence = false;
         for (const line of lines) {
@@ -116,7 +116,7 @@
             if (canJoin) merged[merged.length - 1] += /[\u4E00-\u9FFF]$/.test(previous) && /^[\u4E00-\u9FFF]/.test(line) ? line : ` ${line}`;
             else merged.push(line);
         }
-        return merged.join('\n');
+        return merged.filter(Boolean).join('\n');
     }
     function inlineParts(input) {
         // Keep escaped Markdown punctuation literal while parsing other markers.

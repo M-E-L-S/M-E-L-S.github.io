@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if(nav) { event.preventDefault(); nav.click(); window.scrollTo({top:0,behavior:'instant'}); }
     }));
     document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => {
-        document.getElementById(button.dataset.action === 'music' ? 'music-search-toggle' : 'settings-toggle').click();
+        if (button.dataset.action === 'music') {
+            if (document.getElementById('music-player')?.hidden) document.getElementById('music-quick-toggle')?.click();
+            document.getElementById('music-search-toggle')?.click();
+        } else document.getElementById('settings-toggle')?.click();
     }));
 });

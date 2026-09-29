@@ -20,7 +20,8 @@ async function main() {
     assert(suspicious.some(item => item.value === 'ABCD12' && item.reason === '括号包裹'));
     assert(suspicious.some(item => item.value === 'xK9pQ2rT8v' && item.reason === '高熵字符组合'));
     assert(!suspicious.some(item => item.value === 'hello'));
-    assert.equal(core.cleanText('  A\u00A0  B\u200B \r\n\r\n\r\n C\u2028  D\t E  '), 'A B\n\nC\nD E');
+    assert.equal(core.cleanText('  A\u00A0  B\u200B \r\n\r\n\r\n C\u2028  D\t E  '), 'A B\nC\nD E');
+    assert.equal(core.cleanText('\n A\n \t\n\nB\n\n'), 'A\nB');
     const markdown = '# 标题\n\n- **加粗** [链接](https://example.com)\n\n```js\nconst a = 1;\n```';
     assert.equal(core.stripMarkdown(markdown).output, '标题\n\n• 加粗 链接 (https://example.com)\n\nconst a = 1;');
     assert.equal(core.stripMarkdown('2) second\n3) third\n\\*literal\\*').output, '2. second\n3. third\n*literal*');

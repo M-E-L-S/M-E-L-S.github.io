@@ -32,6 +32,9 @@
         <li><a class="nav-link" data-page="freshcup" href="/freshcup/">鲜蔬杯</a></li>
     </ul>
     <div class="nav-actions">
+        <button class="nav-icon-button music-quick-toggle" id="music-quick-toggle" type="button" aria-label="开启音乐栏" aria-pressed="false" aria-controls="music-player" title="开启音乐栏">
+            <i class="fas fa-music" aria-hidden="true"></i>
+        </button>
         <button class="nav-icon-button theme-quick-toggle" id="theme-quick-toggle" type="button" aria-label="切换到深色模式" aria-pressed="false" title="切换到深色模式">
             <i class="fas fa-moon" aria-hidden="true"></i>
         </button>
@@ -571,7 +574,7 @@
 
 <footer class="site-footer"><a href="/" data-route="home">MELS</a><span>总有一些想法。</span><a href="/about/" data-route="about">关于本站 ↗</a></footer>
 <!-- 底部音乐播放器 -->
-<div class="music-player" id="music-player">
+<div class="music-player" id="music-player" hidden>
     <div class="music-progress-row">
         <span id="music-current-time">00:00</span>
         <input id="music-progress" type="range" min="0" max="1000" value="0" step="1" aria-label="音乐播放进度">
@@ -685,9 +688,7 @@
 </div>
 
 <!-- 音频元素 -->
-<audio id="bg-music" preload="metadata">
-    <source src="assets/audio/没有如果.mp3" type="audio/mpeg">
-</audio>
+<audio id="bg-music" preload="none"></audio>
 
 <script src="src/scripts/i18n.js"></script>
 <script src="src/scripts/script.js?v=8"></script>

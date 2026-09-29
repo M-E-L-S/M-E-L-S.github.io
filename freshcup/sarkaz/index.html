@@ -17,7 +17,7 @@
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="src/styles/site-design.css?v=93dd0cc469">
+    <link rel="stylesheet" href="src/styles/site-design.css?v=66521b7c54">
 <link rel="stylesheet" href="/src/styles/aicu.css?v=874d23fb3e"><link rel="stylesheet" href="/src/styles/arg.css?v=ed09c26db8"><link rel="stylesheet" href="/src/styles/text.css?v=5432600b98"><link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/scoreboard_4.theme.css?v=63e9352904"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
 <body>
 <!-- 顶部导航栏 -->
@@ -32,6 +32,9 @@
         <li><a class="nav-link" data-page="freshcup" href="/freshcup/">鲜蔬杯</a></li>
     </ul>
     <div class="nav-actions">
+        <button class="nav-icon-button music-quick-toggle" id="music-quick-toggle" type="button" aria-label="开启音乐栏" aria-pressed="false" aria-controls="music-player" title="开启音乐栏">
+            <i class="fas fa-music" aria-hidden="true"></i>
+        </button>
         <button class="nav-icon-button theme-quick-toggle" id="theme-quick-toggle" type="button" aria-label="切换到深色模式" aria-pressed="false" title="切换到深色模式">
             <i class="fas fa-moon" aria-hidden="true"></i>
         </button>
@@ -455,7 +458,7 @@
             <button type="button" class="text-one-button" id="text-clean" aria-pressed="false">一键清理文本</button>
             <button type="button" class="text-one-button text-export-button" id="text-export-docx">一键导出 DOCX <span aria-hidden="true">↓</span></button>
         </div>
-        <p class="text-card-help">清理会合并多余空格与空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。DOCX 按当前处理结果导出；若结果仍含 Markdown，会尽量保留其表格等格式。</p>
+        <p class="text-card-help">清理会合并多余空格、删除所有空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。DOCX 按当前处理结果导出；若结果仍含 Markdown，会尽量保留其表格等格式。</p>
         <p id="text-status" class="text-status" role="status" aria-live="polite">按下操作后可在上方核对结果。</p>
     </section>
 
@@ -1289,7 +1292,7 @@
 
 <footer class="site-footer"><a href="/" data-route="home">MELS</a><span>总有一些想法。</span><a href="/about/" data-route="about">关于本站 ↗</a></footer>
 <!-- 底部音乐播放器 -->
-<div class="music-player" id="music-player">
+<div class="music-player" id="music-player" hidden>
     <div class="music-progress-row">
         <span id="music-current-time">00:00</span>
         <input id="music-progress" type="range" min="0" max="1000" value="0" step="1" aria-label="音乐播放进度">
@@ -1403,12 +1406,10 @@
 </div>
 
 <!-- 音频元素 -->
-<audio id="bg-music" preload="metadata">
-    <source src="assets/audio/没有如果.mp3" type="audio/mpeg">
-</audio>
+<audio id="bg-music" preload="none"></audio>
 
-<script src="src/scripts/i18n.js?v=672f488dcb"></script>
-<script src="src/scripts/script.js?v=75a7b29289"></script>
+<script src="src/scripts/i18n.js?v=f51a48c0d3"></script>
+<script src="src/scripts/script.js?v=515f2f5b55"></script>
 <script src="src/scripts/boss-battle.js?v=62c257ad94"></script>
 <script src="src/scripts/game.js?v=eadc706772"></script>
 <script src="src/scripts/minesweeper.js?v=df50eb57b1"></script>
@@ -1417,14 +1418,14 @@
 <script src="src/scripts/mini-games.js?v=962f853eb6"></script>
 <script src="vendor/jszip.min.js?v=acc7e41455"></script>
 <script src="src/scripts/utilities.js?v=8db687f071"></script>
-<script src="src/scripts/text-core.js?v=ded53f743f"></script>
+<script src="src/scripts/text-core.js?v=fa3c9614d9"></script>
 <script src="src/scripts/text-docx.js?v=4f11c15d86"></script>
-<script src="src/scripts/text-workbench.js?v=3c7f1cc45d"></script>
+<script src="src/scripts/text-workbench.js?v=3d9c0ff59f"></script>
 <script src="src/scripts/boss-key.js?v=dac778437d"></script>
 <script src="vendor/flame-wrap.js?v=7ff0908dc6"></script>
 <script src="src/scripts/appearance.js?v=63e82d6f6e"></script>
 <script type="module" src="src/scripts/particle-title.js?v=f2badaae0c"></script>
-<script src="src/scripts/site.js?v=9dbe7129dc"></script>
+<script src="src/scripts/site.js?v=7ff39bd66b"></script>
 <script id="freshcup-tool-script" data-tool="scoreboard_4" src="/src/scripts/freshcup/scoreboard_4.js?v=105d846dfe"></script>
 <script src="/src/scripts/aicu.js?v=086a9ec5a0"></script><script defer src="/src/scripts/arg.js?v=ee5ce03e07"></script></body>
 </html>

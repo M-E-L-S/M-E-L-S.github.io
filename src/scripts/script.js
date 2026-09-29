@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 初始化数据
-    initMusicPlayer();
+    initMusicVisibility();
     initAnnounceArchive();
 
     // 初始时滚动到顶部
@@ -70,6 +70,46 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 音乐播放器功能
+function initMusicVisibility() {
+    const button = document.getElementById('music-quick-toggle');
+    const player = document.getElementById('music-player');
+    const audio = document.getElementById('bg-music');
+    if (!button || !player || !audio) return;
+    const key = 'winy_music_bar_enabled_v1';
+    let initialized = false;
+    function setEnabled(enabled, persist = true) {
+        player.hidden = !enabled;
+        document.body.classList.toggle('music-player-hidden', !enabled);
+        if (enabled && !initialized) {
+            initialized = true;
+            initMusicPlayer();
+        }
+        if (!enabled) {
+            audio.pause();
+            for (const id of ['music-search-panel', 'music-library-panel', 'music-volume-panel']) {
+                const panel = document.getElementById(id);
+                if (panel) panel.hidden = true;
+            }
+            for (const id of ['music-search-toggle', 'music-library-toggle', 'music-volume-toggle']) {
+                document.getElementById(id)?.setAttribute('aria-expanded', 'false');
+            }
+        }
+        document.body.classList.toggle('music-player-collapsed', enabled && player.classList.contains('is-collapsed'));
+        button.setAttribute('aria-pressed', String(enabled));
+        const label = enabled ? '关闭音乐栏' : '开启音乐栏';
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        if (persist) {
+            try { localStorage.setItem(key, String(enabled)); } catch (_) {}
+        }
+        window.dispatchEvent(new Event('winy-music-visibilitychange'));
+    }
+    let saved = false;
+    try { saved = localStorage.getItem(key) === 'true'; } catch (_) {}
+    setEnabled(saved, false);
+    button.addEventListener('click', () => setEnabled(player.hidden));
+}
+
 function initMusicPlayer() {
     const audio = document.getElementById('bg-music');
     const player = document.getElementById('music-player');
@@ -230,7 +270,7 @@ function initMusicPlayer() {
     syncVolume();
 
     function syncLyricPlacement() {
-        const showOnHome = lyricsEnabled
+        const showOnHome = !player.hidden && lyricsEnabled
             && homeLyricsEffectEnabled
             && homePage?.classList.contains('active');
         currentLyricElement.classList.toggle('is-home-routed', showOnHome);
@@ -252,6 +292,7 @@ function initMusicPlayer() {
         syncLyricPlacement();
     }
     window.addEventListener('mels-languagechange', syncLyricPlacement);
+    window.addEventListener('winy-music-visibilitychange', syncLyricPlacement);
 
     if (homePage) {
         new MutationObserver(syncLyricPlacement).observe(homePage, {
