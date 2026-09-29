@@ -117,6 +117,7 @@ export async function searchParallel(input,options={}){
     // wider searches on devices with enough cores and reported memory.
     const workerCount=Math.max(1,Math.min(maxWorkerCount(),Math.floor(options.workerCount||1)));
     const effort=Object.hasOwn(baseWork,options.effort)?options.effort:'中';
+    const anchorBudget=baseWork[effort];
     // More workers buy both throughput and breadth; the queue remains bounded
     // independently so additional workers do not multiply frontier memory.
     const baseline=Math.min(40000,Math.round(baseWork[effort]*(1+Math.log2(workerCount))));
@@ -124,11 +125,27 @@ export async function searchParallel(input,options={}){
     let budget=baseline;
     try{
         await pool.ready;
-        const outcome=await search(input,{
+        const shared={
             ...options,
-            maxNodes:baseline,
             batchSize:Math.max(16,workerCount*8),
-            expandBatch:(nodes,config)=>pool.expand(nodes,config),
+            expandBatch:(nodes,config)=>pool.expand(nodes,config)
+        };
+        // A larger budget changes the allowance at every depth and can push a
+        // path that succeeds at the ordinary budget out of a later frontier.
+        // Finish that narrower search first, then widen only if it has not
+        // found a strong plaintext result.
+        const anchor=await search(input,{...shared,maxNodes:anchorBudget,adjustBudget:undefined});
+        if(anchor.stats.stoppedOnPlaintext||anchor.stats.aborted)
+            return {...anchor,stats:{...anchor.stats,workers:workerCount,effort}};
+        const outcome=await search(input,{
+            ...shared,
+            maxNodes:baseline,
+            onProgress:progress=>options.onProgress?.({
+                ...progress,
+                expanded:anchor.stats.expanded+progress.expanded,
+                attempted:anchor.stats.attempted+progress.attempted,
+                generated:anchor.stats.generated+progress.generated
+            }),
             adjustBudget:({frontier,expanded,nodeBudget})=>{
                 if(!frontier.length)return nodeBudget;
                 let best=-Infinity,close=0;
@@ -143,7 +160,22 @@ export async function searchParallel(input,options={}){
                 return Math.max(expanded+1,budget);
             }
         });
-        return {...outcome,stats:{...outcome.stats,workers:workerCount,effort}};
+        const candidates=new Map();
+        for(const item of [...anchor.candidates,...outcome.candidates]){
+            const previous=candidates.get(item.text);
+            if(!previous||item.score>previous.score)candidates.set(item.text,item);
+        }
+        return {
+            candidates:[...candidates.values()].sort((a,b)=>b.score-a.score).slice(0,20),
+            stats:{
+                ...outcome.stats,
+                expanded:anchor.stats.expanded+outcome.stats.expanded,
+                attempted:anchor.stats.attempted+outcome.stats.attempted,
+                generated:anchor.stats.generated+outcome.stats.generated,
+                redundantPruned:anchor.stats.redundantPruned+outcome.stats.redundantPruned,
+                workers:workerCount,effort
+            }
+        };
     }finally{
         pool.close();
     }
