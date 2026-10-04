@@ -727,8 +727,9 @@
     }
 
     // ---------- 遮罩 / 提示条 ----------
-    function showOverlay(emoji, title, html, withBtn, btnText) {
+    function showOverlay(emoji, title, html, withBtn, btnText, settlement = false) {
         if (!overlayEl) return;
+        $('spider-settlement-cancel').hidden = !settlement;
         const e = overlayEl.querySelector('.overlay-emoji');
         const t = overlayEl.querySelector('.overlay-title');
         if (e) e.textContent = emoji;
@@ -1052,7 +1053,7 @@
         showOverlay('🎉', '全部收齐！',
             '难度：' + cfg.label + ' · 用时 <b>' + fmt(seconds) + '</b> · 步数 <b>' + game.moves + '</b>' +
             (record ? ' · 新纪录！' : (typeof bestMap[level] === 'number' ? ' · 最佳 ' + bestMap[level] : '')) +
-            '<br>通关奖励 +' + bonus + '，最终得分 <b>' + game.score + '</b>', true, '再来一局');
+            '<br>通关奖励 +' + bonus + '，最终得分 <b>' + game.score + '</b>', true, '再来一局', true);
         if (window.showFireworks) {
             window.showFireworks();
             setTimeout(() => { if (window.hideFireworks) window.hideFireworks(); }, 6000);
@@ -1067,7 +1068,7 @@
         sfx.stuck();
         render();
         showOverlay('🕸️', '无路可走',
-            '没有可以移动的牌，牌堆也帮不上忙了。<br>点工具栏的「悔棋」回退一步，或重新开始。', true, '重新开始');
+            '没有可以移动的牌，牌堆也帮不上忙了。<br>点工具栏的「悔棋」回退一步，或重新开始。', true, '重新开始', true);
     }
 
     function togglePause() {
@@ -1474,6 +1475,10 @@
             if (paused) togglePause();
             else if (!started && !game.over) beginGame();
             else { newGame(); beginGame(); }
+        });
+        $('spider-settlement-cancel').addEventListener('click', e => {
+            e.stopPropagation();
+            hideOverlay();
         });
         if (overlayEl) overlayEl.addEventListener('click', () => {
             if (paused) togglePause();

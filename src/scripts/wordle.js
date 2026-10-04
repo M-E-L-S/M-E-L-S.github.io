@@ -142,6 +142,7 @@
     function saveStreak() { try { localStorage.setItem(STREAK_KEY, String(streak)); } catch (e) { /* ignore */ } }
     function message(text, kind) {
         const el = $('wordle-message');
+        el.hidden = false;
         el.textContent = text;
         el.className = 'wordle-message' + (kind ? ' ' + kind : '');
     }
@@ -359,6 +360,7 @@
     function slideAlignment(delta) { setAlignment(draftOffset + delta); }
 
     function newGame() {
+        $('wordle-settlement-cancel').hidden = true;
         let answer;
         if (mode !== 'classic') {
             answer = examWords ? globalThis.WordleGame.chooseExamAnswer(examWords[vocab], mode) : (mode === 'exam' ? 'apple' : 'planet');
@@ -406,6 +408,7 @@
             streak = 0; saveStreak(); $('wordle-streak').textContent = '0';
             message(`本局结束，答案是 ${game.answer.toUpperCase()}`, 'error');
         } else message(`还剩 ${result.attemptsLeft} 次机会`);
+        $('wordle-settlement-cancel').hidden = !game.over;
     }
 
     function typeKey(key) {
@@ -431,6 +434,10 @@
             newGame();
         }));
         $('wordle-start-btn').addEventListener('click', newGame);
+        $('wordle-settlement-cancel').addEventListener('click', () => {
+            $('wordle-message').hidden = true;
+            $('wordle-settlement-cancel').hidden = true;
+        });
         $('wordle-slide-left').addEventListener('click', () => slideAlignment(-1));
         $('wordle-slide-right').addEventListener('click', () => slideAlignment(1));
         $('wordle-keyboard').addEventListener('click', (e) => {

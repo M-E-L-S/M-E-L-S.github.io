@@ -1,7 +1,7 @@
 // ==========================================================
 // 扫雷小游戏（纯前端实现）
 // 规则：翻开所有「不含地雷」的格子即获胜。
-//       数字 = 周围 8 格中的地雷数量；首次点击必定安全且必定连片展开。
+//       数字 = 周围单位根地雷之和的模长；空白表示周围无雷。
 // 结构：核心逻辑（Minesweeper 类，无 DOM，可在 Node 中直接测试）
 //       + 界面控制（IIFE，仅在浏览器中运行）。
 // ==========================================================
@@ -15,6 +15,12 @@
     };
 
     const HIDDEN = 0, OPEN = 1, FLAG = 2;
+    const ORDERS = [1, 2, 3, 4, 6];
+    // ω = exp(2πi/3)；六次单位根按逆时针顺序复用 ω。
+    const TYPE_LABELS = {
+        1: ['1'], 2: ['1', '−1'], 3: ['1', 'ω', 'ω²'],
+        4: ['1', 'i', '−1', '−i'], 6: ['1', '−ω²', 'ω', '−1', 'ω²', '−ω']
+    };
 
     class Minesweeper {
         // level 可以是 'easy' / 'normal' / 'hard'，也可以直接传入自定义配置对象（便于测试）
@@ -24,6 +30,10 @@
             this.level = cfg.id || 'custom';
             this.cols = cfg.cols;
             this.rows = cfg.rows;
+            this.order = ORDERS.includes(options.order) ? options.order : 1;
+            this.roots = Array.from({ length: this.order }, (_, k) => [
+                Math.cos(2 * Math.PI * k / this.order), Math.sin(2 * Math.PI * k / this.order)
+            ]);
             // 极端情况下保证至少留出首次点击的 3×3 安全区
             this.mineTotal = Math.max(0, Math.min(cfg.mines, Math.max(0, cfg.cols * cfg.rows - 9)));
             this.rng = typeof options.rng === 'function' ? options.rng : Math.random;
@@ -33,7 +43,11 @@
         reset() {
             const n = this.cols * this.rows;
             this.mine = new Uint8Array(n);
-            this.adj = new Uint8Array(n);
+            this.mineType = new Uint8Array(n);
+            this.flagType = new Uint8Array(n);
+            this.adj = new Float64Array(n);
+            this.adjSquared = new Uint8Array(n);
+            this.adjCount = new Uint8Array(n);
             this.state = new Uint8Array(n);
             this.armed = false;      // 是否已布雷（首次点击后才布雷）
             this.over = false;
@@ -59,6 +73,29 @@
         minesLeft() { return this.mineTotal - this.flags; }
         safeLeft() { return this.safeTotal - this.opened; }
 
+        // 对这些阶数，单位根之和的模长平方总是整数（最大为 64）。
+        sumSquared(types) {
+            let re = 0, im = 0;
+            types.forEach(type => { re += this.roots[type][0]; im += this.roots[type][1]; });
+            return Math.round(re * re + im * im);
+        }
+
+        clueText(r, c) {
+            const i = this.idx(r, c);
+            if (!this.adjCount[i]) return '';
+            const q = this.adjSquared[i];
+            if (!q) return '0';
+            for (let factor = Math.floor(Math.sqrt(q)); factor >= 1; factor--) {
+                if (q % (factor * factor)) continue;
+                const radicand = q / (factor * factor);
+                return radicand === 1 ? String(factor) : (factor === 1 ? '' : factor) + '√' + radicand;
+            }
+        }
+
+        typeLabel(type) {
+            return TYPE_LABELS[this.order][type];
+        }
+
         neighbors(r, c) {
             const out = [];
             for (let dr = -1; dr <= 1; dr++) {
@@ -83,17 +120,33 @@
                 const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
             }
             this.mine.fill(0);
-            for (let i = 0; i < this.mineTotal; i++) this.mine[pool[i]] = 1;
+            this.mineType.fill(0);
+            for (let i = 0; i < this.mineTotal; i++) {
+                this.mine[pool[i]] = 1;
+                this.mineType[pool[i]] = this.order === 1 ? 0 : Math.floor(this.rng() * this.order);
+            }
+            this.computeClues();
+            this.armed = true;
+        }
+
+        computeClues() {
+            this.adj.fill(0);
+            this.adjSquared.fill(0);
+            this.adjCount.fill(0);
             for (let r = 0; r < this.rows; r++) {
                 for (let c = 0; c < this.cols; c++) {
                     const i = this.idx(r, c);
                     if (this.mine[i]) { this.adj[i] = 0; continue; }
-                    let n = 0;
-                    this.neighbors(r, c).forEach(([nr, nc]) => { if (this.mine[this.idx(nr, nc)]) n++; });
-                    this.adj[i] = n;
+                    const types = [];
+                    this.neighbors(r, c).forEach(([nr, nc]) => {
+                        const ni = this.idx(nr, nc);
+                        if (this.mine[ni]) types.push(this.mineType[ni]);
+                    });
+                    this.adjCount[i] = types.length;
+                    this.adjSquared[i] = this.sumSquared(types);
+                    this.adj[i] = Math.sqrt(this.adjSquared[i]);
                 }
             }
-            this.armed = true;
         }
 
         // ---------- 翻开 ----------
@@ -124,7 +177,7 @@
                 this.state[i] = OPEN;
                 this.opened++;
                 changed.push([r, c]);
-                if (this.adj[i] === 0) {
+                if (this.adjCount[i] === 0) {
                     this.neighbors(r, c).forEach(([nr, nc]) => {
                         const ni = this.idx(nr, nc);
                         if (this.state[ni] === HIDDEN && !this.mine[ni]) stack.push([nr, nc]);
@@ -149,6 +202,7 @@
             for (let i = 0; i < this.total; i++) {
                 if (this.mine[i] && this.state[i] !== FLAG) {
                     this.state[i] = FLAG;
+                    this.flagType[i] = this.mineType[i];
                     out.push(this.rc(i));
                 }
             }
@@ -177,34 +231,38 @@
             const i = this.idx(r, c);
             if (this.state[i] === HIDDEN) {
                 this.state[i] = FLAG; this.flags++;
+                this.flagType[i] = 0;
                 return { status: 'flag', cell: [r, c] };
             }
             if (this.state[i] === FLAG) {
+                if (this.flagType[i] + 1 < this.order) {
+                    this.flagType[i]++;
+                    return { status: 'flag', cell: [r, c] };
+                }
                 this.state[i] = HIDDEN; this.flags--;
+                this.flagType[i] = 0;
                 return { status: 'unflag', cell: [r, c] };
             }
             return { status: 'ignore', cell: [r, c] };
         }
 
-        // ---------- 双击和弦：旗数与数字相符时一次翻开周围格子 ----------
+        // ---------- 双击和弦：先验证位置及模长，拒绝错误标记，不比较真实雷型 ----------
         chord(r, c) {
             if (this.over || !this.isOpen(r, c)) return { status: 'ignore', changed: [] };
-            const need = this.adjOf(r, c);
-            if (!need) return { status: 'ignore', changed: [] };
+            const i = this.idx(r, c);
+            if (!this.adjCount[i]) return { status: 'ignore', changed: [] };
             const around = this.neighbors(r, c);
-            let flagged = 0;
-            around.forEach(([nr, nc]) => { if (this.isFlag(nr, nc)) flagged++; });
-            if (flagged !== need) return { status: 'ignore', changed: [] };
+            const types = [];
+            around.forEach(([nr, nc]) => { if (this.isFlag(nr, nc)) types.push(this.flagType[this.idx(nr, nc)]); });
+            if (!types.length || this.sumSquared(types) !== this.adjSquared[i]) return { status: 'ignore', changed: [] };
+            // 抵消可能让漏标、错位的旗子也满足模长。展开前统一验证，拒绝时不改动棋盘。
+            if (around.some(([nr, nc]) => this.isMine(nr, nc) !== this.isFlag(nr, nc))) {
+                return { status: 'ignore', changed: [] };
+            }
             const changed = [];
             for (const [nr, nc] of around) {
                 const ni = this.idx(nr, nc);
                 if (this.state[ni] !== HIDDEN) continue;
-                if (this.mine[ni]) {
-                    this.state[ni] = OPEN;
-                    this.boomCell = [nr, nc];
-                    changed.push([nr, nc]);
-                    return this.explode(changed);
-                }
                 this.flood(nr, nc, changed);
             }
             if (!changed.length) return { status: 'ignore', changed: [] };
@@ -229,7 +287,7 @@
                 this.neighbors(rc[0], rc[1]).forEach(([nr, nc]) => { if (this.isOpen(nr, nc)) nearOpen = true; });
                 (nearOpen ? frontier : rest).push(rc);
             }
-            const zeros = frontier.filter(([r, c]) => this.adjOf(r, c) === 0);
+            const zeros = frontier.filter(([r, c]) => this.adjCount[this.idx(r, c)] === 0);
             const pool = zeros.length ? zeros : (frontier.length ? frontier : rest);
             if (!pool.length) return { status: 'none', changed: [] };
             const pick = pool[Math.floor(this.rng() * pool.length)];
@@ -240,6 +298,7 @@
     }
 
     Minesweeper.LEVELS = LEVELS;
+    Minesweeper.ORDERS = ORDERS;
     Minesweeper.CELL = { HIDDEN, OPEN, FLAG };
     root.Minesweeper = Minesweeper;
     root.MINE_LEVELS = LEVELS;
@@ -266,6 +325,8 @@
 
     // ---------- 状态 ----------
     let level = 'easy';
+    let order = 1;
+    const bestKey = () => order === 1 ? level : level + ':order' + order;
     let game = new Minesweeper(level);
     let started = false;        // 是否已按「开始游戏」
     let clockStarted = false;   // 计时是否已随第一次操作启动
@@ -288,6 +349,7 @@
     function levelIntro() {
         const cfg = LEVELS[level];
         return '当前难度：' + cfg.label + '（' + cfg.cols + '×' + cfg.rows + ' · ' + cfg.mines + ' 颗地雷）<br>' +
+            '阶数：' + order + '<br>' +
             '点击「开始游戏」出发，第一次点击必定安全';
     }
 
@@ -419,11 +481,11 @@
     function ariaFor(r, c, st, mine) {
         const pos = '第 ' + (r + 1) + ' 行第 ' + (c + 1) + ' 列，';
         if (st === OPEN) {
-            if (mine) return pos + '地雷';
+            if (mine) return pos + '地雷 ' + game.typeLabel(game.mineType[game.idx(r, c)]);
             const n = game.adj[game.idx(r, c)];
-            return pos + (n ? '周围 ' + n + ' 颗地雷' : '空白');
+            return pos + (game.adjCount[game.idx(r, c)] ? (order === 1 ? '周围 ' + n + ' 颗地雷' : '单位根之和的模长 ' + game.clueText(r, c)) : '空白');
         }
-        if (st === FLAG) return pos + '已插旗';
+        if (st === FLAG) return pos + '已插旗 ' + game.typeLabel(game.flagType[game.idx(r, c)]);
         return pos + '未翻开';
     }
 
@@ -440,15 +502,21 @@
             if (mine) {
                 cls.push('mine');
                 text = '💣';
+                if (order > 1) { text += '\n' + game.typeLabel(game.mineType[i]); cls.push('typed'); }
                 if (game.boomCell && game.boomCell[0] === r && game.boomCell[1] === c) cls.push('boom');
             } else {
                 const n = game.adj[i];
-                if (n > 0) { cls.push('n' + n); text = String(n); }
+                if (game.adjCount[i]) {
+                    cls.push('n' + Math.max(0, Math.ceil(n)));
+                    text = game.clueText(r, c);
+                    if (text.length > 1) cls.push('radical');
+                }
             }
         } else if (st === FLAG) {
             cls.push('flag');
             if (game.over && !game.won && !mine) { cls.push('wrong'); text = '❌'; }
             else text = '🚩';
+            if (order > 1 && !cls.includes('wrong')) { text += '\n' + game.typeLabel(game.flagType[i]); cls.push('typed'); }
         }
         const wasPop = el.classList.contains('pop');
         el.className = cls.join(' ');
@@ -499,7 +567,7 @@
         flagsEl.classList.toggle('negative', left < 0);
         timeEl.textContent = fmt(seconds);
         scoreEl.textContent = score;
-        bestEl.textContent = typeof bestMap[level] === 'number' ? fmt(bestMap[level]) : '--:--';
+        bestEl.textContent = typeof bestMap[bestKey()] === 'number' ? fmt(bestMap[bestKey()]) : '--:--';
         const pct = game.safeTotal ? (game.opened / game.safeTotal * 100) : 0;
         progressEl.style.width = pct.toFixed(1) + '%';
         progressEl.classList.toggle('done', game.won);
@@ -510,15 +578,16 @@
     }
 
     function saveBest(sec) {
-        const prev = bestMap[level];
+        const prev = bestMap[bestKey()];
         if (typeof prev === 'number' && prev <= sec) return false;
-        bestMap[level] = sec;
+        bestMap[bestKey()] = sec;
         try { localStorage.setItem(BEST_KEY, JSON.stringify(bestMap)); } catch (e) { /* 隐私模式下忽略 */ }
         return true;
     }
 
     // ---------- 遮罩 / 提示条 ----------
-    function showOverlay(emoji, title, html, withBtn, btnText) {
+    function showOverlay(emoji, title, html, withBtn, btnText, settlement = false) {
+        $('mine-settlement-cancel').hidden = !settlement;
         overlayEl.querySelector('.overlay-emoji').textContent = emoji;
         overlayEl.querySelector('.overlay-title').textContent = title;
         overlayText.innerHTML = html;
@@ -559,11 +628,19 @@
     }
 
     // ---------- 游戏流程 ----------
-    function newGame(nextLevel) {
+    function newGame(nextLevel, nextOrder) {
         if (nextLevel && LEVELS[nextLevel]) level = nextLevel;
+        if (Minesweeper.ORDERS.includes(nextOrder)) order = nextOrder;
+        cancelPress();
+        document.querySelectorAll('.mine-order-btn').forEach(btn => {
+            const active = Number(btn.dataset.mineOrder) === order;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-pressed', String(active));
+        });
+        document.querySelectorAll('.mine-diff-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.mineDiff === level));
         stopTimer();
         clearTimeout(popTimer);
-        game = new Minesweeper(level);
+        game = new Minesweeper(level, { order });
         started = false;
         clockStarted = false;
         paused = false;
@@ -665,9 +742,9 @@
         sfx.win();
         startBtn.innerHTML = '<i class="fas fa-play"></i> 开始游戏';
         showOverlay('🎉', '排雷成功！',
-            '难度：' + cfg.label + ' · 用时 <b>' + fmt(seconds) + '</b>' +
-            (record ? ' · 新纪录！' : (typeof bestMap[level] === 'number' ? ' · 最佳 ' + fmt(bestMap[level]) : '')) +
-            '<br>通关奖励 +' + bonus + '，最终得分 <b>' + score + '</b>', true, '再来一局');
+            '难度：' + cfg.label + ' · 阶数：' + order + ' · 用时 <b>' + fmt(seconds) + '</b>' +
+            (record ? ' · 新纪录！' : (typeof bestMap[bestKey()] === 'number' ? ' · 最佳 ' + fmt(bestMap[bestKey()]) : '')) +
+            '<br>通关奖励 +' + bonus + '，最终得分 <b>' + score + '</b>', true, '再来一局', true);
         if (window.showFireworks) {
             window.showFireworks();
             setTimeout(() => { if (window.hideFireworks) window.hideFireworks(); }, 6000);
@@ -675,6 +752,7 @@
     }
 
     function loseGame(res) {
+        const endedGame = game;
         stopTimer();
         started = false;
         stageEl.classList.add('shake');
@@ -684,13 +762,13 @@
         updateStatus();
         startBtn.innerHTML = '<i class="fas fa-play"></i> 开始游戏';
         setTimeout(() => {
-            if (game.won) return;
+            if (game !== endedGame || game.won) return;
             showOverlay('💥', '踩到地雷！',
                 '坚持了 <b>' + fmt(seconds) + '</b>，翻开 ' + game.opened + ' / ' + game.safeTotal + ' 个安全格' +
                 '<br>本局得分 <b>' + score + '</b>' +
                 (res.wrongFlags && res.wrongFlags.length
                     ? '<br>另有 ' + res.wrongFlags.length + ' 面旗子插错了位置（❌）' : ''),
-                true, '再来一局');
+                true, '再来一局', true);
         }, 760);
     }
 
@@ -862,6 +940,9 @@
 
         loadBest();
         bindBoard();
+        document.querySelectorAll('.mine-order-btn').forEach(btn => {
+            btn.addEventListener('click', () => newGame(null, Number(btn.dataset.mineOrder)));
+        });
 
         startBtn.addEventListener('click', () => { newGame(); beginGame(); });
         hintBtn.addEventListener('click', doHint);
@@ -874,6 +955,10 @@
             if (paused) togglePause();
             else if (!started && !game.over) beginGame();
             else { newGame(); beginGame(); }
+        });
+        $('mine-settlement-cancel').addEventListener('click', e => {
+            e.stopPropagation();
+            hideOverlay();
         });
         overlayEl.addEventListener('click', () => {
             if (paused) togglePause();
@@ -901,14 +986,14 @@
     // 调试 / 联动入口
     globalThis.__MINE = {
         setVisible: setVisible,
-        newGame: (lv) => newGame(lv),
+        newGame: (lv, n) => newGame(lv, n),
         begin: () => beginGame(),
         reveal: (r, c) => doReveal(r, c),
         flag: (r, c) => doFlag(r, c),
         chord: (r, c) => doChord(r, c),
         hint: () => doHint(),
         get: () => ({
-            level, started, paused, seconds, score, hintsLeft,
+            level, order, started, paused, seconds, score, hintsLeft,
             opened: game.opened, safeTotal: game.safeTotal, minesLeft: game.minesLeft()
         }),
         core: () => game

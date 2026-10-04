@@ -2,6 +2,8 @@
     'use strict';
     const STORAGE_KEY = 'mels-language';
     const english = {
+        '阶数选择':'Root order','1 · 经典':'1 · Classic',
+        "玩法：翻开所有不含地雷的格子即可获胜。阶数 1 为经典扫雷；雷型为 n 次单位根；ω = exp(2πi/3)。数字是周围 8 格所有雷的复数和的模长；双击数字只有周围雷的位置全部标对且旗子之和的模长与数字相符，才会翻开其余格子；标记不符时会拒绝展开。无需匹配真实雷型，复数整体旋转不影响判定。首次点击必定安全，「提示」可直接翻开安全格。切换地图大小或阶数会重开，最佳成绩按大小和阶数分别记录。":"How to play: Reveal every safe cell to win. Order 1 is classic Minesweeper. Mine types are nth roots of unity; ω = exp(2πi/3). Each number is the magnitude of the sum of all mines in the eight neighboring cells. Double-click a number to reveal its remaining neighbors only when all adjacent mine positions are correctly flagged and the magnitude of the flag sum matches the clue; otherwise, expansion is rejected. Actual mine types need not match: rotating all complex values together preserves the check. The first click is always safe, and hints reveal a safe cell. Changing the board size or root order starts a new game. Best times are recorded separately for each size and order.",
         '跳至主要内容':'Skip to main content','主导航':'Main navigation','首页':'Home','关于':'About','小功能':'Tools','小游戏':'Games','鲜蔬杯':'F.V. Cup','设置':'Settings','关闭设置':'Close settings','设置分类':'Settings categories','外观':'Appearance','音乐':'Music','老板键':'Boss key','切换到深色模式':'Switch to dark mode','切换到浅色模式':'Switch to light mode',
         '关于 · MELS':'About · MELS','小功能 · MELS':'Tools · MELS','小游戏 · MELS':'Games · MELS','鲜蔬杯 · MELS':'F.V. Cup · MELS','缩写转义 · 小功能 · MELS':'Acronym Decoder · Tools · MELS','Favicon 图包 · 小功能 · MELS':'Favicon Package · Tools · MELS',
         '快捷文本工作台 · 小功能 · MELS':'Quick Text Workbench · Tools · MELS','快捷文本工作台':'Quick Text Workbench','切换功能，当前：快捷文本工作台':'Switch tools. Current: Quick Text Workbench','切换功能（当前：快捷文本工作台）':'Switch tools (current: Quick Text Workbench)',
@@ -308,7 +310,9 @@
             else if ((match = core.match(/^本局结束，答案是 (.+)$/))) translated = `Game over. The answer was ${match[1]}`;
             else if ((match = core.match(/^第 (\d+) 行第 (\d+) 列，(.+)$/))) {
                 const cellStates = {'未翻开':'covered','地雷':'mine','空白':'empty','已插旗':'flagged'};
-                let state = cellStates[match[3]] || match[3].replace(/^周围 (\d+) 颗地雷$/, '$1 adjacent mines');
+                let state = cellStates[match[3]] || match[3].replace(/^周围 (\d+) 颗地雷$/, '$1 adjacent mines')
+                    .replace(/^单位根之和的模长 /, 'Root sum magnitude ')
+                    .replace(/^地雷 /, 'Mine ').replace(/^已插旗 /, 'Flagged ');
                 translated = `Row ${match[1]}, column ${match[2]}, ${state}`;
             }
             else if ((match = core.match(/^拖动当前字母组调整对齐 · 第 (\d+) 位$/))) translated = `Drag the current letter group to align · Position ${match[1]}`;
@@ -329,6 +333,8 @@
             else if ((match = core.match(/^已为你翻开一个安全格（剩余 (\d+) 次）$/))) translated = `Revealed one safe cell for you (${match[1]} hints remaining).`;
             else if ((match = core.match(/^(.+) · (\d+)×(\d+) · 第一次点击必定安全$/))) translated = `${english[match[1]] || match[1]} · ${match[2]}×${match[3]} · The first click is always safe`;
             else if ((match = core.match(/^当前难度：(.+)（(\d+)×(\d+) · (\d+) 颗地雷）$/))) translated = `Current difficulty: ${english[match[1]] || match[1]} (${match[2]}×${match[3]} · ${match[4]} mines)`;
+            else if ((match = core.match(/^阶数：(\d+)$/))) translated = `Root order: ${match[1]}`;
+            else if ((match = core.match(/^难度：(.+) · 阶数：(\d+) · 用时 ?$/))) translated = `Difficulty: ${english[match[1]] || match[1]} · Root order: ${match[2]} · Time `;
             else if ((match = core.match(/^难度：(.+) · 用时 (.+?)(?: · 步数 (\d+))?(?: · (新纪录！|最佳 .+))?$/))) translated = `Difficulty: ${english[match[1]] || match[1]} · Time ${match[2]}${match[3] ? ` · Moves ${match[3]}` : ''}${match[4] ? ` · ${match[4] === '新纪录！' ? 'New record!' : match[4].replace('最佳 ', 'Best ')}` : ''}`;
             else if ((match = core.match(/^通关奖励 \+(\d+)，最终得分 (\d+)$/))) translated = `Clear bonus +${match[1]} · Final score ${match[2]}`;
             else if ((match = core.match(/^坚持了 (.+)，翻开 (\d+) \/ (\d+) 个安全格$/))) translated = `Survived ${match[1]} · Revealed ${match[2]} / ${match[3]} safe cells`;

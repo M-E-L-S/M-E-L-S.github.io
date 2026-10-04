@@ -1677,6 +1677,10 @@ body.music-player-collapsed .page-container { padding-bottom: 24px; }
     animation: pageFadeIn 0.4s ease;
 }
 
+.game-settlement-cancel { margin: 0 0 0 8px; }
+.game-settlement-cancel[hidden] { display: none; }
+#wordle-settlement-cancel { margin: 0 auto 12px; }
+
 .overlay-emoji {
     font-size: 46px;
     margin-bottom: 10px;
@@ -2424,6 +2428,9 @@ body.music-player-collapsed .page-container { padding-bottom: 24px; }
 
 /* 数字配色（经典扫雷八色，深浅色主题各一套） */
 .mine-cell.n1 { color: #2f6fd0; }
+.mine-cell.n0 { color: var(--text); }
+.mine-cell.radical { font-size: max(11px, calc(var(--mine-fs) * 0.65)); }
+.mine-cell.typed { font-size: max(10px, calc(var(--mine-fs) * 0.52)); white-space: pre-line; text-align: center; }
 .mine-cell.n2 { color: #2e8b57; }
 .mine-cell.n3 { color: #d1495b; }
 .mine-cell.n4 { color: #7048b6; }
@@ -3071,7 +3078,7 @@ body.music-player-collapsed .page-container { padding-bottom: 24px; }
 .wordle-mode-note a { color: var(--accent); font-weight: 700; text-decoration: none; }
 .wordle-mode-note a:hover { text-decoration: underline; }
 
-.wordle-vocab-picker {
+:is(.wordle-vocab-picker, .mine-order-picker) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3082,8 +3089,8 @@ body.music-player-collapsed .page-container { padding-bottom: 24px; }
     font-size: 12px;
     font-weight: 700;
 }
-.wordle-vocab-picker[hidden] { display: none; }
-.wordle-vocab-btn {
+:is(.wordle-vocab-picker, .mine-order-picker)[hidden] { display: none; }
+:is(.wordle-vocab-btn, .mine-order-btn) {
     padding: 6px 11px;
     border: 1px solid var(--border);
     border-radius: 15px;
@@ -3094,8 +3101,8 @@ body.music-player-collapsed .page-container { padding-bottom: 24px; }
     cursor: pointer;
     transition: color .2s, background .2s, border-color .2s, transform .15s;
 }
-.wordle-vocab-btn:hover { color: var(--accent); border-color: var(--accent-soft); transform: translateY(-1px); }
-.wordle-vocab-btn.active { color: #fff; background: var(--accent); border-color: var(--accent); }
+:is(.wordle-vocab-btn, .mine-order-btn):hover { color: var(--accent); border-color: var(--accent-soft); transform: translateY(-1px); }
+:is(.wordle-vocab-btn, .mine-order-btn).active { color: #fff; background: var(--accent); border-color: var(--accent); }
 
 .wordle-stage {
     min-height: 430px;
@@ -3317,8 +3324,8 @@ body.music-player-collapsed .page-container { padding-bottom: 24px; }
 @media (max-width: 520px) {
     .wordle-toolbar { align-items: stretch; }
     .wordle-mode-btn { padding: 8px 7px; font-size: 11px; }
-    .wordle-vocab-picker { gap: 5px; }
-    .wordle-vocab-btn { padding: 5px 8px; font-size: 11px; }
+    :is(.wordle-vocab-picker, .mine-order-picker) { gap: 5px; }
+    :is(.wordle-vocab-btn, .mine-order-btn) { padding: 5px 8px; font-size: 11px; }
     .wordle-mode-note { margin-top: 8px; padding: 8px 10px; font-size: 11px; }
     .wordle-gloss-row { grid-template-columns: 34px 66px minmax(0, 1fr); gap: 5px; font-size: 11px; }
     .wordle-stage { min-height: 390px; padding-inline: 8px; }

@@ -465,7 +465,7 @@
                 playing = false; stopTimer(); updateBossHud();
                 if (won) sfx.win(); else sfx.lose();
                 showOverlay(won ? '🏆' : '💔', won ? '击败邪恶机器人！' : '对决失败',
-                    '我方生命 ' + battle.playerHp + '/' + battle.playerMaxHp + ' · BOSS 生命 ' + battle.hp + '/400<br>本局得分 <b>' + score + '</b>', true, '再战一局');
+                    '我方生命 ' + battle.playerHp + '/' + battle.playerMaxHp + ' · BOSS 生命 ' + battle.hp + '/400<br>本局得分 <b>' + score + '</b>', true, '再战一局', true);
                 startBtn.innerHTML = '<i class="fas fa-play"></i> 开始游戏';
             }
         });
@@ -881,7 +881,7 @@
         updateStatus();
         showOverlay('🎉', '恭喜通关！',
             '用时 ' + fmtTime(used) + '，剩余时间加分 +' + bonus + '，剩余道具加分 +' + toolBonus +
-            '<br>最终得分 <b>' + score + '</b>', true, '再来一局');
+            '<br>最终得分 <b>' + score + '</b>', true, '再来一局', true);
         startBtn.innerHTML = '<i class="fas fa-play"></i> 开始游戏';
         if (window.showFireworks) {
             window.showFireworks();
@@ -895,7 +895,7 @@
         updateTimeDisplay();
         sfx.lose();
         showOverlay('⏰', '时间到！',
-            '差一点点，再来一次吧！你可以尝试使用道具！<br>本局得分 <b>' + score + '</b>', true, '再来一局');
+            '差一点点，再来一次吧！你可以尝试使用道具！<br>本局得分 <b>' + score + '</b>', true, '再来一局', true);
         startBtn.innerHTML = '<i class="fas fa-play"></i> 开始游戏';
     }
 
@@ -922,7 +922,8 @@
     }
 
     // ---------- 遮罩层 ----------
-    function showOverlay(emoji, title, html, withBtn, btnText) {
+    function showOverlay(emoji, title, html, withBtn, btnText, settlement = false) {
+        $('#game-settlement-cancel').hidden = !settlement;
         overlayEl.querySelector('.overlay-emoji').textContent = emoji;
         overlayEl.querySelector('.overlay-title').textContent = title;
         overlayText.innerHTML = html;
@@ -989,6 +990,10 @@
             e.stopPropagation();
             if (playing && paused) togglePause();
             else startGame();
+        });
+        $('#game-settlement-cancel').addEventListener('click', e => {
+            e.stopPropagation();
+            hideOverlay();
         });
         overlayEl.addEventListener('click', () => {
             if (playing && paused) togglePause();
