@@ -439,7 +439,6 @@
                     <button type="button" class="mine-order-btn" data-mine-order="2" aria-pressed="false">2</button>
                     <button type="button" class="mine-order-btn" data-mine-order="3" aria-pressed="false">3</button>
                     <button type="button" class="mine-order-btn" data-mine-order="4" aria-pressed="false">4</button>
-                    <button type="button" class="mine-order-btn" data-mine-order="6" aria-pressed="false">6</button>
                 </div>
 
                 <div class="game-status">
@@ -467,7 +466,7 @@
                 </div>
 
                 <p class="game-tips">
-                    玩法：翻开所有不含地雷的格子即可获胜。阶数 1 为经典扫雷；雷型为 n 次单位根；ω = exp(2πi/3)。数字是周围 8 格所有雷的复数和的模长；双击数字只有周围雷的位置全部标对且旗子之和的模长与数字相符，才会翻开其余格子；标记不符时会拒绝展开。无需匹配真实雷型，复数整体旋转不影响判定。首次点击必定安全，「提示」可直接翻开安全格。切换地图大小或阶数会重开，最佳成绩按大小和阶数分别记录。
+                    玩法：翻开所有不含地雷的格子即可获胜。阶数 1 为经典扫雷；雷型为 n 次单位根；ω = exp(2πi/3)。数字是周围 8 格所有雷的复数和的模长；3 阶模式中，若复数和不沿 1、ω、ω² 的方向，数字背后的淡红色向量箭头指向复数和的主辐角（−π < θ ≤ π）方向；和为 0 时不显示箭头。2 阶与 4 阶模式中，数字背后的淡雷图标表示周围存在抵消雷对：2 阶为 1 与 −1；4 阶为 1 与 −1 或 i 与 −i。双击数字（包括 0），若周围至少有一面旗且旗子之和的模长与数字相符，就会翻开其余格子；漏标或错位可能翻到雷并判负，模长不符则不展开。无需匹配真实雷型，复数整体旋转不影响判定。首次点击必定安全，「提示」可直接翻开安全格。切换地图大小或阶数会重开，最佳成绩按大小和阶数分别记录。
                 </p>
             </div>
 

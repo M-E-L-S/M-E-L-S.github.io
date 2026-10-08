@@ -15,11 +15,11 @@
     };
 
     const HIDDEN = 0, OPEN = 1, FLAG = 2;
-    const ORDERS = [1, 2, 3, 4, 6];
-    // ω = exp(2πi/3)；六次单位根按逆时针顺序复用 ω。
+    const ORDERS = [1, 2, 3, 4];
+    // ω = exp(2πi/3)。
     const TYPE_LABELS = {
         1: ['1'], 2: ['1', '−1'], 3: ['1', 'ω', 'ω²'],
-        4: ['1', 'i', '−1', '−i'], 6: ['1', '−ω²', 'ω', '−1', 'ω²', '−ω']
+        4: ['1', 'i', '−1', '−i']
     };
 
     class Minesweeper {
@@ -48,6 +48,9 @@
             this.adj = new Float64Array(n);
             this.adjSquared = new Uint8Array(n);
             this.adjCount = new Uint8Array(n);
+            this.adjCancellation = new Uint8Array(n);
+            this.adjArgument = new Float64Array(n);
+            this.adjArgumentHint = new Uint8Array(n);
             this.state = new Uint8Array(n);
             this.armed = false;      // 是否已布雷（首次点击后才布雷）
             this.over = false;
@@ -96,6 +99,13 @@
             return TYPE_LABELS[this.order][type];
         }
 
+        argumentRotation(r, c) {
+            const i = this.idx(r, c);
+            if (!this.adjArgumentHint[i]) return null;
+            // 箭头默认向右；CSS 正旋转为顺时针，故取数学辐角的相反数。
+            return -this.adjArgument[i] * 180 / Math.PI;
+        }
+
         neighbors(r, c) {
             const out = [];
             for (let dr = -1; dr <= 1; dr++) {
@@ -133,6 +143,9 @@
             this.adj.fill(0);
             this.adjSquared.fill(0);
             this.adjCount.fill(0);
+            this.adjCancellation.fill(0);
+            this.adjArgument.fill(0);
+            this.adjArgumentHint.fill(0);
             for (let r = 0; r < this.rows; r++) {
                 for (let c = 0; c < this.cols; c++) {
                     const i = this.idx(r, c);
@@ -143,8 +156,23 @@
                         if (this.mine[ni]) types.push(this.mineType[ni]);
                     });
                     this.adjCount[i] = types.length;
+                    if (this.order === 2) {
+                        this.adjCancellation[i] = types.includes(0) && types.includes(1) ? 1 : 0;
+                    } else if (this.order === 4) {
+                        this.adjCancellation[i] = (types.includes(0) && types.includes(2)) ||
+                            (types.includes(1) && types.includes(3)) ? 1 : 0;
+                    }
                     this.adjSquared[i] = this.sumSquared(types);
                     this.adj[i] = Math.sqrt(this.adjSquared[i]);
+                    if (this.order === 3 && this.adjSquared[i]) {
+                        const counts = [0, 0, 0];
+                        types.forEach(type => counts[type]++);
+                        const [a, b, d] = counts;
+                        const x = 2 * a - b - d, y = b - d;
+                        this.adjArgument[i] = Math.atan2(Math.sqrt(3) * y, x);
+                        const alongRoot = (b === d && a > b) || (a === d && b > a) || (a === b && d > a);
+                        this.adjArgumentHint[i] = alongRoot ? 0 : 1;
+                    }
                 }
             }
         }
@@ -246,7 +274,7 @@
             return { status: 'ignore', cell: [r, c] };
         }
 
-        // ---------- 双击和弦：先验证位置及模长，拒绝错误标记，不比较真实雷型 ----------
+        // ---------- 双击和弦：模长相符就展开，漏标或错位可能翻到雷 ----------
         chord(r, c) {
             if (this.over || !this.isOpen(r, c)) return { status: 'ignore', changed: [] };
             const i = this.idx(r, c);
@@ -255,14 +283,16 @@
             const types = [];
             around.forEach(([nr, nc]) => { if (this.isFlag(nr, nc)) types.push(this.flagType[this.idx(nr, nc)]); });
             if (!types.length || this.sumSquared(types) !== this.adjSquared[i]) return { status: 'ignore', changed: [] };
-            // 抵消可能让漏标、错位的旗子也满足模长。展开前统一验证，拒绝时不改动棋盘。
-            if (around.some(([nr, nc]) => this.isMine(nr, nc) !== this.isFlag(nr, nc))) {
-                return { status: 'ignore', changed: [] };
-            }
             const changed = [];
             for (const [nr, nc] of around) {
                 const ni = this.idx(nr, nc);
                 if (this.state[ni] !== HIDDEN) continue;
+                if (this.mine[ni]) {
+                    this.state[ni] = OPEN;
+                    this.boomCell = [nr, nc];
+                    changed.push([nr, nc]);
+                    return this.explode(changed);
+                }
                 this.flood(nr, nc, changed);
             }
             if (!changed.length) return { status: 'ignore', changed: [] };
@@ -483,7 +513,9 @@
         if (st === OPEN) {
             if (mine) return pos + '地雷 ' + game.typeLabel(game.mineType[game.idx(r, c)]);
             const n = game.adj[game.idx(r, c)];
-            return pos + (game.adjCount[game.idx(r, c)] ? (order === 1 ? '周围 ' + n + ' 颗地雷' : '单位根之和的模长 ' + game.clueText(r, c)) : '空白');
+            return pos + (game.adjCount[game.idx(r, c)] ? (order === 1 ? '周围 ' + n + ' 颗地雷' : '单位根之和的模长 ' + game.clueText(r, c)) : '空白') +
+                (game.adjCancellation[game.idx(r, c)] ? '，存在抵消雷' : '') +
+                (game.adjArgumentHint[game.idx(r, c)] ? '，主辐角 ' + (game.adjArgument[game.idx(r, c)] * 180 / Math.PI).toFixed(1) + '°' : '');
         }
         if (st === FLAG) return pos + '已插旗 ' + game.typeLabel(game.flagType[game.idx(r, c)]);
         return pos + '未翻开';
@@ -507,6 +539,8 @@
             } else {
                 const n = game.adj[i];
                 if (game.adjCount[i]) {
+                    if (game.adjCancellation[i]) cls.push('cancellation');
+                    if (game.adjArgumentHint[i]) cls.push('argument');
                     cls.push('n' + Math.max(0, Math.ceil(n)));
                     text = game.clueText(r, c);
                     if (text.length > 1) cls.push('radical');
@@ -520,7 +554,22 @@
         }
         const wasPop = el.classList.contains('pop');
         el.className = cls.join(' ');
-        if (el.textContent !== text) el.textContent = text;
+        if (cls.includes('argument')) {
+            el.style.setProperty('--mine-argument-rotation', game.argumentRotation(r, c) + 'deg');
+        } else {
+            el.style.removeProperty('--mine-argument-rotation');
+        }
+        if (cls.includes('cancellation') || cls.includes('argument')) {
+            let clue = el.querySelector('.mine-clue');
+            if (!clue) {
+                clue = document.createElement('span');
+                clue.className = 'mine-clue';
+                el.replaceChildren(clue);
+            }
+            if (clue.textContent !== text) clue.textContent = text;
+        } else if (el.children.length || el.textContent !== text) {
+            el.textContent = text;
+        }
         el.setAttribute('aria-label', ariaFor(r, c, st, mine));
         if (delay === undefined || delay === null) {
             el.style.animationDelay = '';

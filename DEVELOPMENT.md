@@ -30,7 +30,7 @@
 
 缩写转义使用 `/tools/acronym/`。小游戏子路由为：连连看 `/minigame/link/`、扫雷 `/minigame/minesweeper/`、蜘蛛纸牌 `/minigame/spider/`、Wordle `/minigame/wordle/`。菜单切换会无刷新更新地址栏，所有子路由都可直接访问、刷新，并支持浏览器前进与后退。
 
-扫雷支持各地图选择阶数 1、2、3、4、6。核心中 `mine` 保存雷的位置，`mineType` / `flagType` 保存单位根的指数，`adjCount` 区分无雷空白与抵消零，`adjSquared` 保存精确的整数模长平方。连片展开只经过无雷空白；标记按单位根指数递增循环，转完后取消；和弦先验证所有邻雷位置已正确标记，再比较旗子之和的模长平方，标记不符时不改动棋盘或判负；胜利只要求翻开所有安全格。运行 `node scripts/check-minesweeper.cjs` 检查全部 15 种组合与旋转、抵消等规则。
+扫雷支持各地图选择阶数 1、2、3、4。核心中 `mine` 保存雷的位置，`mineType` / `flagType` 保存单位根的指数，`adjCount` 区分无雷空白与抵消零，`adjSquared` 保存精确的整数模长平方。连片展开只经过无雷空白；标记按单位根指数递增循环，转完后取消；和弦比较旗子之和的模长平方，相符则展开其余邻格，漏标或错位翻到雷时判负，模长不符不展开；胜利只要求翻开所有安全格。运行 `node scripts/check-minesweeper.cjs` 检查全部 12 种组合与旋转、抵消等规则。
 
 快捷文本工作台使用 `/tools/text/`。页面源文件是 `src/pages/text.html`、`src/styles/text.css`；`text-core.js` 负责嗅探、替换、清理、Markdown 解析和差异计算，`text-workbench.js` 负责可叠加操作的开关与实时结果，`text-worker.js` 为正则替换提供 2 秒超时隔离，`text-docx.js` 使用仓库已有的 JSZip 在浏览器内生成 DOCX。导出使用当前操作组合的结果。文本不上传，也不写入本地存储。运行 `node scripts/check-text.cjs` 检查文本处理和 DOCX 包结构。
 

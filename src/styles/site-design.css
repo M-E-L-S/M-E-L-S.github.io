@@ -41,6 +41,16 @@
  --mine-closed-border:#777e88; --mine-open-bg:#25282d; --mine-open-border:#40454d;
  --mine-closed-bevel:inset 0 1px 0 #ffffff30,inset 0 -2px 3px #0005;
 }
+/* Higher contrast is limited to Minesweeper; the surrounding site keeps its palette. */
+:root:not([data-theme="dark"]) #mine-view {
+ --mine-stage-bg:#b9c6d6; --mine-closed-start:#b8c8db; --mine-closed-end:#8fa4bd;
+ --mine-closed-border:#647c98; --mine-open-bg:#fff; --mine-open-border:#a2b1c4;
+ --mine-flag-start:#e3f7fc; --mine-flag-end:#b9e8f2; --mine-flag-border:#438d9f;
+ --mine-cancel-bg:#ead1d0; --mine-cancel-border:#ae7471; --mine-cancel-text:#672c29;
+}
+:root[data-theme="dark"] #mine-view {
+ --mine-cancel-bg:#4a2c30; --mine-cancel-border:#965e63; --mine-cancel-text:#f2ced0;
+}
 * {box-sizing:border-box;}
 html {scroll-behavior:smooth;scroll-padding-top:90px;}
 body {margin:0;background:var(--page-bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6;overflow-x:clip;}

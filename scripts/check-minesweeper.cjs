@@ -17,11 +17,71 @@ function mark(game, r, c, type) {
     for (let k = 0; k <= type; k++) game.toggleFlag(r, c);
 }
 
+// The arrow's CSS clockwise rotation is the negative of the mathematical angle.
+const ring = [[1, 1], [1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2], [3, 3]];
+for (const [types, expectedAngle] of [
+    [[0, 1], Math.PI / 3], [[0, 2], -Math.PI / 3], [[1, 2], Math.PI],
+    [[0, 0, 1], Math.PI / 6], [[0, 1, 1], Math.PI / 2],
+    [[0, 2, 2], -Math.PI / 2]
+]) {
+    const game = board(3, types.map((type, i) => [...ring[i], type]));
+    const i = game.idx(2, 2);
+    assert.equal(game.adjArgumentHint[i], 1);
+    assert.ok(Math.abs(game.adjArgument[i] - expectedAngle) < 1e-12);
+    assert.ok(Math.abs(game.argumentRotation(2, 2) + expectedAngle * 180 / Math.PI) < 1e-10);
+}
+for (let a = 0; a <= 8; a++) for (let b = 0; b <= 8 - a; b++) for (let c = 0; c <= 8 - a - b; c++) {
+    const types = [...Array(a).fill(0), ...Array(b).fill(1), ...Array(c).fill(2)];
+    const game = board(3, types.map((type, i) => [...ring[i], type]));
+    const i = game.idx(2, 2);
+    const zero = a === b && b === c;
+    const angle = Math.atan2(Math.sqrt(3) * (b - c), 2 * a - b - c);
+    const alongRoot = [0, 2 * Math.PI / 3, -2 * Math.PI / 3].some(root => Math.abs(angle - root) < 1e-12);
+    assert.equal(Boolean(game.adjArgumentHint[i]), !zero && !alongRoot);
+    assert.equal(game.argumentRotation(4, 4), null, 'no argument on blank cells');
+    if (!zero) assert.ok(game.adjArgument[i] > -Math.PI && game.adjArgument[i] <= Math.PI);
+    game.reset();
+    assert.equal(game.adjArgumentHint.some(Boolean), false);
+}
+for (const order of [1, 2, 4]) {
+    const game = board(order, [[1, 1, 0], [1, 2, order - 1]]);
+    assert.equal(game.adjArgumentHint.some(Boolean), false, 'argument hint is exclusive to order 3');
+}
+
+// Four-root hint detects an opposite pair even when the remaining sum is nonzero.
+for (const [types, expected] of [
+    [[0, 2], 1], [[1, 3], 1], [[0, 2, 1], 1], [[1, 3, 0, 0], 1],
+    [[0, 1], 0], [[0, 0], 0], [[2, 3], 0], [[], 0]
+]) {
+    const positions = [[1, 1], [1, 2], [1, 3], [2, 1]];
+    for (let rotation = 0; rotation < 4; rotation++) {
+        const game = board(4, types.map((type, i) => [...positions[i], (type + rotation) % 4]));
+        assert.equal(game.adjCancellation[game.idx(2, 2)], expected);
+        assert.equal(game.adjCancellation[game.idx(4, 4)], 0, 'blank cells have no cancellation hint');
+        game.mine.fill(0);
+        game.computeClues();
+        assert.equal(game.adjCancellation.some(Boolean), false, 'recomputing clears old hints');
+    }
+}
+for (const order of [1, 3]) {
+    const game = board(order, [[1, 1, 0], [1, 2, order === 1 ? 0 : order / 2 | 0]]);
+    assert.equal(game.adjCancellation.some(Boolean), false, 'cancellation hint is exclusive to orders 2 and 4');
+}
+
+for (let positive = 0; positive <= 8; positive++) for (let negative = 0; negative <= 8 - positive; negative++) {
+    const types = [...Array(positive).fill(0), ...Array(negative).fill(1)];
+    const game = board(2, types.map((type, i) => [...ring[i], type]));
+    assert.equal(Boolean(game.adjCancellation[game.idx(2, 2)]), positive > 0 && negative > 0);
+    assert.equal(game.adjCancellation[game.idx(4, 4)], 0);
+    game.reset();
+    assert.equal(game.adjCancellation.some(Boolean), false);
+}
+assert.deepEqual(Minesweeper.ORDERS, [1, 2, 3, 4]);
+
 // Exact clues, including cancellation zeros and simplified radicals.
 for (const [order, types, expected] of [
     [1, [0, 0], '2'], [2, [0, 1], '0'], [3, [0, 1, 2], '0'],
-    [3, [0, 0, 1], '√3'], [4, [0, 1], '√2'], [4, [0, 0, 1, 1], '2√2'],
-    [6, [0, 1], '√3'], [6, [0, 3], '0']
+    [3, [0, 0, 1], '√3'], [4, [0, 1], '√2'], [4, [0, 0, 1, 1], '2√2']
 ]) {
     const positions = [[1, 1], [1, 2], [1, 3], [2, 1]];
     const game = board(order, types.map((type, i) => [...positions[i], type]));
@@ -57,23 +117,21 @@ const wrong = board(2, [[1, 1, 0], [1, 2, 1]]);
 wrong.reveal(2, 2);
 mark(wrong, 2, 1, 0);
 mark(wrong, 2, 3, 1);
-const beforeWrong = Array.from(wrong.state);
-const beforeOpened = wrong.opened;
-assert.deepEqual(wrong.chord(2, 2), { status: 'ignore', changed: [] }, 'wrong positions reject expansion');
-assert.deepEqual(Array.from(wrong.state), beforeWrong, 'rejection must not partially reveal safe cells');
-assert.equal(wrong.opened, beforeOpened);
-assert.equal(wrong.over, false);
-assert.equal(wrong.boomCell, null);
-assert.equal(wrong.reveal(1, 1).status, 'boom', 'directly clicking a mine still loses');
+const wrongResult = wrong.chord(2, 2);
+assert.equal(wrongResult.status, 'boom', 'matching modulus with wrong positions triggers a mine');
+assert.equal(wrong.over, true);
+assert.equal(wrong.won, false);
+assert.equal(wrong.isMine(...wrong.boomCell), true);
+assert.equal(wrongResult.wrongFlags.length, 2);
+const direct = board(2, [[1, 1, 0]]);
+assert.equal(direct.reveal(1, 1).status, 'boom', 'directly clicking a mine still loses');
 
 // A cancelling pair may be missed even when the marked sum matches the clue.
 const missing = board(2, [[1, 1, 0], [1, 2, 1], [1, 3, 0]]);
 missing.reveal(2, 2);
 mark(missing, 1, 3, 0);
-const beforeMissing = Array.from(missing.state);
-assert.equal(missing.chord(2, 2).status, 'ignore');
-assert.deepEqual(Array.from(missing.state), beforeMissing);
-assert.equal(missing.over, false);
+assert.equal(missing.chord(2, 2).status, 'boom', 'a missed cancelling pair still triggers a mine');
+assert.equal(missing.over, true);
 
 const mismatch = board(4, [[1, 1, 0], [1, 2, 1]]);
 mismatch.reveal(2, 2);
@@ -84,7 +142,7 @@ assert.equal(mismatch.over, false);
 
 const labels = {
     1: ['1'], 2: ['1', '−1'], 3: ['1', 'ω', 'ω²'],
-    4: ['1', 'i', '−1', '−i'], 6: ['1', '−ω²', 'ω', '−1', 'ω²', '−ω']
+    4: ['1', 'i', '−1', '−i']
 };
 for (const order of Minesweeper.ORDERS) {
     const game = board(order, [[1, 1, 0]]);
@@ -114,7 +172,7 @@ for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) if (!flags.isMine(r, c))
 assert.equal(flags.won, true, 'winning does not require correct flag types');
 assert.equal(flags.state[flags.idx(1, 1)], FLAG);
 
-// Exercise all 15 combinations, first-click safety, clue calculation, hint and completion.
+// Exercise all 12 combinations, first-click safety, clue calculation, hint and completion.
 let seed = 12345;
 const rng = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32);
 for (const level of Object.keys(Minesweeper.LEVELS)) for (const order of Minesweeper.ORDERS) {
@@ -142,4 +200,4 @@ for (const level of Object.keys(Minesweeper.LEVELS)) for (const order of Mineswe
     assert.equal(game.adjCount.some(Boolean), false);
     assert.equal(game.flagType.some(Boolean), false);
 }
-console.log('OK Minesweeper: 15 modes, exact clues, cancellation, rotation, flags, chords, safety, hints and wins');
+console.log('OK Minesweeper: 12 modes, exact clues, cancellation, rotation, flags, chords, safety, hints and wins');
