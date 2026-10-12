@@ -55,9 +55,10 @@
         const occupied = [];
         function add(type, value, index, reason, occupy = true) {
             const key = `${type}:${value}`;
+            // Even repeated findings reserve their source ranges.
+            if (value && occupy) occupied.push([index, index + value.length]);
             if (!value || seen.has(key)) return;
             seen.add(key); found.push({ type, value, index, reason });
-            if (occupy) occupied.push([index, index + value.length]);
         }
         function collect(type, regex, clean) {
             for (const match of source.matchAll(regex)) {
@@ -91,10 +92,19 @@
             const wrapped = /[\[【(（「『"“]\s*$/.test(before) && /^[\]】)）」』"”]/.test(after);
             const nearCode = /(?:码|口令|code)\s*[:：=为是]?\s*[\[【(（「『"“]?\s*$/i.test(before);
             const classes = Number(/[a-z]/.test(value)) + Number(/[A-Z]/.test(value)) + Number(/\d/.test(value));
-            const random = value.length >= 10 && classes >= 2 && entropy(value) >= 3.1 && new Set(value).size / value.length >= .55;
-            if (!wrapped && !nearCode && !random) continue;
+            const diversity = new Set(value).size / value.length;
+            const wrappedCode = wrapped && value.length >= 8 && classes >= 2 && entropy(value) >= 2.5 && diversity >= .6;
+            const random = value.length >= 12 && classes === 3 && entropy(value) >= 3.4 && diversity >= .65;
+            if (!wrappedCode && !nearCode && !random) continue;
             const reason = nearCode ? '附近有“码”' : wrapped ? '括号包裹' : '高熵字符组合';
             add('疑似代码', value, index, reason);
+        }
+        // Only join digits outside existing findings; never trim an invalid ID.
+        const digits = [...source.matchAll(/\d+/g)].filter(match =>
+            !occupied.some(([start, end]) => match.index < end && match.index + match[0].length > start));
+        const pixivId = digits.map(match => match[0]).join('');
+        if (/^[1-9]\d{1,8}$/.test(pixivId)) {
+            add('疑似 PIXIV ID', pixivId, digits[0].index, '按原文顺序拼接未命中的数字', false);
         }
         return found.sort((a, b) => a.index - b.index);
     }

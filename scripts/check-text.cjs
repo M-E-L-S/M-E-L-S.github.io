@@ -15,10 +15,29 @@ async function main() {
     assert.throws(() => core.replace('abc', { mode: 'regex', find: '[' }), SyntaxError);
     const found = core.detect('邀请码：ABCD12，详见 https://example.com/a). 联系 a@example.com');
     assert.deepEqual(found.map(item => [item.type, item.value]), [['邀请码', 'ABCD12'], ['网址', 'https://example.com/a'], ['邮箱', 'a@example.com']]);
-    const suspicious = core.detect('码 Q7K2P9L4；另见 [ABCD12] 和 xK9pQ2rT8v，普通文字 hello world');
+    const pixiv = input => core.detect(input).filter(item => item.type === '疑似 PIXIV ID').map(item => item.value);
+    assert.deepEqual(pixiv('前文12中间文字345\n后文6789'), ['123456789']);
+    assert.deepEqual(pixiv('ID 12'), ['12']);
+    for (const input of [
+        'https://www.pixiv.net/artworks/123456789',
+        '邀请码：ABCD12 邀请码：ABCD12',
+        '兑换码：1234 提取码：5678',
+        'user12@example.com user12@example.com',
+        '13812345678',
+        '[ABCD1234] [ABCD1234]'
+    ]) assert.deepEqual(pixiv(input), [], input);
+    assert.deepEqual(pixiv('https://example.com/99 https://example.com/99 邀请码：ABCD88 邀请码：ABCD88 user77@example.com 13812345678 [ABCD1234] 剩余12和345'), ['12345']);
+    for (const input of ['没有数字', '9', '0', '01234', '1234567890', '片段0其他文字123']) {
+        assert.deepEqual(pixiv(input), [], input);
+    }
+    const suspicious = core.detect('码 Q7K2P9L4；另见 [ABCD1234] 和 xK9pQ2rT8vN5，普通文字 hello world');
     assert(suspicious.some(item => item.value === 'Q7K2P9L4'));
-    assert(suspicious.some(item => item.value === 'ABCD12' && item.reason === '括号包裹'));
-    assert(suspicious.some(item => item.value === 'xK9pQ2rT8v' && item.reason === '高熵字符组合'));
+    assert(suspicious.some(item => item.value === 'ABCD1234' && item.reason === '括号包裹'));
+    assert(suspicious.some(item => item.value === 'xK9pQ2rT8vN5' && item.reason === '高熵字符组合'));
+    for (const input of ['[ABCD12]', '[ordinaryword]', '[AAAA1111]', 'xK9pQ2rT8v', 'ABCDEFGHIJKL', 'abcdefgh1234']) {
+        assert(!core.detect(input).some(item => item.type === '疑似代码'), input);
+    }
+    assert(core.detect('码：AB12').some(item => item.type === '邀请码' && item.value === 'AB12'));
     assert(!suspicious.some(item => item.value === 'hello'));
     assert.equal(core.cleanText('  A\u00A0  B\u200B \r\n\r\n\r\n C\u2028  D\t E  '), 'A B\nC\nD E');
     assert.equal(core.cleanText('\n A\n \t\n\nB\n\n'), 'A\nB');

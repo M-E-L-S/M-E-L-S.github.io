@@ -53,8 +53,14 @@
 .text-quick-buttons .text-one-button { width:100%;min-height:55px;white-space:normal;text-align:center; }
 .text-status { min-height:20px;margin:15px 0 0;padding-top:13px;border-top:1px solid var(--divider); }
 .text-detections { display:grid;gap:8px; }
-.text-detection { display:grid;grid-template-columns:78px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 11px;border:1px solid var(--divider);border-radius:9px;background:var(--button-bg); }
-.text-detection-type { color:var(--accent-strong);font-size:12px;font-weight:700; }
+.text-detection-group { min-width:0;padding:12px;border:1px solid var(--divider);border-radius:11px; }
+.text-detection { display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 11px;border:1px solid var(--divider);border-radius:9px;background:var(--button-bg); }
+.text-detection-type { display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;color:var(--accent-strong);font-size:12px;font-weight:700; }
+.text-detection-actions { display:flex;flex-wrap:wrap;gap:6px; }
+.text-detection-actions a { display:inline-flex;align-items:center;text-decoration:none; }
+.text-detection-more summary { width:fit-content;margin-top:9px;color:var(--secondary);font-size:12px;cursor:pointer; }
+.text-detection-more summary:focus-visible { outline:2px solid var(--accent);outline-offset:3px; }
+.text-detection-rest { display:grid;gap:8px;margin-top:9px; }
 .text-detection-value { min-width:0;overflow-wrap:anywhere;font-size:13px;user-select:text; }
 .text-detection-reason { color:var(--muted);font-size:11px;white-space:nowrap; }
 .text-empty { margin:0;color:var(--muted);font-size:13px;padding:12px; }
@@ -71,9 +77,8 @@
  .text-card-head>div { flex-wrap:wrap;gap:6px 9px; }
  .text-quick-buttons { grid-template-columns:1fr 1fr; }
  .text-quick-buttons .text-export-button { grid-column:1 / -1; }
- .text-detection { grid-template-columns:65px minmax(0,1fr) auto;gap:5px; }
- .text-detection-reason { grid-column:2;grid-row:2;white-space:normal; }
- .text-detection .text-subtle { grid-column:3;grid-row:1 / 3; }
+ .text-detection { grid-template-columns:minmax(0,1fr);gap:6px; }
+ .text-detection-reason { white-space:normal; }
 }
 @media(max-width:420px) {
  .text-quick-buttons { grid-template-columns:1fr; }

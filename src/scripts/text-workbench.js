@@ -115,14 +115,52 @@
         const container = $('text-detections'); container.replaceChildren();
         $('text-detect-count').textContent = findings.length ? `${findings.length} 项` : '未发现';
         if (!findings.length) { const p = document.createElement('p'); p.className = 'text-empty'; p.textContent = source ? '未发现可提取的信息。' : '输入原文后，这里会自动显示结果。'; container.appendChild(p); return; }
-        for (const item of findings.slice(0, 100)) {
+        function makeRow(item) {
             const row = document.createElement('div'); row.className = 'text-detection';
-            const tag = document.createElement('span'); tag.className = 'text-detection-type'; tag.textContent = item.type;
             const value = document.createElement('span'); value.className = 'text-detection-value'; value.textContent = item.value; value.translate = false;
             const reason = document.createElement('span'); reason.className = 'text-detection-reason'; reason.textContent = item.reason || '';
+            const actions = document.createElement('div'); actions.className = 'text-detection-actions';
             const button = document.createElement('button'); button.type = 'button'; button.className = 'text-subtle'; button.textContent = '复制'; button.setAttribute('aria-label', `复制${item.type}`);
             button.addEventListener('click', () => copy(item.value, $('text-status'), button));
-            row.append(tag, value, reason, button); container.appendChild(row);
+            actions.appendChild(button);
+            function addLink(label, url) {
+                const link = document.createElement('a'); link.className = 'text-subtle'; link.textContent = label;
+                link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+                actions.appendChild(link);
+            }
+            if (item.type === '网址') addLink('直接跳转', item.value);
+            if (item.type === '疑似 PIXIV ID') {
+                addLink('作品链接', `https://www.pixiv.net/artworks/${item.value}`);
+                addLink('用户链接', `https://www.pixiv.net/users/${item.value}`);
+            }
+            row.append(value, reason, actions);
+            return row;
+        }
+        const groups = new Map();
+        for (const item of findings.slice(0, 100)) {
+            if (!groups.has(item.type)) groups.set(item.type, []);
+            groups.get(item.type).push(item);
+        }
+        for (const [type, items] of groups) {
+            const group = document.createElement('section'); group.className = 'text-detection-group';
+            const heading = document.createElement('h5'); heading.className = 'text-detection-type';
+            const tag = document.createElement('span'); tag.textContent = type;
+            const count = document.createElement('span'); count.className = 'text-count'; count.textContent = `${items.length} 项`;
+            heading.append(tag, count); group.append(heading, makeRow(items[0]));
+            if (items.length > 1) {
+                const details = document.createElement('details'); details.className = 'text-detection-more';
+                const summary = document.createElement('summary');
+                const updateSummary = () => {
+                    const label = details.open ? '收起其余 {count} 项' : '展开其余 {count} 项';
+                    if (globalThis.MELSI18n) globalThis.MELSI18n.bind(summary, label, { count: items.length - 1 });
+                    else summary.textContent = label.replace('{count}', items.length - 1);
+                };
+                updateSummary(); details.addEventListener('toggle', updateSummary);
+                const rest = document.createElement('div'); rest.className = 'text-detection-rest';
+                for (const item of items.slice(1)) rest.appendChild(makeRow(item));
+                details.append(summary, rest); group.appendChild(details);
+            }
+            container.appendChild(group);
         }
         if (findings.length > 100) { const p = document.createElement('p'); p.className = 'text-card-help'; p.textContent = `只显示前 100 项，共发现 ${findings.length} 项。`; container.appendChild(p); }
     }
