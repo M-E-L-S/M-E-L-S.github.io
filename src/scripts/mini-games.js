@@ -1,23 +1,24 @@
 // ==========================================================
 // 小游戏切换器
 // 职责：标题栏「小游戏」右侧的箭头按钮展开自绘菜单，
-//       在「连连看 / 扫雷 / 蜘蛛纸牌」之间切换，
+//       在连连看、扫雷、蜘蛛纸牌、Wordle 和五子棋之间切换，
 //       并把「当前是否可见」通知给对应游戏，使其自动暂停 / 继续。
 // 依赖：game.js 暴露的 __LLK.setVisible、minesweeper.js 暴露的 __MINE.setVisible、
-//       spider.js 暴露的 __SPIDER.setVisible
+//       spider.js / wordle.js / gomoku.js 暴露的对应 setVisible 钩子
 // ==========================================================
 (function () {
     'use strict';
     if (typeof document === 'undefined') return;
 
     const CHOICE_KEY = 'winy_minigame_choice_v1';
-    const GAMES = ['llk', 'mine', 'spider', 'wordle'];
-    const NAMES = { llk: '连连看', mine: '扫雷', spider: '蜘蛛纸牌', wordle: 'Wordle' };
+    const GAMES = ['llk', 'mine', 'spider', 'wordle', 'gomoku'];
+    const NAMES = { llk: '连连看', mine: '扫雷', spider: '蜘蛛纸牌', wordle: 'Wordle', gomoku: '五子棋' };
     const ROUTES = {
         llk: '/minigame/link/',
         mine: '/minigame/minesweeper/',
         spider: '/minigame/spider/',
-        wordle: '/minigame/wordle/'
+        wordle: '/minigame/wordle/',
+        gomoku: '/minigame/gomoku/'
     };
     const GAME_BY_ROUTE = Object.fromEntries(Object.entries(ROUTES).map(([game, route]) => [route.replace(/\/$/, ''), game]));
 
@@ -42,7 +43,7 @@
     }
 
     // 各游戏把自己的控制钩子挂在全局，这里按 id 查表转发可见性
-    const HOOKS = { llk: '__LLK', mine: '__MINE', spider: '__SPIDER', wordle: '__WORDLE' };
+    const HOOKS = { llk: '__LLK', mine: '__MINE', spider: '__SPIDER', wordle: '__WORDLE', gomoku: '__GOMOKU' };
 
     function notify(id, visible) {
         const hook = globalThis[HOOKS[id]];

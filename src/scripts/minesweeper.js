@@ -686,6 +686,9 @@
             btn.classList.toggle('active', active);
             btn.setAttribute('aria-pressed', String(active));
         });
+        document.querySelectorAll('#mine-rules [data-mine-orders]').forEach(part => {
+            part.hidden = !part.dataset.mineOrders.split(' ').includes(String(order));
+        });
         document.querySelectorAll('.mine-diff-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.mineDiff === level));
         stopTimer();
         clearTimeout(popTimer);

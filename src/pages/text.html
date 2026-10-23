@@ -10,7 +10,7 @@
             <div class="text-pane">
                 <div class="text-input-head"><label for="text-source">原文</label><button type="button" class="text-subtle" id="text-clear">清空</button></div>
                 <textarea id="text-source" class="text-input" rows="8" spellcheck="false" translate="no" placeholder="在这里粘贴需要处理的文字或 Markdown…"></textarea>
-                <p class="text-meta" id="text-source-meta">0 字符 · 粘贴后自动嗅探特殊信息</p>
+                <p class="text-meta" id="text-source-meta">0 字符</p>
             </div>
             <div class="text-pane">
                 <div class="text-input-head"><label for="text-output">处理后</label><button type="button" class="text-subtle" id="text-copy-output" disabled>复制结果</button></div>
@@ -26,7 +26,7 @@
 
     <section class="text-card" aria-labelledby="text-detect-title">
         <div class="text-card-head"><div><span class="text-step">AUTO</span><h4 id="text-detect-title">自动提取</h4></div><span class="text-count" id="text-detect-count">等待输入</span></div>
-        <p class="text-card-help">同类结果默认显示第一项，其余可展开。自动嗅探网址、邮箱、电话及疑似代码。结果请自行核对。</p>
+        <p class="text-card-help">自动嗅探网址、邮箱、电话及疑似代码。结果请自行核对。</p>
         <div class="text-detections" id="text-detections" aria-live="polite"><p class="text-empty">输入原文后，这里会自动显示结果。</p></div>
     </section>
     <section class="text-card text-actions" aria-labelledby="text-actions-title">
@@ -44,8 +44,7 @@
             <button type="button" class="text-one-button" id="text-clean" aria-pressed="false">一键清理文本</button>
             <button type="button" class="text-one-button text-export-button" id="text-export-docx">一键导出 DOCX <span aria-hidden="true">↓</span></button>
         </div>
-        <p class="text-card-help">清理会合并多余空格、删除所有空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。DOCX 按当前处理结果导出；若结果含 Markdown，会尽量保留其格式。</p>
-        <p id="text-status" class="text-status" role="status" aria-live="polite">按下操作后可在上方核对结果。</p>
+        <p class="text-card-help">注意！清理会合并多余空格、删除所有空行，去除行首行尾空格、零宽和不可见字符，并规范特殊空格与异常换行。<br> DOCX 按当前处理结果导出；若结果含 Markdown，会尽量保留其格式。</p>
     </section>
 
 </section>

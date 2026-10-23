@@ -2,11 +2,100 @@
         <section class="home-section" id="explore" aria-labelledby="explore-title">
             <div class="section-heading"><p class="eyebrow">UNIQUE FEATURES</p><h2 id="explore-title">特色功能</h2><p>实用的，放松的。总有你感兴趣的。</p></div>
             <div class="feature-grid">
-                <a class="feature-card" href="/tools/" data-route="tools"><div class="feature-art type-art" aria-hidden="true"><span>yyds</span><span>永远的神 ↗</span></div><div class="feature-copy"><span class="eyebrow">EVERYDAY TOOLS</span><h3>小功能 <span>↗</span></h3><p>一个缩写，一句“黑话”，这里有你想知道的答案。</p><span class="text-link">打开小功能</span></div></a>
-                <a class="feature-card" href="/minigame/" data-route="game"><div class="feature-art game-art" aria-hidden="true"><div class="demo-word"><b>W</b><b>O</b><b>R</b><b>D</b><b>O</b></div><div class="demo-tiles"><span>♠</span><span>♦</span><span>✿</span><span>✿</span></div></div><div class="feature-copy"><span class="eyebrow">A LITTLE PLAY</span><h3>小游戏 <span>↗</span></h3><p>连连看、扫雷、蜘蛛纸牌与 Wordle。传统之外或许还有你未曾见过的新挑战？</p><span class="text-link">开始一局</span></div></a>
-                <a class="feature-card" href="/freshcup/" data-route="freshcup"><div class="feature-art score-art" aria-hidden="true"><span>YOUR NEXT CHALLENGE</span><strong>3,250<span> pts</span></strong><div><span>记录</span><span>计算</span><span>挑战</span></div></div><div class="feature-copy"><span class="eyebrow">F.V. cup</span><h3>鲜蔬杯工具中心 <span>↗</span></h3><p>界园、萨卡兹、萨米计分器，以及伤害计算器。</p><span class="text-link">进入工具中心</span></div></a>
+                <div class="feature-card feature-carousel-card tools-feature">
+                    <div class="feature-art feature-carousel type-art" id="home-tools-art" data-feature-carousel="tools" role="region" aria-label="小功能介绍图">
+                        <div class="tools-slide tools-slide-acronym is-active" data-tool="acronym" aria-hidden="true">
+                            <span class="tools-slide-label">缩写转义</span>
+                            <b class="tools-slide-word tools-type-entry" translate="no"><span class="tools-type-text">yyds</span></b>
+                            <span class="tools-slide-result">永远的神 ↗</span>
+                        </div>
+                        <div class="tools-slide tools-slide-decoder" data-tool="arg" aria-hidden="true">
+                            <span class="tools-slide-label">ARG 辅助器</span>
+                            <div class="tools-decoder-text" translate="no"><span>SGVsbG8=</span><span>→</span><span>Hello</span></div>
+                            <div class="tools-decoder-block"><span class="tools-slide-from" translate="no">from Base64</span></div>
+                        </div>
+                        <div class="tools-slide tools-slide-favicon" data-tool="favicon" aria-hidden="true">
+                            <span class="tools-slide-label">Favicon 图包</span>
+                            <div class="tools-browser" translate="no">
+                                <div class="tools-browser-tabs"><div class="tools-browser-tab"><b>M</b><span>My website</span><i class="fas fa-xmark"></i></div><i class="fas fa-plus"></i></div>
+                                <div class="tools-browser-address"><i class="fas fa-lock"></i><span>mysite.example</span></div>
+                                <div class="tools-browser-page"><i></i><i></i></div>
+                            </div>
+                            <b class="tools-favicon-fly" translate="no">M</b>
+                        </div>
+                        <div class="tools-slide tools-slide-text" data-tool="text" aria-hidden="true">
+                            <span class="tools-slide-label">快捷文本工作台</span>
+                            <b class="tools-slide-word tools-markdown-source" translate="no">**MARKDOWN**</b>
+                            <span class="tools-markdown-plain" translate="no">MARKDOWN</span>
+                        </div>
+                        <div class="tools-slide tools-slide-history" data-tool="aicu" aria-hidden="true">
+                            <span class="tools-slide-label">B站记录查询</span>
+                            <div class="tools-television"><span><i></i><i></i></span></div>
+                            <span class="tools-slide-result" translate="no"><i class="fas fa-magnifying-glass"></i> UID</span>
+                        </div>
+                        <a class="tools-slide-link" href="/tools/acronym/" aria-label="缩写转义"></a>
+                        <div class="tools-slide-controls" hidden>
+                            <button type="button" data-tools-prev aria-label="上一张"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+                            <button type="button" data-tools-next aria-label="下一张"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="tools-slide-dots" role="group" aria-label="选择介绍图" hidden>
+                            <button type="button" data-tools-slide="0" aria-label="缩写转义" aria-pressed="true"></button>
+                            <button type="button" data-tools-slide="1" aria-label="ARG 辅助器" aria-pressed="false"></button>
+                            <button type="button" data-tools-slide="2" aria-label="Favicon 图包" aria-pressed="false"></button>
+                            <button type="button" data-tools-slide="3" aria-label="快捷文本工作台" aria-pressed="false"></button>
+                            <button type="button" data-tools-slide="4" aria-label="B站记录查询" aria-pressed="false"></button>
+                        </div>
+                    </div>
+                    <a class="feature-copy" href="/tools/" data-route="tools"><span class="eyebrow">EVERYDAY TOOLS</span><h3>小功能 <span>↗</span></h3><p>揭秘一句“黑话”，解密一段密文，或者单纯想去掉不合时宜的MD格式。这里有全(局域)网最方便的文本工具。</p><span class="text-link">打开小功能</span></a>
+                </div>
+                <div class="feature-card feature-carousel-card">
+                    <div class="feature-art feature-carousel game-art" id="home-games-art" data-feature-carousel="game" role="region" aria-label="小游戏介绍图">
+                        <div class="tools-slide game-slide-link is-active" data-tool="llk" aria-hidden="true">
+                            <span class="tools-slide-label">连连看 · BOSS 对决</span>
+                            <div class="demo-boss"><div class="demo-boss-head"><i class="fas fa-robot"></i><div><b translate="no">BOSS</b><span><i></i></span></div></div><div class="demo-boss-match"><span><i class="fas fa-bolt"></i></span><i class="fas fa-bolt demo-boss-hit"></i><span><i class="fas fa-bolt"></i></span></div></div>
+                        </div>
+                        <div class="tools-slide game-slide-mine" data-tool="mine" aria-hidden="true">
+                            <span class="tools-slide-label">扫雷</span>
+                            <div class="demo-mine" translate="no"><span></span><span>1</span><span>√2</span><span></span><b></b><span>1</span><b class="special">−1</b><b></b><span>1</span><b></b><span>√2</span><b></b><b class="special imaginary demo-mine-target"><span class="demo-mine-cover"></span><i class="demo-mine-blast"></i><span class="demo-mine-value">i</span><i class="fas fa-arrow-pointer demo-mine-pointer"></i></b><span>2</span><b></b><span></span><span>1</span><b class="special">−i</b><b></b><b></b></div>
+                        </div>
+                        <div class="tools-slide game-slide-spider" data-tool="spider" aria-hidden="true">
+                            <span class="tools-slide-label">蜘蛛纸牌</span>
+                            <div class="demo-playing-cards" translate="no"><span><b>K</b>♠</span><span><b>Q</b>♠</span><span><b>J</b>♠</span></div>
+                        </div>
+                        <div class="tools-slide game-slide-wordle" data-tool="wordle" aria-hidden="true">
+                            <span class="tools-slide-label" translate="no">Wordle</span>
+                            <div class="demo-wordle-long" translate="no"><div class="demo-wordle-answer"><i>?</i><i>?</i><i>?</i><i>?</i><i>?</i><i>?</i><i>?</i><i>?</i></div><div class="demo-wordle-track"><div class="demo-wordle-slots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="demo-word"><b>W</b><b>O</b><b>R</b><b>D</b><b>L</b><b>E</b></div></div><div class="demo-wordle-range"><i class="fas fa-arrow-left"></i><span></span><i class="fas fa-arrow-right"></i></div></div>
+                        </div>
+                        <div class="tools-slide game-slide-gomoku" data-tool="gomoku" aria-hidden="true">
+                            <span class="tools-slide-label">五子棋</span>
+                            <div class="demo-gomoku"><i style="--x:1;--y:1"></i><i class="white" style="--x:2;--y:1"></i><i style="--x:2;--y:2"></i><i class="white" style="--x:3;--y:2"></i><i style="--x:3;--y:3"></i><i class="white" style="--x:2;--y:3"></i><i class="last" style="--x:4;--y:4"></i></div>
+                        </div>
+                        <a class="tools-slide-link" href="/minigame/link/" aria-label="连连看"></a>
+                        <div class="tools-slide-controls" hidden><button type="button" data-tools-prev aria-label="上一张"><i class="fas fa-chevron-left" aria-hidden="true"></i></button><button type="button" data-tools-next aria-label="下一张"><i class="fas fa-chevron-right" aria-hidden="true"></i></button></div>
+                        <div class="tools-slide-dots" role="group" aria-label="选择介绍图" hidden>
+                            <button type="button" data-tools-slide="0" aria-label="连连看" aria-pressed="true"></button><button type="button" data-tools-slide="1" aria-label="扫雷" aria-pressed="false"></button><button type="button" data-tools-slide="2" aria-label="蜘蛛纸牌" aria-pressed="false"></button><button type="button" data-tools-slide="3" aria-label="Wordle" aria-pressed="false"></button><button type="button" data-tools-slide="4" aria-label="五子棋" aria-pressed="false"></button>
+                        </div>
+                    </div>
+                    <a class="feature-copy" href="/minigame/" data-route="game"><span class="eyebrow">A LITTLE PLAY</span><h3>小游戏 <span>↗</span></h3><p>来一把紧张刺激的连连看BOSS对决、高难版扫雷、或更长——的Wordle。无论是人机对战还是联机房间，这里都支持。</p><span class="text-link">开始一局</span></a>
+                </div>
+                <div class="feature-card feature-carousel-card">
+                    <div class="feature-art feature-carousel cup-art" id="home-cup-art" data-feature-carousel="freshcup" role="region" aria-label="鲜蔬杯介绍图">
+                        <div class="tools-slide cup-slide-score is-active" data-tool="score" aria-hidden="true">
+                            <span class="tools-slide-label">计分器</span>
+                            <div class="demo-score"><span translate="no">YOUR NEXT CHALLENGE</span><strong translate="no"><span data-roll-number="3,250">3,250</span><span class="score-unit"> pts</span></strong><div><span>界园</span><span>萨卡兹</span><span>萨米</span></div></div>
+                        </div>
+                        <div class="tools-slide cup-slide-damage" data-tool="damage" aria-hidden="true">
+                            <span class="tools-slide-label">伤害计算器</span>
+                            <div class="demo-damage" translate="no"><span>ATK <b data-roll-number="1,189">1,189</b></span><i class="fas fa-arrow-down"></i><strong><span data-roll-number="7,999">7,999</span><span class="damage-unit"> DMG</span></strong><div><i></i><i></i><i></i></div></div>
+                        </div>
+                        <a class="tools-slide-link" href="/freshcup/" aria-label="计分器"></a>
+                        <div class="tools-slide-controls" hidden><button type="button" data-tools-prev aria-label="上一张"><i class="fas fa-chevron-left" aria-hidden="true"></i></button><button type="button" data-tools-next aria-label="下一张"><i class="fas fa-chevron-right" aria-hidden="true"></i></button></div>
+                        <div class="tools-slide-dots" role="group" aria-label="选择介绍图" hidden><button type="button" data-tools-slide="0" aria-label="计分器" aria-pressed="true"></button><button type="button" data-tools-slide="1" aria-label="伤害计算器" aria-pressed="false"></button></div>
+                    </div>
+                    <a class="feature-copy" href="/freshcup/" data-route="freshcup"><span class="eyebrow">F.V. cup</span><h3>鲜蔬杯工具中心 <span>↗</span></h3><p>界园、萨卡兹、萨米计分器，以及伤害计算器。</p><span class="text-link">进入工具中心</span></a>
+                </div>
             </div>
         </section>
-        <section class="home-section music-feature" aria-labelledby="music-feature-title"><div class="record-art" aria-hidden="true"><div class="record"><span>MELS<br>PLAY</span></div></div><div class="section-heading"><p class="eyebrow">SOUNDTRACK TO YOUR DAY</p><h2 id="music-feature-title">你的下一个电子播放器，何必是Spotify？</h2><p>搜索喜欢的音乐，收进自己的列表。播放历史、收藏和独家粒子动态歌词。该有的，你没见过的这里都有。<br><br>^Spotify 是其各自权利人的商标，本站与 Spotify 无关联，亦未获其赞助或背书。</p><button class="pill-link" type="button" data-action="music">发现音乐 ↗</button></div></section>
-        <section class="home-section about-feature" aria-labelledby="about-feature-title"><div class="section-heading"><p class="eyebrow">UPDATE ANNOUNCEMENT</p><h2 id="about-feature-title">更新公告</h2><p>关于本站、最近的更新，以及那些你未曾注意到的小变化。</p><a class="pill-link" href="/about/" data-route="about">了解更多 ↗</a></div><div class="about-note"><span>VER 2.0</span><p>页面重构更新。<br>外观重构更新。<br>原页面保留并收纳为单独「鲜蔬杯」页面。</p><span>— 2026.09.15</span></div></section>
+        <section class="home-section music-feature" aria-labelledby="music-feature-title"><div class="record-art" aria-hidden="true"><div class="record"><span translate="no">MELS<br>PLAY</span></div><div class="record-tonearm"><i></i></div><div class="record-equalizer"><i></i><i></i><i></i><i></i><i></i></div></div><div class="section-heading"><p class="eyebrow">SOUNDTRACK TO YOUR DAY</p><h2 id="music-feature-title">你的下一个电子播放器，何必是Spotify？</h2><p>搜索音乐，在线播放，收藏，甚至独家动态粒子歌词。无需VIP和SVIP。<br><br>^Spotify 是其各自权利人的商标，本站与 Spotify 无关联，亦未获其赞助或背书。</p><button class="pill-link" type="button" data-action="music">发现音乐 ↗</button></div></section>
+        <section class="home-section about-feature" aria-labelledby="about-feature-title"><div class="section-heading"><p class="eyebrow">UPDATE ANNOUNCEMENT</p><h2 id="about-feature-title">更新公告</h2><p>关于本站、最近的更新，以及那些你可能没注意到的小变化。</p><a class="pill-link" href="/about/" data-route="about">了解更多 ↗</a></div><div class="about-note"><span>VER 2.1</span><p>联机功能测试版正式上线。<br>新增更多的功能和游戏。<br>文本与结构优化。</p><span>— 2026.10.23</span></div></section>
         <section class="home-section settings-feature"><div><p class="eyebrow">MAKE IT YOURS</p><h2>也可以，换一种看法。</h2><p>浅色与深色、粒子文字、动态火焰。甚至主题色。</p></div><button class="pill-link" type="button" data-action="settings">调整外观 ↗</button></section>

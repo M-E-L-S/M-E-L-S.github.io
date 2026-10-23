@@ -18,6 +18,7 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="src/styles/site-design.css?v=2">
+    <link rel="stylesheet" href="src/styles/gomoku.css">
 </head>
 <body>
 <!-- 顶部导航栏 -->
@@ -194,11 +195,12 @@
         </div>
         <div class="about-content">
             <p>欢迎访问M.E.L.S.个人站。</p>
-            <p>本站大部分代码，除非特殊说明，采用MIT协议开源。仅“连连看游戏的boss对决模式”“wordle游戏的长单词模式”以及“全部鲜蔬杯页面”由于涉及到大量个人独特原创设计，采用 <b>PolyForm Noncommercial License 1.0.0</b>协议，限制免费商用，但个人/非盈利项目依旧不受限制。详见<a href="https://github.com/M-E-L-S/M-E-L-S.github.io/blob/main/LICENSE.md" target="_blank" rel="noopener noreferrer">LICENSE</a>。</p>
-            <p>第三方来源声明：“外观设置”中的两项高级视觉效果，本地预设歌曲“没有如果”，在线歌曲服务，“缩写转义”功能，“Favicon 图包生成功能”，“wordle游戏中内置的各类词库以及词性、翻译文本”，“鲜蔬杯页面涉及到的明日方舟游戏文本及计算逻辑”等内容，为第三方提供，非本站原创，本站也不对其效果和稳定性作保证。详见<a href="https://github.com/M-E-L-S/M-E-L-S.github.io/blob/main/THIRD_PARTY_AND_CONTENT_NOTICE.md" target="_blank" rel="noopener noreferrer">第三方内容说明</a>。</p>
-            <p>隐私和个人信息声明：本站是Github Pages纯前端静态页面，不设后端服务器，不会在云端保存任何用户信息，也不会对任何用户的访问信息做收集和统计。关于一些设置和历史的记录，全部保存在您的浏览器本地，云端不可见，您自行清除本站浏览器数据即可完全删除。当然，换句话说，您使用不同的设备或浏览器访问本网站，设置与历史记录将 <b>不会互通</b>。</p>
-            <p>特殊提醒：在线音乐以及缩写转义功能，由于使用第三方接口，您的请求将从您的设备直接访问第三方服务，对于第三方服务对请求和数据 可能的 记录或收集，本站不作保证。但注意，本站<b>不会</b>主动默默访问第三方服务，仅在您使用”音乐栏的搜索和非本地歌曲（“没有如果”）播放”以及“缩写转义的输入”时会访问第三方，若您不想接触第三方服务，不使用上述功能即可。</p>
+            <p>本站大部分代码，除非特殊说明，采用MIT协议开源。但“连连看游戏的boss对决模式”“扫雷高阶模式”“wordle游戏的长单词模式”、“ARG辅助器的搜索算法”以及“全部鲜蔬杯页面”由于涉及到大量个人独特原创设计，采用 <b>PolyForm Noncommercial License 1.0.0</b>协议，限制免费商用，但个人/非盈利项目依旧不受限制。详见<a href="https://github.com/M-E-L-S/M-E-L-S.github.io/blob/main/LICENSE.md" target="_blank" rel="noopener noreferrer">LICENSE</a>。</p>
+            <p>第三方来源声明：“外观设置”中的两项高级视觉效果，本地预设歌曲“没有如果”，在线歌曲服务，“缩写转义”“B站记录查询”“Favicon 图包生成”功能，“ARG辅助器中的英语词典和ACG Name词典”文本，“wordle游戏中内置的各类词库以及词性、翻译文本”，“鲜蔬杯页面涉及到的明日方舟游戏文本及计算逻辑”等内容，为第三方提供，非本站原创，本站也不对其效果和稳定性作保证。详见<a href="https://github.com/M-E-L-S/M-E-L-S.github.io/blob/main/THIRD_PARTY_AND_CONTENT_NOTICE.md" target="_blank" rel="noopener noreferrer">第三方内容说明</a>。</p>
+            <p>隐私和个人信息声明：本站属于Github Pages静态页面与Cloudflare边缘后端结合形式。但绝大部分功能和逻辑均在本地前端实现。仅在“B站记录查询”与“联机对战”功能中由于必须的实现要求，才引入了后端节点，且承诺不会在云端保存任何用户信息，也不会对任何用户的访问信息做收集和统计。关于网站所有设置和历史的记录，全部保存在您的浏览器本地，云端不可见，您自行清除本站浏览器数据即可完全删除。当然，换句话说，您使用不同的设备或浏览器访问本网站，设置与历史记录将 <b>不会互通</b>。</p>
+            <p>特殊提醒：在线音乐、缩写转义、B站记录查询功能，由于使用第三方接口，您的请求将从您的设备直接访问第三方服务，对于第三方服务对请求和数据可能的记录或收集，本站不作保证。但注意，本站<b>不会</b>主动默默访问第三方服务，仅在您使用”音乐栏的搜索和非本地歌曲（“没有如果”）播放”以及“缩写转义的输入”“B站记录查询的UID搜索”时会访问第三方，若您不想接触第三方服务，不使用上述功能即可。</p>
             <p>版权声明：在线音乐的搜索结果、封面、歌词与播放地址由 <a href="https://music.gdstudio.xyz/">GD音乐台</a> 及其上游内容来源提供，本地歌曲“没有如果”来自于<a href="https://www.bilibili.com/video/BV1JJMg6UEWU">bilibili视频</a>，本站不主张拥有这些内容的版权。</p>
+            <p>关于“B站记录查询”的说明：考虑到此功能的特殊性，以及最大程度规避网站的后端风险，此功能 目前 使用”白名单“机制。即使用此功能需要输入站长设置的密码。如果你希望使用这个功能，可以联系我。</p>
             <p>特别致歉：<a href="https://space.bilibili.com/13164144">魔法ZC目录</a>，dbq周哥，实在是没忍住。</p>
             <p>感谢访问网站。</p>
             <p>—— M-E-L-S.github.io</p>
@@ -252,8 +254,8 @@
             <section class="utility-view" id="acronym-view" aria-labelledby="acronym-title">
                 <div class="acronym-hero">
                     <span class="acronym-kicker">能不能好好说话？</span>
-                    <h3 id="acronym-title">看懂拼音首字母缩写</h3>
-                    <p>输入一段缩写，可能的原文会自动出现在下方。</p>
+                    <h3 id="acronym-title">看懂”黑话“缩写</h3>
+                    <p>输入一段缩写，所有可能的意思会自动出现在下方。</p>
                 </div>
                 <form class="acronym-form" id="acronym-form">
                     <label for="acronym-input">缩写内容</label>
@@ -265,7 +267,7 @@
                             <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> 转义
                         </button>
                     </div>
-                    <p class="acronym-help" id="acronym-help">支持字母和数字组成的缩写；输入后会自动查询，也可以按回车。</p>
+                    <p class="acronym-help" id="acronym-help">支持字母和数字组成的缩写。</p>
                 </form>
                 <div class="acronym-results" id="acronym-results" aria-live="polite" aria-busy="false">
                     <div class="acronym-empty">
@@ -311,7 +313,7 @@
         </div>
     </div>
 
-    <!-- 小游戏页面：标题栏的箭头菜单可切换「连连看 / 扫雷 / 蜘蛛纸牌」 -->
+    <!-- 小游戏页面：标题栏箭头菜单切换游戏 -->
     <div class="page" id="game">
         <div class="page-title-row">
             <h2 class="page-title">小游戏</h2>
@@ -347,10 +349,85 @@
                         <span class="game-picker-name">Wordle</span>
                         <i class="fas fa-check game-picker-check" aria-hidden="true"></i>
                     </a>
+                    <a href="/minigame/gomoku/" class="game-picker-item" id="game-picker-item-gomoku"
+                        role="option" data-game="gomoku" aria-selected="false">
+                        <span class="game-picker-emoji" aria-hidden="true">⚫</span>
+                        <span class="game-picker-name">五子棋</span>
+                        <i class="fas fa-check game-picker-check" aria-hidden="true"></i>
+                    </a>
                 </div>
             </div>
         </div>
         <div class="game-panel">
+            <!-- 五子棋 -->
+            <div class="game-view" id="gomoku-view" hidden>
+                <div class="game-toolbar">
+                    <div class="game-difficulty" role="group" aria-label="对战模式">
+                        <button type="button" class="diff-btn active" data-gomoku-mode="local" aria-pressed="true">本地对战</button>
+                        <button type="button" class="diff-btn" data-gomoku-mode="online" aria-pressed="false">双人联机</button>
+                    </div>
+                    <div class="game-actions">
+                        <button type="button" class="game-btn primary" id="gomoku-start">开始 / 重新开局</button>
+                        <button type="button" class="game-btn" id="gomoku-undo" disabled>悔棋</button>
+                        <button type="button" class="game-btn icon-btn" id="gomoku-sound-btn" title="音效开关" aria-label="音效开关" aria-pressed="true"><i class="fas fa-volume-high" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+                <div class="gomoku-options" id="gomoku-local-options">
+                    <div class="game-actions" role="group" aria-label="AI 执棋开关">
+                        <button type="button" class="game-btn gomoku-ai-toggle" id="gomoku-ai-2" aria-pressed="false">AI 执白</button>
+                        <button type="button" class="game-btn gomoku-ai-toggle" id="gomoku-ai-1" aria-pressed="false">AI 执黑</button>
+                    </div>
+                    <label class="gomoku-speed-label">思考深度
+                        <select id="gomoku-speed" aria-describedby="gomoku-budget">
+                            <option value="beginner">简单</option>
+                            <option value="fast" selected>普通</option>
+                            <option value="light">高级</option>
+                        </select>
+                    </label>
+                    <span class="gomoku-budget" id="gomoku-budget">目标 0.3 秒 · 上限 1 秒 · 下一手生效</span>
+                </div>
+                <div class="gomoku-options" id="gomoku-color-control" hidden>
+                    <span class="gomoku-label" id="gomoku-color-label">房主执棋</span>
+                    <div class="game-difficulty" role="group" aria-label="房主执棋选择">
+                        <button type="button" class="diff-btn active" id="gomoku-color-1" aria-pressed="true">黑棋 · 先手</button>
+                        <button type="button" class="diff-btn" id="gomoku-color-2" aria-pressed="false">白棋 · 后手</button>
+                    </div>
+                </div>
+                <div class="gomoku-online-panel" id="gomoku-online-panel" hidden>
+                    <form id="gomoku-join-form" class="gomoku-join-form">
+                        <label for="gomoku-room-input">加入好友房间</label>
+                        <input id="gomoku-room-input" type="text" maxlength="20" placeholder="输入 20 位房间码" autocomplete="off" autocapitalize="none" spellcheck="false">
+                        <button type="submit" class="game-btn" id="gomoku-join">加入房间</button>
+                    </form>
+                    <div class="gomoku-room-actions" id="gomoku-room-actions" hidden>
+                        <span>房间 <strong id="gomoku-room-code"></strong></span>
+                        <button type="button" class="game-btn" id="gomoku-copy-room">复制邀请链接</button>
+                        <button type="button" class="game-btn" id="gomoku-reconnect">重新连接</button>
+                        <button type="button" class="game-btn" id="gomoku-leave">离开房间</button>
+                    </div>
+                    <p class="gomoku-online-help">创建房间后分享邀请链接，好友加入即可开局。房间保留 24 小时；断线后可在原标签页重连。</p>
+                    <div class="gomoku-offer" id="gomoku-offer" hidden>
+                        <span id="gomoku-offer-text" role="status"></span>
+                        <button type="button" class="game-btn primary" id="gomoku-accept">同意</button>
+                        <button type="button" class="game-btn" id="gomoku-decline">拒绝</button>
+                    </div>
+                </div>
+                <div class="gomoku-layout">
+                    <div class="gomoku-board" id="gomoku-board" role="group" aria-label="15 行 15 列五子棋棋盘，可用方向键移动、回车落子" aria-description="触屏操作：首次点按预选，再次点按同一位置落子；点按其他位置可更换预选。"></div>
+                    <aside class="gomoku-info" aria-label="对局状态">
+                        <p class="gomoku-kicker">FIVE IN A ROW</p>
+                        <h3 id="gomoku-status" role="status" aria-live="polite">点击开始，黑棋先行</h3>
+                        <p id="gomoku-side">黑棋：玩家 · 白棋：玩家</p>
+                        <p id="gomoku-moves">0 手</p>
+                        <p id="gomoku-detail"></p>
+                        <div class="gomoku-proof" id="gomoku-proof" role="status" hidden>
+                            <strong id="gomoku-proof-text"></strong>
+                        </div>
+                        <button type="button" class="game-btn" id="gomoku-retry" hidden>重试 AI</button>
+                    </aside>
+                </div>
+                <p class="game-tips" id="gomoku-rules">15 × 15 自由五子棋，无禁手。</p>
+            </div>
             <!-- 连连看 -->
             <div class="game-view" id="llk-view">
                 <div class="game-toolbar">
@@ -374,12 +451,10 @@
                         <div id="boss-boss-health" class="combat-health enemy-health">
                             <div><strong>邪恶机器人</strong><span id="boss-hp">400 / 400</span></div>
                             <div class="combat-track"><div id="boss-hp-fill"></div></div>
-                            <small id="boss-phase">第 1 / 2 条生命</small>
                         </div>
                         <div id="boss-player-health" class="combat-health player-health">
                             <div><strong>♥ 我方</strong><span id="player-hp">300 / 300</span></div>
                             <div class="combat-track"><div id="player-hp-fill"></div></div>
-                            <small>仅一条生命 · 300 HP</small>
                         </div>
                     </div>
                     <div id="boss-action" class="boss-action">等待开始</div>
@@ -411,9 +486,9 @@
                 </div>
 
                 <p class="game-tips">
-                    玩法：点击两个相同的图案，若连接路径转弯不超过 2 次（路线可以绕到棋盘外侧）即可消除；在倒计时结束前清空全部方块即获胜。连续快速消除还能触发连击加分哦！
+                    玩法：点击两个相同的图案，若连接路径转弯不超过 2 次即可消除；在倒计时结束前清空全部方块即获胜。连续快速消除还能触发连击加分哦！
                 </p>
-                <p class="boss-tips">对决规则：消除造成基础 10 点伤害，4 秒内连击每次 +5。BOSS 初始攻击间隔 5 秒，最低 1 秒，两次选块各需 2 秒，期间消除可打断并眩晕 2 秒；红框同类方块已被锁定。竞技期间 BOSS 无敌且无法打断，双方消除只计次数，不造成即时伤害，以 4 次消除为目标在结束后结算。清空棋盘会自动补满，胜负仅由血量决定。</p>
+                <p class="boss-tips">对决规则：消除即可造成伤害，每次连击伤害增加。BOSS 的消除会越来越快，在BOSS消除时可以打断！BOSS会慢慢获得一些额外的能力...?</p>
             </div>
 
             <!-- 扫雷 -->
@@ -465,8 +540,13 @@
                     <div class="game-toast" id="mine-toast"></div>
                 </div>
 
-                <p class="game-tips">
-                    玩法：翻开所有不含地雷的格子即可获胜。阶数 1 为经典扫雷；雷型为 n 次单位根；ω = exp(2πi/3)。数字是周围 8 格所有雷的复数和的模长；3 阶模式中，若复数和不沿 1、ω、ω² 的方向，数字背后的淡红色向量箭头指向复数和的主辐角（−π < θ ≤ π）方向；和为 0 时不显示箭头。2 阶与 4 阶模式中，数字背后的淡雷图标表示周围存在抵消雷对：2 阶为 1 与 −1；4 阶为 1 与 −1 或 i 与 −i。双击数字（包括 0），若周围至少有一面旗且旗子之和的模长与数字相符，就会翻开其余格子；漏标或错位可能翻到雷并判负，模长不符则不展开。无需匹配真实雷型，复数整体旋转不影响判定。首次点击必定安全，「提示」可直接翻开安全格。切换地图大小或阶数会重开，最佳成绩按大小和阶数分别记录。
+                <p class="game-tips" id="mine-rules">
+                    <span>玩法：翻开所有不含地雷的格子即可获胜。双击快捷展开，右键/长按插旗。</span>
+                    <span data-mine-orders="1">1 阶即为经典扫雷，数字表示周围 8 格中的地雷数量。</span>
+                    <span data-mine-orders="2" hidden>2 阶的雷型为 1 与 −1。数字背后的淡雷图标表示周围存在 1 与 −1 组成的抵消雷对。</span>
+                    <span data-mine-orders="3" hidden>3 阶的雷型为 1、ω、ω²，其中 ω = exp(2πi/3)。若周围雷的复数和不沿 1、ω、ω² 的方向，数字背后的淡红色向量箭头指向复数和的主辐角方向。</span>
+                    <span data-mine-orders="4" hidden>4 阶的雷型为 1、i、−1、−i。数字背后的淡雷图标表示周围存在 1 与 −1 或 i 与 −i 组成的抵消雷对。</span>
+                    <span data-mine-orders="2 3 4" hidden>数字是周围 8 格所有雷的数字和的模长。无需匹配真实雷型，复数整体旋转不影响判定。</span>
                 </p>
             </div>
 
@@ -521,7 +601,7 @@
                 </div>
 
                 <p class="game-tips">
-                    玩法：把牌按从大到小（K→Q→J→…→A）叠放；同一花色从 K 到 A 凑满一整列即可自动收走，收齐 8 组即获胜。可移动的牌必须是同花色且连续递减的一叠。无棋可走时点右上角牌堆发牌（每列各发一张，且每列都不能为空）。单色最轻松，双色、四色更具挑战。支持拖拽或「先点选、再点目标列」两种方式，双击一叠牌可自动归位。
+                    玩法：把牌按从大到小叠放；同一花色从 K 到 A 凑满一整列即可自动收走，收齐 8 组即获胜。可移动的牌必须是同花色且连续递减的一叠。无棋可走时点右上角牌堆发牌（每列各发一张，且每列都不能为空）。支持拖拽和点选拖牌，双击一叠牌可自动归位。
                 </p>
             </div>
 
@@ -535,6 +615,7 @@
                     </div>
                     <div class="game-actions">
                         <button class="game-btn primary" id="wordle-start-btn"><i class="fas fa-rotate-right"></i> 新游戏</button>
+                        <button type="button" class="game-btn icon-btn" id="wordle-sound-btn" title="音效开关" aria-label="音效开关" aria-pressed="true"><i class="fas fa-volume-high" aria-hidden="true"></i></button>
                     </div>
                 </div>
 
@@ -708,7 +789,9 @@
 <script src="src/scripts/game.js"></script>
 <script src="src/scripts/minesweeper.js"></script>
 <script src="src/scripts/spider.js"></script>
+<script src="src/scripts/game-audio.js"></script>
 <script src="src/scripts/wordle.js"></script>
+<script type="module" src="src/scripts/gomoku.js"></script>
 <script src="src/scripts/mini-games.js?v=2"></script>
 <script src="vendor/jszip.min.js"></script>
 <script src="src/scripts/utilities.js?v=1"></script>
@@ -720,6 +803,7 @@
 <script src="src/scripts/appearance.js"></script>
 <script type="module" src="src/scripts/particle-title.js"></script>
 <script src="src/scripts/site.js"></script>
+<script src="src/scripts/home-tools.js"></script>
 <!-- TOOL_SCRIPT -->
 </body>
 </html>

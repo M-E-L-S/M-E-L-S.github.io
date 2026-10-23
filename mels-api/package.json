@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test test/auth.test.js",
+    "test": "node --test test/*.test.js",
+    "test:gomoku:integration": "node test/gomoku-integration.mjs",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev"

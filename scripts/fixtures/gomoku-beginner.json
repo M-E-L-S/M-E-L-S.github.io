@@ -1,0 +1,1618 @@
+{
+  "schema": 1,
+  "native_engine_sha256": "71696b6a36c5f281aa5c116dc8c7724c7cb1e2240ebb3cdd81e521233a194262",
+  "cases": [
+    {
+      "id": "ranking-0",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 0
+      },
+      "expected": {
+        "move": [
+          7,
+          6
+        ],
+        "score": 96,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 3.941,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            6
+          ],
+          [
+            7,
+            5
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 0,
+        "selected_rank": 1,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-1",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 1
+      },
+      "expected": {
+        "move": [
+          7,
+          6
+        ],
+        "score": 96,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 4.04,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            6
+          ],
+          [
+            7,
+            5
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 1,
+        "selected_rank": 1,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-2",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 2
+      },
+      "expected": {
+        "move": [
+          7,
+          10
+        ],
+        "score": 36,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 4.028,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            10
+          ],
+          [
+            7,
+            9
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 2,
+        "selected_rank": 3,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-3",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 3
+      },
+      "expected": {
+        "move": [
+          7,
+          6
+        ],
+        "score": 96,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 4.074,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            6
+          ],
+          [
+            7,
+            5
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 3,
+        "selected_rank": 1,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-4",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 4
+      },
+      "expected": {
+        "move": [
+          7,
+          9
+        ],
+        "score": 70,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 4.221,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            9
+          ],
+          [
+            7,
+            6
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 4,
+        "selected_rank": 2,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-5",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 5
+      },
+      "expected": {
+        "move": [
+          7,
+          9
+        ],
+        "score": 70,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 3.967,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            9
+          ],
+          [
+            7,
+            6
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 5,
+        "selected_rank": 2,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-6",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 6
+      },
+      "expected": {
+        "move": [
+          7,
+          9
+        ],
+        "score": 70,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 3.911,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            9
+          ],
+          [
+            7,
+            6
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 6,
+        "selected_rank": 2,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-7",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 7
+      },
+      "expected": {
+        "move": [
+          7,
+          9
+        ],
+        "score": 70,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 4.044,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            9
+          ],
+          [
+            7,
+            6
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 7,
+        "selected_rank": 2,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-8",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 8
+      },
+      "expected": {
+        "move": [
+          7,
+          6
+        ],
+        "score": 96,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 4.093,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            6
+          ],
+          [
+            7,
+            5
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 8,
+        "selected_rank": 1,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-9",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 9
+      },
+      "expected": {
+        "move": [
+          7,
+          6
+        ],
+        "score": 96,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 4.359,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            6
+          ],
+          [
+            7,
+            5
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 9,
+        "selected_rank": 1,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-10",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 10
+      },
+      "expected": {
+        "move": [
+          7,
+          9
+        ],
+        "score": 70,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 4.453,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            9
+          ],
+          [
+            7,
+            6
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 10,
+        "selected_rank": 2,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-11",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 11
+      },
+      "expected": {
+        "move": [
+          7,
+          6
+        ],
+        "score": 96,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 4.139,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            6
+          ],
+          [
+            7,
+            5
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 11,
+        "selected_rank": 1,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranking-4294967295",
+      "moves": [
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 4294967295
+      },
+      "expected": {
+        "move": [
+          7,
+          6
+        ],
+        "score": 96,
+        "depth": 2,
+        "nodes": 630,
+        "elapsed_ms": 4,
+        "reason": "depth",
+        "pv": [
+          [
+            7,
+            6
+          ],
+          [
+            7,
+            5
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 1,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 2,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 4294967295,
+        "selected_rank": 1,
+        "beginner_choices": [
+          {
+            "move": [
+              7,
+              6
+            ],
+            "score": 96
+          },
+          {
+            "move": [
+              7,
+              9
+            ],
+            "score": 70
+          },
+          {
+            "move": [
+              7,
+              10
+            ],
+            "score": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "forced-defense-0",
+      "moves": [
+        [
+          0,
+          7
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          4,
+          7
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 0
+      },
+      "expected": {
+        "move": [
+          5,
+          7
+        ],
+        "score": null,
+        "depth": 0,
+        "nodes": 0,
+        "elapsed_ms": 1.032,
+        "reason": "forced_reply",
+        "pv": [
+          [
+            5,
+            7
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 0,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 0,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 0,
+        "selected_rank": 0,
+        "beginner_choices": []
+      }
+    },
+    {
+      "id": "forced-defense-1",
+      "moves": [
+        [
+          0,
+          7
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          4,
+          7
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 1
+      },
+      "expected": {
+        "move": [
+          5,
+          7
+        ],
+        "score": null,
+        "depth": 0,
+        "nodes": 0,
+        "elapsed_ms": 0.996,
+        "reason": "forced_reply",
+        "pv": [
+          [
+            5,
+            7
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 0,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 0,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 1,
+        "selected_rank": 0,
+        "beginner_choices": []
+      }
+    },
+    {
+      "id": "forced-defense-2",
+      "moves": [
+        [
+          0,
+          7
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          4,
+          7
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 2
+      },
+      "expected": {
+        "move": [
+          5,
+          7
+        ],
+        "score": null,
+        "depth": 0,
+        "nodes": 0,
+        "elapsed_ms": 1.073,
+        "reason": "forced_reply",
+        "pv": [
+          [
+            5,
+            7
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 0,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 0,
+        "mate_proven": false,
+        "mate_plies": null,
+        "beginner_seed": 2,
+        "selected_rank": 0,
+        "beginner_choices": []
+      }
+    },
+    {
+      "id": "immediate-win-0",
+      "moves": [
+        [
+          1,
+          7
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          12,
+          4
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 0
+      },
+      "expected": {
+        "move": [
+          5,
+          7
+        ],
+        "score": 999999,
+        "depth": 1,
+        "nodes": 1,
+        "elapsed_ms": 0.906,
+        "reason": "mate_score",
+        "pv": [
+          [
+            5,
+            7
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 0,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 0,
+        "mate_proven": true,
+        "mate_plies": 1,
+        "beginner_seed": 0,
+        "selected_rank": 0,
+        "beginner_choices": []
+      }
+    },
+    {
+      "id": "immediate-win-1",
+      "moves": [
+        [
+          1,
+          7
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          12,
+          4
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 1
+      },
+      "expected": {
+        "move": [
+          5,
+          7
+        ],
+        "score": 999999,
+        "depth": 1,
+        "nodes": 1,
+        "elapsed_ms": 0.961,
+        "reason": "mate_score",
+        "pv": [
+          [
+            5,
+            7
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 0,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 0,
+        "mate_proven": true,
+        "mate_plies": 1,
+        "beginner_seed": 1,
+        "selected_rank": 0,
+        "beginner_choices": []
+      }
+    },
+    {
+      "id": "immediate-win-2",
+      "moves": [
+        [
+          1,
+          7
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          12,
+          4
+        ]
+      ],
+      "limits": {
+        "depth": 2,
+        "nodes": 0,
+        "soft_ms": 0,
+        "hard_ms": 60000,
+        "beginner": true,
+        "beginner_seed": 2
+      },
+      "expected": {
+        "move": [
+          5,
+          7
+        ],
+        "score": 999999,
+        "depth": 1,
+        "nodes": 1,
+        "elapsed_ms": 1.012,
+        "reason": "mate_score",
+        "pv": [
+          [
+            5,
+            7
+          ]
+        ],
+        "evaluator": "classical-v2",
+        "tt_hits": 0,
+        "lmr_reductions": 0,
+        "null_attempts": 0,
+        "null_cutoffs": 0,
+        "futility_prunes": 0,
+        "vcf_nodes": 0,
+        "vcf_calls": 0,
+        "vcf_limits": 0,
+        "vcf_hits": 0,
+        "seldepth": 0,
+        "mate_proven": true,
+        "mate_plies": 1,
+        "beginner_seed": 2,
+        "selected_rank": 0,
+        "beginner_choices": []
+      }
+    }
+  ]
+}

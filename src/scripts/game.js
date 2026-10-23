@@ -469,12 +469,13 @@
                 startBtn.innerHTML = '<i class="fas fa-play"></i> 开始游戏';
             }
         });
-        $('#boss-notice').textContent = '消除即攻击 · 红色锁定的同类方块不可选 · 选块时攻击可打断';
         updateBossHud();
     }
 
     function setText(selector, value) {
         const element = $(selector);
+        // HUD text labels are optional; removing one must not stop the battle clock.
+        if (!element) return;
         if (element.textContent !== value) element.textContent = value;
     }
 
@@ -848,7 +849,7 @@
         timeLeft = totalTime;
         buildBoard();
         remain = cols * rows;
-        document.getElementById('game').classList.toggle('boss-mode', diff === 'hard');
+        document.getElementById('llk-view').classList.toggle('boss-mode', diff === 'hard');
         if (diff === 'hard') setupBattle();
         updateStatus();
         updateTimeDisplay();
@@ -1008,11 +1009,11 @@
             if (soundOn) { ensureAudio(); sfx.select(); }
         });
 
-        document.querySelectorAll('.diff-btn').forEach(btn => {
+        document.querySelectorAll('#llk-view .diff-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (btn.dataset.diff === diff) return;
                 diff = btn.dataset.diff;
-                document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#llk-view .diff-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 newGame();
                 showOverlay('🎴', '连连看',

@@ -24,7 +24,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             '用时 0:33，剩余时间加分 +27，剩余道具加分 +5<br>最终得分 <b>195</b>',
             '当前难度：双色（2 种花色 · 104 张牌）<br>同花色的 K→A 连满 13 张会自动收起，收齐 8 组获胜<br>点击「开始游戏」发牌',
             '题库说明：答案库从 <b>考研英语</b> 中筛选出 <b>600</b> 个五字母单词；猜词库为宽泛英文词表中的五字母单词。',
-            '随机播放 · 1 首歌曲', '找到 12 首歌曲', '还没有收藏歌曲'
+            '随机播放 · 1 首歌曲', '找到 12 首歌曲', '还没有收藏歌曲',
+            '<span>本地对战</span> · <span>双人联机</span> · <span>AI 执白</span> · <span>AI 执黑</span> · <span>思考深度</span>',
+            '白棋 AI 落在 O15 · 用时 1.00 秒',
+            '简单模式 · 目标 0.3 秒 · 上限 1 秒 · 下一手生效',
+            '黑棋确定杀棋 · 至多 7 次落子',
+            '你申请重新开局（房主执白），等待对方同意',
+            '请输入完整的 20 位房间码'
         ];
         for (const markup of examples) {
             fixture.innerHTML = markup;
@@ -35,6 +41,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             check(fixture.innerHTML === markup, 'Round trip failed: ' + fixture.innerHTML);
             MELSI18n.setLanguage('en');
         }
+        fixture.innerHTML = '<button aria-label="H8，空位">悔棋</button>';
+        await tick();
+        check(fixture.firstChild.getAttribute('aria-label') === 'H8, Empty', 'Gomoku cell label not translated');
+        fixture.firstChild.setAttribute('aria-label', 'H8，黑棋');
+        fixture.firstChild.textContent = '本手已思考 0.3 秒';
+        await tick();
+        check(fixture.firstChild.getAttribute('aria-label') === 'H8, Black' && fixture.textContent === 'Thinking for 0.3 s', 'Gomoku dynamic update failed');
+        MELSI18n.setLanguage('zh-CN');
+        check(fixture.firstChild.getAttribute('aria-label') === 'H8，黑棋' && fixture.textContent === '本手已思考 0.3 秒', 'Gomoku source lost');
+        MELSI18n.setLanguage('en');
         fixture.innerHTML = '<span title="播放">播放</span>';
         await tick();
         const span = fixture.firstChild;

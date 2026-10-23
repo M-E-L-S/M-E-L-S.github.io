@@ -2,10 +2,28 @@
     'use strict';
     const STORAGE_KEY = 'mels-language';
     const english = {
+        '15 × 15 自由五子棋，无禁手。': '15 × 15 freestyle Gomoku, with no forbidden moves.',
+        '来一把紧张刺激的连连看BOSS对决、高难版扫雷、或更长——的Wordle。无论是人机对战还是联机房间，这里都支持。': 'Try an intense Tile Match BOSS Battle, harder Minesweeper, or a looonger Wordle. Play against AI or join an online room.',
+        '联机功能测试版正式上线。': 'Online multiplayer beta is now live.',
+        '新增更多的功能和游戏。': 'More tools and games added.',
+        '文本与结构优化。': 'Text and layout improvements.',
+        'WECRLTEERDSOEEFEAOCAIVDEN → WEAREDISCOVEREDFLEEATONCE（3 栏）': 'WECRLTEERDSOEEFEAOCAIVDEN → WEAREDISCOVEREDFLEEATONCE (3 rails)',
+        'Jr;;p → Hello（左移 1 键）；Asdfgh → Qwerty（上移 1 行）': 'Jr;;p → Hello (shift left by 1 key); Asdfgh → Qwerty (shift up by 1 row)',
+        '小功能介绍图': 'Tools preview', '小游戏介绍图': 'Games preview', '鲜蔬杯介绍图': 'F.V. cup preview', '选择介绍图': 'Choose a preview', '上一张': 'Previous slide', '下一张': 'Next slide',
+        '计分器': 'Score calculators', '界园': 'Jieyuan', '萨卡兹': 'Sarkaz', '萨米': 'Sami',
+        '连连看 · BOSS 对决': 'Tile Match · BOSS Battle',
         '疑似 PIXIV ID':'Possible PIXIV ID','复制疑似 PIXIV ID':'Copy possible PIXIV ID','按原文顺序拼接未命中的数字':'Unmatched digits joined in source order','直接跳转':'Open link','作品链接':'Artwork link','用户链接':'User link',
         '展开其余 {count} 项':'Show {count} more','收起其余 {count} 项':'Hide {count} more',
         '同类结果默认显示第一项，其余可展开。自动嗅探网址、邮箱、电话及疑似代码；疑似 PIXIV ID 按原文顺序拼接未命中的数字，首位非 0 且为 2～9 位。结果请自行核对。':'The first result of each type is shown; expand to see more. Detects URLs, email addresses, phone numbers and possible codes. Possible PIXIV IDs join unmatched digits in source order and must contain 2–9 digits with no leading zero. Please verify the results.',
         '阶数选择':'Root order','1 · 经典':'1 · Classic',
+        '玩法：翻开所有不含地雷的格子即可获胜。': 'How to play: Reveal every safe cell to win.',
+        '1 阶为普通扫雷，数字表示周围 8 格中的地雷数量。双击已翻开的数字，若周围旗数与数字相符，就会翻开其余格子；漏标或错位可能翻到雷并判负。': 'Order 1 is standard Minesweeper. Each number counts the mines in the eight neighboring cells. Double-click a revealed number to open the remaining neighbors when the flag count matches. Missing or misplaced flags can expose a mine and end the game.',
+        '2 阶的雷型为 1 与 −1。数字背后的淡雷图标表示周围存在 1 与 −1 组成的抵消雷对。': 'Order 2 uses mine types 1 and −1. A faint mine icon behind a number indicates an adjacent cancelling pair of 1 and −1.',
+        '3 阶的雷型为 1、ω、ω²，其中 ω = exp(2πi/3)。若周围雷的复数和不沿 1、ω、ω² 的方向，数字背后的淡红色向量箭头指向复数和的主辐角（−π < θ ≤ π）方向；和为 0 时不显示箭头。': 'Order 3 uses mine types 1, ω and ω², where ω = exp(2πi/3). When the neighboring mines sum to a complex value that does not point along 1, ω or ω², a muted red vector arrow behind the number shows its principal argument (−π < θ ≤ π). A zero sum has no arrow.',
+        '4 阶的雷型为 1、i、−1、−i。数字背后的淡雷图标表示周围存在 1 与 −1 或 i 与 −i 组成的抵消雷对。': 'Order 4 uses mine types 1, i, −1 and −i. A faint mine icon behind a number indicates an adjacent cancelling pair: 1 and −1, or i and −i.',
+        '数字是周围 8 格所有雷的复数和的模长。插旗后重复标记可依次切换雷型，最后取消旗子。双击数字（包括 0），若周围至少有一面旗且旗子之和的模长与数字相符，就会翻开其余格子；漏标或错位可能翻到雷并判负，模长不符则不展开。无需匹配真实雷型，复数整体旋转不影响判定。': 'Each number is the magnitude of the sum of all mines in the eight neighboring cells. Repeatedly flag a cell to cycle through mine types, then remove the flag. Double-click a number (including 0) to reveal the remaining neighbors when at least one flag is present and the magnitude of the flag sum matches the clue. Missing or misplaced flags can expose a mine and end the game; a magnitude mismatch leaves the cells covered. Actual mine types need not match: rotating all complex values together preserves the check.',
+        '右键、长按或开启「标记模式」可为疑似地雷的格子插旗。': 'Right-click, long-press, or enable Flag mode to mark suspected mines.',
+        '首次点击必定安全，「提示」可直接翻开安全格。切换地图大小或阶数会重开，最佳成绩按大小和阶数分别记录。': 'The first click is always safe, and hints reveal a safe cell. Changing the board size or root order starts a new game. Best times are recorded separately for each size and order.',
         "玩法：翻开所有不含地雷的格子即可获胜。阶数 1 为经典扫雷；雷型为 n 次单位根；ω = exp(2πi/3)。数字是周围 8 格所有雷的复数和的模长；3 阶模式中，若复数和不沿 1、ω、ω² 的方向，数字背后的淡红色向量箭头指向复数和的主辐角（−π < θ ≤ π）方向；和为 0 时不显示箭头。2 阶与 4 阶模式中，数字背后的淡雷图标表示周围存在抵消雷对：2 阶为 1 与 −1；4 阶为 1 与 −1 或 i 与 −i。双击数字（包括 0），若周围至少有一面旗且旗子之和的模长与数字相符，就会翻开其余格子；漏标或错位可能翻到雷并判负，模长不符则不展开。无需匹配真实雷型，复数整体旋转不影响判定。首次点击必定安全，「提示」可直接翻开安全格。切换地图大小或阶数会重开，最佳成绩按大小和阶数分别记录。":"How to play: Reveal every safe cell to win. Order 1 is classic Minesweeper. Mine types are nth roots of unity; ω = exp(2πi/3). Each number is the magnitude of the sum of all mines in the eight neighboring cells. In order 3, when the sum does not point along 1, ω or ω², a muted red vector arrow behind the number points in the direction of its principal argument (−π < θ ≤ π). A zero sum has no arrow. In orders 2 and 4, a faint mine icon behind the number indicates an adjacent cancelling pair: 1 and −1 in order 2; 1 and −1, or i and −i, in order 4. Double-click a number (including 0) to reveal the remaining neighbors when at least one flag is present and the magnitude of the flag sum matches the clue. Missing or misplaced flags can expose a mine and end the game; a magnitude mismatch does not expand. Actual mine types need not match: rotating all complex values together preserves the check. The first click is always safe, and hints reveal a safe cell. Changing the board size or root order starts a new game. Best times are recorded separately for each size and order.",
         '跳至主要内容':'Skip to main content','主导航':'Main navigation','首页':'Home','关于':'About','小功能':'Tools','小游戏':'Games','鲜蔬杯':'F.V. Cup','设置':'Settings','关闭设置':'Close settings','设置分类':'Settings categories','外观':'Appearance','音乐':'Music','老板键':'Boss key','切换到深色模式':'Switch to dark mode','切换到浅色模式':'Switch to light mode',
         '关于 · MELS':'About · MELS','小功能 · MELS':'Tools · MELS','小游戏 · MELS':'Games · MELS','鲜蔬杯 · MELS':'F.V. Cup · MELS','缩写转义 · 小功能 · MELS':'Acronym Decoder · Tools · MELS','Favicon 图包 · 小功能 · MELS':'Favicon Package · Tools · MELS',
@@ -256,6 +274,70 @@
         '成绩单 (模式:':'Score sheet (mode:','成绩单（模式：':'Score sheet (mode:',
         '我方生命 ':'Your HP ',' · BOSS 生命 ':' · BOSS HP ',' · 无敌':' · invincible'
     });
+    Object.assign(english, {
+        '揭秘一句“黑话”，解密一段密文，或者单纯想去掉不合时宜的MD格式。这里有全(局域)网最方便的文本工具。': 'Decode slang, decipher a message, or simply strip unwanted Markdown. Meet the most convenient text tools on the (local) web.',
+        'BOSS版连连看、高阶扫雷、蜘蛛纸牌与更长—— 的Wordle。颠覆传统的独家体验。': 'BOSS Battle Tile Match, higher-order Minesweeper, Spider Solitaire, and a loooonger Wordle. Familiar games with original twists.',
+        '搜索音乐，在线播放，收藏，甚至独家动态粒子歌词。无需VIP和SVIP。': 'Search, stream, and save music, with exclusive animated particle lyrics. No VIP or SVIP subscription required.',
+        '关于本站、最近的更新，以及那些你可能没注意到的小变化。': 'About this site, recent releases, and the little changes you may have missed.',
+        '全自动多层文本解密工具': 'Automatic Multi-layer Text Decoder',
+        '输入文本后开始分析；所有计算都在此设备完成。不会上传云端。目前支持解密的方法详见标题上方的”支持的编码与密码“页面。': 'Enter text to start analysis. All computation stays on this device; nothing is uploaded. See “Supported encodings and ciphers” above the title for the supported methods.',
+        '使用 Bitcoin 字母表并排除容易混淆的 0、O、I、l。格式本身没有校验和。': 'Uses the Bitcoin alphabet and omits the easily confused 0, O, I, and l. The format has no checksum.',
+        'Hex 十六进制': 'Hex', 'Binary 二进制字符码': 'Binary character codes',
+        'Octal 八进制字符码': 'Octal character codes', 'Decimal 十进制字符码': 'Decimal character codes',
+        'Morse 摩尔斯电码': 'Morse code', 'ADFGX（无换位）': 'ADFGX (without transposition)',
+        'Tap Code 敲击码': 'Tap Code', 'Reverse 文本反转': 'Reverse text',
+        'Rail Fence 栅栏密码': 'Rail Fence cipher', 'Keyboard Shift 键盘移位': 'Keyboard Shift',
+        '支持拉丁字母与数字。点、划可用任意两种可打印符号表示；字母用单个空格分隔，单词用 /、|、换行或多个空格分隔。': 'Supports Latin letters and digits. Any two printable symbols may represent dot and dash; one space separates letters, while /, |, a newline, or multiple spaces separate words.',
+        '按标准之字形栅栏还原，枚举 2–10 栏；短文本不会枚举超过字符数一半的栏数。字母、数字、空白及各种可打印编码符号都作为字符参与重排。': 'Restores the standard zigzag rail pattern, trying 2–10 rails. Short inputs use no more than half as many rails as characters. Letters, digits, whitespace, and printable encoding symbols all take part in the rearrangement.',
+        '使用 Bangumi 中具有罗马字或英文名、简体中文名的角色。要求姓或名至少三个字母。结果中出现可能的姓名时，会显示对应的 Bangumi 页面；重名和姓名片段只显示罗马音。': 'Uses Bangumi characters with a romanized or English name and a Simplified Chinese name. A given or family name must contain at least three letters. Possible name matches link to the corresponding Bangumi page; ambiguous names and name fragments show only the romanization.'
+    });
+    // Gomoku keeps Chinese source strings in the UI and game/network state.
+    // Translate complete messages rather than replacing color or player fragments.
+    Object.assign(english, {
+        '五子棋': 'Gomoku', '对战模式': 'Game mode', '本地对战': 'Local play', '双人联机': 'Online play',
+        '开始 / 重新开局': 'Start / Restart', '悔棋': 'Undo', '申请悔棋': 'Request undo',
+        '申请重开': 'Request restart', '创建房间': 'Create room', '重试 AI': 'Retry AI', '继续 AI': 'Resume AI',
+        'AI 执棋开关': 'AI player controls', 'AI 执白': 'AI plays White', 'AI 执黑': 'AI plays Black',
+        '思考深度': 'Thinking depth', '普通': 'Normal',
+        '房主执棋': 'Host color', '房主下局执棋': 'Host color next game', '房主执棋选择': 'Choose host color',
+        '黑棋 · 先手': 'Black · First', '白棋 · 后手': 'White · Second',
+        '加入好友房间': 'Join a friend’s room', '输入 20 位房间码': 'Enter the 20-character room code',
+        '加入房间': 'Join room', '房间': 'Room', '复制邀请链接': 'Copy invite link',
+        '重新连接': 'Reconnect', '离开房间': 'Leave room', '同意': 'Accept', '拒绝': 'Decline', '取消申请': 'Cancel request',
+        '创建房间后分享邀请链接，好友加入即可开局。房间保留 24 小时；断线后可在原标签页重连。': 'Create a room and share the invite link. Play starts when your friend joins. Rooms last 24 hours; reconnect in the same tab after a disconnection.',
+        '15 行 15 列五子棋棋盘，可用方向键移动、回车落子': '15 by 15 Gomoku board. Use arrow keys to navigate and Enter to place a stone.',
+        '对局状态': 'Game status', '黑棋': 'Black', '白棋': 'White', '空位': 'Empty', '玩家': 'Player',
+        '再次点按预选位置确认落子': 'Tap the selected position again to place your stone',
+        '触屏操作：首次点按预选，再次点按同一位置落子；点按其他位置可更换预选。': 'Touch controls: tap to preview, then tap the same position again to place a stone. Tap another position to move the preview.',
+        '点击开始，黑棋先行': 'Select Start. Black moves first.', '邀请好友，一起开局': 'Invite a friend to play',
+        '创建房间，或输入好友房间码': 'Create a room or enter your friend’s room code',
+        '正在连接房间…': 'Connecting to room…', '连接中断，正在重连…': 'Connection lost. Reconnecting…',
+        '已断开，可重新连接': 'Disconnected. You can reconnect.', '等待好友加入…': 'Waiting for your friend to join…',
+        '对方已断线，等待重连': 'Your opponent disconnected. Waiting for reconnection.',
+        '和棋 · 棋盘已满': 'Draw · The board is full', '等待处理对局申请': 'Waiting for a response to the game request',
+        'AI 已暂停': 'AI paused', '等待对方落子': 'Waiting for your opponent’s move',
+        '双方在线时可继续对局': 'Play can continue when both players are online',
+        '双方合计，从本手 AI 落子前计算；这是已证明的次数上界，并非最短杀棋。': 'Counts both players’ moves from before this AI move. This is a proven upper bound, not the shortest forced win.',
+        '15 × 15 自由五子棋，无禁手。默认双方手动落子，可分别开启 AI 执白与 AI 执黑。': '15 × 15 freestyle Gomoku, with no forbidden moves. Both players are human by default. AI can play White, Black, or both.',
+        '15 × 15 自由五子棋，无禁手。默认双方手动落子；AI 执白、AI 执黑可独立开启或关闭。单方 AI 时悔棋撤回玩家上一手及应手，其他情况撤回一手；双方 AI 悔棋后暂停，可点击继续 AI。': '15 × 15 freestyle Gomoku, with no forbidden moves. Both players are human by default; toggle AI for White and Black independently. With one AI, Undo takes back your last move and the reply; otherwise it takes back one move. With two AIs, Undo pauses play; select Resume AI to continue.',
+        '15 × 15 自由五子棋，无禁手。双方在线时可落子；悔棋及重开需对方同意。房主可选择下局执棋，双方确认重开后换色。': '15 × 15 freestyle Gomoku, with no forbidden moves. Both players must be online to play. Undo and restart require your opponent’s agreement. The host can choose a color for the next game; colors change after both players agree to restart.',
+        'AI 返回了无效落子': 'The AI returned an invalid move',
+        'AI 暂时无法落子，请点击「重试 AI」': 'The AI could not move. Select Retry AI.',
+        'AI 引擎加载失败': 'Could not load the AI engine', 'AI 引擎返回的数据无法读取': 'Could not read the AI engine response',
+        'AI 响应超时，请重试': 'The AI response timed out. Please retry.',
+        '邀请链接已复制': 'Invite link copied', '复制失败，请将房间码发给好友': 'Could not copy. Send the room code to your friend.',
+        '局面已更新，请重新操作': 'The position changed. Please try again.',
+        '该位置不能落子或尚未轮到你': 'You cannot play here, or it is not your turn.',
+        '请先处理当前申请': 'Respond to the current request first.', '还没有可撤回的落子': 'There are no moves to undo.',
+        '申请已失效，请重试': 'The request expired. Please try again.',
+        '只有房主可以选择下局执棋': 'Only the host can choose a color for the next game.',
+        '更换执棋颜色需要申请重开': 'Request a restart to change colors.',
+        '请输入完整的 20 位房间码': 'Enter the complete 20-character room code.',
+        '操作未成功，请重试': 'The action failed. Please try again.',
+        '已在另一窗口连接，本窗口已断开': 'Connected in another window. This window was disconnected.',
+        '房间已到期，请创建新房间': 'The room expired. Create a new room.',
+        '连接已断开；房间不存在、已满或服务暂不可用，请检查房间码后重试': 'Disconnected. The room may not exist, may be full, or the service may be unavailable. Check the room code and try again.'
+    });
     // Longest first prevents a short label from consuming a more specific phrase.
     const fragments = Object.entries(englishFragments).sort((a, b) => b[0].length - a[0].length);
     const originals = new WeakMap();
@@ -275,7 +357,21 @@
         let translated = Object.hasOwn(english, core) ? english[core] : undefined;
         let dynamic;
         if (!translated) {
-            if ((dynamic = core.match(/^(正在加载|正在播放|已取消收藏|已收藏)：(.*)$/))) {
+            if ((dynamic = core.match(/^([A-O](?:[1-9]|1[0-5]))，(黑棋|白棋|空位)$/))) translated = `${dynamic[1]}, ${english[dynamic[2]]}`;
+            else if ((dynamic = core.match(/^([A-O](?:[1-9]|1[0-5]))，预选(黑棋|白棋)，再次点按落子$/))) translated = `${dynamic[1]}, ${english[dynamic[2]]} preview, tap again to place`;
+            else if ((dynamic = core.match(/^(\d+) 手$/))) translated = `${dynamic[1]} move${dynamic[1] === '1' ? '' : 's'}`;
+            else if ((dynamic = core.match(/^黑棋：(AI|玩家) · 白棋：(AI|玩家)$/))) translated = `Black: ${english[dynamic[1]] || dynamic[1]} · White: ${english[dynamic[2]] || dynamic[2]}`;
+            else if ((dynamic = core.match(/^你执(黑棋|白棋) · 对方执(黑棋|白棋)$/))) translated = `You: ${english[dynamic[1]]} · Opponent: ${english[dynamic[2]]}`;
+            else if ((dynamic = core.match(/^(黑棋|白棋)获胜！$/))) translated = `${english[dynamic[1]]} wins!`;
+            else if ((dynamic = core.match(/^(黑棋|白棋) AI 正在思考…$/))) translated = `${english[dynamic[1]]} AI is thinking…`;
+            else if ((dynamic = core.match(/^(黑棋|白棋)(落子| AI 等待继续)$/))) translated = dynamic[2] === '落子' ? `${english[dynamic[1]]} to move` : `${english[dynamic[1]]} AI is waiting to resume`;
+            else if ((dynamic = core.match(/^轮到你落子 · (黑棋|白棋)$/))) translated = `Your turn · ${english[dynamic[1]]}`;
+            else if ((dynamic = core.match(/^(黑棋|白棋)确定杀棋 · 至多 (\d+) 次落子$/))) translated = `${english[dynamic[1]]} has a proven forced win · At most ${dynamic[2]} move${dynamic[2] === '1' ? '' : 's'}`;
+            else if ((dynamic = core.match(/^本手已思考 (\d+(?:\.\d+)?) 秒$/))) translated = `Thinking for ${dynamic[1]} s`;
+            else if ((dynamic = core.match(/^(黑棋|白棋) AI 落在 ([A-O](?:[1-9]|1[0-5])) · 用时 (\d+(?:\.\d+)?) 秒$/))) translated = `${english[dynamic[1]]} AI played ${dynamic[2]} · ${dynamic[3]} s`;
+            else if ((dynamic = core.match(/^(简单模式 · )?目标 (\d+(?:\.\d+)?) 秒 · 上限 (\d+(?:\.\d+)?) 秒 · 下一手生效$/))) translated = `${dynamic[1] ? 'Easy mode · ' : ''}Target ${dynamic[2]} s · Limit ${dynamic[3]} s · Applies next move`;
+            else if ((dynamic = core.match(/^(你|对方)申请(悔棋|重新开局)(?:（房主执(黑|白)）)?(，等待对方同意)?$/))) translated = `${dynamic[1] === '你' ? 'You requested' : 'Your opponent requested'} ${dynamic[2] === '悔棋' ? 'an undo' : 'a restart'}${dynamic[3] ? ` (host plays ${dynamic[3] === '黑' ? 'Black' : 'White'})` : ''}${dynamic[4] ? '. Waiting for your opponent’s agreement' : ''}`;
+            else if ((dynamic = core.match(/^(正在加载|正在播放|已取消收藏|已收藏)：(.*)$/))) {
                 translated = ({'正在加载':'Loading','正在播放':'Now playing','已取消收藏':'Removed favorite','已收藏':'Favorited'})[dynamic[1]] + ': ' + dynamic[2];
             } else if ((dynamic = core.match(/^(顺序播放|随机播放|单曲循环) · (\d+) 首歌曲$/))) {
                 translated = `${english[dynamic[1]]} · ${dynamic[2]} track${dynamic[2] === '1' ? '' : 's'}`;

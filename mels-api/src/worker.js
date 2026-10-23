@@ -1,4 +1,6 @@
 import { authorize, login } from './auth.js';
+import { routeGomoku } from './gomoku-router.js';
+export { GomokuRoom } from './gomoku-room.js';
 
 const CONFIG = {
   allowedOrigin: "https://m-e-l-s.github.io",
@@ -1101,6 +1103,7 @@ async function handleApi(request, env, ctx, type) {
 export default {
   async fetch(request, env, ctx) {
     try {
+      if (new URL(request.url).pathname.startsWith('/api/gomoku/')) return await routeGomoku(request, env);
       const origin = request.headers.get("Origin");
 
       // 保留无 Origin 请求，便于地址栏或命令行测试。

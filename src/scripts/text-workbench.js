@@ -200,7 +200,7 @@
         const source = $('text-source'), status = $('text-status');
         updateButtons();
         source.addEventListener('input', () => {
-            $('text-source-meta').textContent = `${source.value.length} 字符 · 粘贴后自动嗅探特殊信息`;
+            $('text-source-meta').textContent = `${source.value.length} 字符`;
             renderDetections(source.value); recompute();
         });
         $('text-clear').addEventListener('click', () => { source.value = ''; source.dispatchEvent(new Event('input')); source.focus(); });

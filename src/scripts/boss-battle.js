@@ -69,11 +69,11 @@
             this.emit('skill', skill.id);
             if (skill.id === 'night') {
                 this.skillLeft = 6000; this.emit('night', true);
-                this.emit('notice', '夜幕降临 · 6 秒内图案不可见，仍可操作');
+                this.emit('notice', '夜幕降临 · 一段时间内内图案不可见，但仍可操作');
             } else if (skill.id === 'contest') {
                 this.playerMatches = 0; this.bossMatches = 0; this.competitionLeft = 20000;
                 this.savedIntervalLeft = this.left; this.left = 1000;
-                this.emit('notice', '同台竞技 · 20 秒内挑战 4 次消除 · BOSS 无敌');
+                this.emit('notice', '同台竞技 · 在这段时间里没人能造成伤害！BOSS不会被打断！只有赢家能结算伤害！');
             } else {
                 this.emit('shuffle'); this.emit('notice', '狂暴模式 · 剩余方块重排');
                 this.endSkill();

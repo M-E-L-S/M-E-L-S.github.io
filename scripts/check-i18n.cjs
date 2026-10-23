@@ -62,6 +62,80 @@ const fixtures = new Map([
     ['正常中文，视为明文', 'Natural Chinese detected; treated as plaintext']
 ]);
 for (const [source, expected] of fixtures) assert.equal(i18n.t(source), expected, source);
+const gomokuFixtures = new Map([
+    ['五子棋 · 小游戏 · MELS', 'Gomoku · Games · MELS'],
+    ['切换游戏，当前：五子棋', 'Switch game (current: Gomoku)'],
+    ['切换游戏（当前：五子棋）', 'Switch game (current: Gomoku)'],
+    ['0 手', '0 moves'], ['1 手', '1 move'], ['225 手', '225 moves'],
+    ['黑棋：玩家 · 白棋：AI', 'Black: Player · White: AI'],
+    ['你执白棋 · 对方执黑棋', 'You: White · Opponent: Black'],
+    ['白棋获胜！', 'White wins!'], ['黑棋落子', 'Black to move'],
+    ['白棋 AI 等待继续', 'White AI is waiting to resume'],
+    ['黑棋 AI 正在思考…', 'Black AI is thinking…'],
+    ['轮到你落子 · 白棋', 'Your turn · White'],
+    ['黑棋确定杀棋 · 至多 7 次落子', 'Black has a proven forced win · At most 7 moves'],
+    ['本手已思考 0.0 秒', 'Thinking for 0.0 s'],
+    ['白棋 AI 落在 O15 · 用时 1.00 秒', 'White AI played O15 · 1.00 s'],
+    ['简单模式 · 目标 0.3 秒 · 上限 1 秒 · 下一手生效', 'Easy mode · Target 0.3 s · Limit 1 s · Applies next move'],
+    ['目标 1 秒 · 上限 3 秒 · 下一手生效', 'Target 1 s · Limit 3 s · Applies next move'],
+    ['你申请悔棋，等待对方同意', 'You requested an undo. Waiting for your opponent’s agreement'],
+    ['对方申请重新开局（房主执白）', 'Your opponent requested a restart (host plays White)'],
+    ['再次点按预选位置确认落子', 'Tap the selected position again to place your stone'],
+    ['H8，预选黑棋，再次点按落子', 'H8, Black preview, tap again to place'],
+    ['O15，预选白棋，再次点按落子', 'O15, White preview, tap again to place']
+]);
+// Cover every board accessibility label, player pairing and negotiation variant.
+for (const column of 'ABCDEFGHIJKLMNO') for (let row = 1; row <= 15; row++) {
+    for (const [state, target] of [['空位', 'Empty'], ['黑棋', 'Black'], ['白棋', 'White']]) {
+        gomokuFixtures.set(`${column}${row}，${state}`, `${column}${row}, ${target}`);
+    }
+}
+for (const [color, target] of [['黑棋', 'Black'], ['白棋', 'White']]) {
+    gomokuFixtures.set(`${color}获胜！`, `${target} wins!`);
+    gomokuFixtures.set(`${color}落子`, `${target} to move`);
+    gomokuFixtures.set(`${color} AI 正在思考…`, `${target} AI is thinking…`);
+    gomokuFixtures.set(`${color} AI 等待继续`, `${target} AI is waiting to resume`);
+    gomokuFixtures.set(`轮到你落子 · ${color}`, `Your turn · ${target}`);
+    gomokuFixtures.set(`${color}确定杀棋 · 至多 1 次落子`, `${target} has a proven forced win · At most 1 move`);
+}
+for (const [black, blackEn] of [['玩家', 'Player'], ['AI', 'AI']]) {
+    for (const [white, whiteEn] of [['玩家', 'Player'], ['AI', 'AI']]) {
+        gomokuFixtures.set(`黑棋：${black} · 白棋：${white}`, `Black: ${blackEn} · White: ${whiteEn}`);
+    }
+}
+for (const who of ['你', '对方']) for (const kind of ['悔棋', '重新开局']) {
+    for (const color of ['', '黑', '白']) {
+        const source = `${who}申请${kind}${color ? `（房主执${color}）` : ''}${who === '你' ? '，等待对方同意' : ''}`;
+        const target = `${who === '你' ? 'You requested' : 'Your opponent requested'} ${kind === '悔棋' ? 'an undo' : 'a restart'}${color ? ` (host plays ${color === '黑' ? 'Black' : 'White'})` : ''}${who === '你' ? '. Waiting for your opponent’s agreement' : ''}`;
+        gomokuFixtures.set(source, target);
+    }
+}
+for (const [source, expected] of gomokuFixtures) assert.equal(i18n.t(source), expected, source);
+// Catch missing static controls, help, placeholders, ARIA labels and client errors.
+const gomokuMarkup = fs.readFileSync('src/site.html', 'utf8').match(/<div class="game-view" id="gomoku-view"[\s\S]*?<!-- 连连看 -->/)[0];
+const gomokuStatic = new Set();
+for (const match of gomokuMarkup.matchAll(/>([^<>]*[\u3400-\u9fff][^<>]*)<|(?:aria-label|aria-description|title|placeholder)="([^"]+)"/g)) {
+    gomokuStatic.add((match[1] || match[2]).trim());
+}
+for (const file of ['gomoku-client.js', 'gomoku-online.js']) {
+    const source = fs.readFileSync('src/scripts/' + file, 'utf8');
+    for (const match of source.matchAll(/'([^'\n]*[\u3400-\u9fff][^'\n]*)'/g)) gomokuStatic.add(match[1]);
+}
+for (const source of gomokuStatic) assert.ok(!/[\u3400-\u9fff]/.test(i18n.t(source)), source);
+for (const file of ['src/pages/home-sections.html', 'src/pages/arg.html']) {
+    const markup = fs.readFileSync(file, 'utf8').replace(/<code\b[^>]*>[\s\S]*?<\/code>/g, '');
+    for (const match of markup.matchAll(/>([^<>]*[\u3400-\u9fff][^<>]*)</g)) {
+        const source = match[1].trim().replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
+        assert.ok(!/[\u3400-\u9fff]/.test(i18n.t(source)), `${file}: ${source}`);
+    }
+}
+const gomokuSources = [...new Set([...gomokuFixtures.keys(), ...gomokuStatic])];
+root.childNodes = gomokuSources.map(text);
+i18n.setLanguage('en');
+assert.ok(root.childNodes.every(n => !/[\u3400-\u9fff]/.test(n.nodeValue)));
+i18n.setLanguage('zh-CN');
+assert.deepEqual(root.childNodes.map(n => n.nodeValue), gomokuSources);
+i18n.setLanguage('en');
 assert.equal(i18n.t('候选 {index}', {index: 3}), 'Candidate 3');
 assert.equal(i18n.t('文本评分 {score} · 深度 {depth}', {score: '82.5', depth: 2}), 'Text score 82.5 · Depth 2');
 assert.equal(i18n.t('搜索完成。展开 {expanded} 个节点，生成 {generated} 个候选状态，显示前 {count} 个候选。', {expanded: 40, generated: 90, count: 12}), 'Search complete. Expanded 40 nodes, generated 90 candidate states, and showing the top 12 candidates.');
@@ -109,7 +183,7 @@ assert.equal(button.getAttribute('data-damage'), 'Hit −20 HP');
 i18n.setLanguage('zh-CN');
 assert.equal(button.getAttribute('data-damage'), '命中 −20 HP');
 i18n.setLanguage('en');
-console.log(`OK i18n: ${fixtures.size} translation fixtures, split markup, dynamic updates, round trips, protected content`);
+console.log(`OK i18n: ${fixtures.size} existing and ${gomokuSources.length} Gomoku fixtures, split markup, dynamic updates, round trips, protected content`);
 if (process.argv.includes('--audit')) {
     for (const file of fs.readdirSync('src/scripts').filter(f => f.endsWith('.js') && f !== 'i18n.js')) {
         const source = fs.readFileSync('src/scripts/' + file, 'utf8');

@@ -137,6 +137,7 @@
     let mode = 'classic', vocab = 'cet4', game, visible = false, keyMarks = Object.create(null), streak = 0;
     let draft = '', draftOffset = 0, drag = null;
     let validWords = null, examWords = null, examDefinitions = null, dictionaryState = 'loading';
+    let sound;
 
     function loadStreak() { try { streak = Number(localStorage.getItem(STREAK_KEY)) || 0; } catch (e) { streak = 0; } }
     function saveStreak() { try { localStorage.setItem(STREAK_KEY, String(streak)); } catch (e) { /* ignore */ } }
@@ -351,7 +352,9 @@
 
     function setAlignment(next) {
         const max = Math.max(0, game.answer.length - draft.length);
+        const previous = draftOffset;
         draftOffset = Math.max(0, Math.min(max, Number(next) || 0));
+        if (draftOffset !== previous) { sound.unlock(); sound.play('select'); }
         const track = $('wordle-board').querySelector('.wordle-draft-track');
         if (track) layoutTrack(track.parentNode, track, draftOffset);
         updateAlignControls();
@@ -360,6 +363,7 @@
     function slideAlignment(delta) { setAlignment(draftOffset + delta); }
 
     function newGame() {
+        sound?.stop();
         $('wordle-settlement-cancel').hidden = true;
         let answer;
         if (mode !== 'classic') {
@@ -376,7 +380,7 @@
         updateGlossary('', false);
         $('wordle-rules').textContent = mode === 'long'
             ? '长单词模式：答案为 6–9 字母，共八次机会。可填入最短 5 个、最长与答案等长的单词；短词可直接拖动整组方格选择起始对齐位置。绿字按对齐后的绝对位置判断，黄字会在答案全词中查找，灰字则表示答案全词中没有可用的该字母。'
-            : (mode === 'exam' ? `考试五字模式：答案从 ${VOCAB_LABELS[vocab]} 词库的五字母单词中抽取，共六次机会。` : '经典模式：答案来自原版 Wordle 的 2,315 词答案池，共六次机会。') + '绿色表示字母与位置都正确，黄色表示答案中有该字母但位置不对，灰色表示答案中没有可用的该字母。';
+            : (mode === 'exam' ? `考试五字模式：答案从 ${VOCAB_LABELS[vocab]} 词库的五字母单词中抽取，共六次机会。` : '经典模式：与原版Wordle完全一致，共六次机会。') + '绿色表示字母与位置都正确，黄色表示答案中有该字母但位置不对，灰色表示答案中没有可用的该字母。';
         message(dictionaryState === 'loading' ? '正在加载单词词库…' : (dictionaryState === 'failed' ? '单词词库加载失败，请刷新页面重试' :
             (mode === 'long' ? `答案有 ${game.answer.length} 个字母；填入 5–${game.answer.length} 个字母` : '填满当前行，然后按回车提交')),
             dictionaryState === 'failed' ? 'error' : '');
@@ -384,16 +388,19 @@
     }
 
     function submit() {
-        if (dictionaryState === 'loading') { message('单词词库仍在加载，请稍候', 'error'); return; }
-        if (dictionaryState === 'failed') { message('单词词库加载失败，请刷新页面重试', 'error'); return; }
+        if (dictionaryState === 'loading') { message('单词词库仍在加载，请稍候', 'error'); sound.play('error'); return; }
+        if (dictionaryState === 'failed') { message('单词词库加载失败，请刷新页面重试', 'error'); sound.play('error'); return; }
         const result = game.submit(draft, mode === 'long' ? draftOffset : 0);
         if (result.status === 'invalid') {
+            sound.play('error');
             message(result.message, 'error');
             const row = $('wordle-board').querySelector('.wordle-row.active');
             if (row) { row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake'); }
             return;
         }
         if (result.status === 'over') return;
+        result.row.marks.forEach((mark, i) => sound.play(mark, .12 + i * .07));
+        const resultDelay = .2 + result.row.marks.length * .07;
         updateGlossary(result.row.guess, result.status === 'win' || result.status === 'lose');
         result.row.guess.split('').forEach((letter, i) => {
             const mark = result.row.marks[i];
@@ -402,9 +409,11 @@
         draft = ''; draftOffset = 0; updateAlignControls(); renderBoard(); renderKeyboard();
         $('wordle-attempts').textContent = `${game.guesses.length} / ${game.maxAttempts}`;
         if (result.status === 'win') {
+            sound.play('win', resultDelay);
             streak++; saveStreak(); $('wordle-streak').textContent = String(streak);
             message(`猜对了！答案是 ${game.answer.toUpperCase()}`, 'success');
         } else if (result.status === 'lose') {
+            sound.play('lose', resultDelay);
             streak = 0; saveStreak(); $('wordle-streak').textContent = '0';
             message(`本局结束，答案是 ${game.answer.toUpperCase()}`, 'error');
         } else message(`还剩 ${result.attemptsLeft} 次机会`);
@@ -413,27 +422,31 @@
 
     function typeKey(key) {
         if (!game || game.over) return;
+        sound.unlock();
         if (key === 'Enter') submit();
-        else if (key === 'Backspace') { draft = draft.slice(0, -1); setAlignment(draftOffset); renderBoard(); }
-        else if (/^[a-z]$/i.test(key) && draft.length < game.answer.length) { draft += key.toLowerCase(); setAlignment(draftOffset); renderBoard(); }
+        else if (key === 'Backspace' && draft.length) { draft = draft.slice(0, -1); sound.play('erase'); setAlignment(draftOffset); renderBoard(); }
+        else if (/^[a-z]$/i.test(key) && draft.length < game.answer.length) { draft += key.toLowerCase(); sound.play('key'); setAlignment(draftOffset); renderBoard(); }
         updateAlignControls();
     }
 
     function init() {
         if (!$('wordle-view')) return;
+        sound = window.MELSGameAudio.create($('wordle-sound-btn'), () => visible);
         loadStreak();
         loadDictionary();
         document.querySelectorAll('.wordle-mode-btn').forEach(btn => btn.addEventListener('click', () => {
             mode = btn.dataset.wordleMode;
             document.querySelectorAll('.wordle-mode-btn').forEach(b => b.classList.toggle('active', b === btn));
             newGame();
+            sound.unlock(); sound.play('start');
         }));
         document.querySelectorAll('.wordle-vocab-btn').forEach(btn => btn.addEventListener('click', () => {
             vocab = btn.dataset.wordleVocab;
             document.querySelectorAll('.wordle-vocab-btn').forEach(b => b.classList.toggle('active', b === btn));
             newGame();
+            sound.unlock(); sound.play('start');
         }));
-        $('wordle-start-btn').addEventListener('click', newGame);
+        $('wordle-start-btn').addEventListener('click', () => { newGame(); sound.unlock(); sound.play('start'); });
         $('wordle-settlement-cancel').addEventListener('click', () => {
             $('wordle-message').hidden = true;
             $('wordle-settlement-cancel').hidden = true;
@@ -446,6 +459,7 @@
         });
         document.addEventListener('keydown', (e) => {
             if (!visible || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || '')) return;
+            if ((e.key === 'Enter' || e.key === ' ') && e.target?.closest('#wordle-sound-btn')) return;
             if (e.key === 'Enter' || e.key === 'Backspace' || /^[a-z]$/i.test(e.key)) { e.preventDefault(); typeKey(e.key); flashKey(e.key); }
             else if (mode === 'long' && draft.length >= 5 && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); slideAlignment(e.key === 'ArrowLeft' ? -1 : 1); }
         });
@@ -453,6 +467,6 @@
         newGame();
     }
 
-    globalThis.__WORDLE = { setVisible(on) { visible = !!on; }, newGame };
+    globalThis.__WORDLE = { setVisible(on) { visible = !!on; if (!visible) sound?.stop(); }, newGame };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

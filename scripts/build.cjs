@@ -18,7 +18,11 @@ function freshcup(tool) {
 function render(tool='scoreboard_5') {
   return shell.replace('<!-- FRESHCUP_PAGE -->',freshcup(tool)).replace('</head>',`<link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/${tool}.theme.css"><link rel="stylesheet" href="/src/styles/freshcup-native.css"></head>`).replace('<!-- TOOL_SCRIPT -->',`<script id="freshcup-tool-script" data-tool="${tool}" src="/src/scripts/freshcup/${tool}.js"></script>`).replace(/(src|href)="(\/?(?:src|vendor)\/[^"?]+)(?:\?[^" ]*)?"/g,(_,attr,file)=>{
     const source=read(file.replace(/^\//,''));
-    const versionSource=file.replace(/^\//,'')==='src/scripts/arg.js'?source+read('src/scripts/arg-engine.js')+read('src/scripts/arg-parallel.js')+read('src/scripts/arg-worker.js')+read('src/scripts/arg-acg.js')+read('assets/data/arg-acg-names.json')+read('assets/data/arg-acg-words.txt'):file.replace(/^\//,'')==='src/scripts/text-workbench.js'?source+read('src/scripts/text-core.js')+read('src/scripts/text-worker.js')+read('src/scripts/text-docx.js'):source;
+    let versionSource=file.replace(/^\//,'')==='src/scripts/arg.js'?source+read('src/scripts/arg-engine.js')+read('src/scripts/arg-parallel.js')+read('src/scripts/arg-worker.js')+read('src/scripts/arg-acg.js')+read('assets/data/arg-acg-names.json')+read('assets/data/arg-acg-words.txt'):file.replace(/^\//,'')==='src/scripts/text-workbench.js'?source+read('src/scripts/text-core.js')+read('src/scripts/text-worker.js')+read('src/scripts/text-docx.js'):source;
+    if (file.replace(/^\//,'') === 'src/scripts/gomoku.js') {
+      const dependencies = ['src/scripts/gomoku-model.js', 'src/scripts/gomoku-client.js', 'src/scripts/gomoku-online.js', 'src/scripts/gomoku-feedback.js', 'src/scripts/gomoku-input.js', 'assets/gomoku/worker.js', 'assets/gomoku/gomoku_wasm.js', 'assets/gomoku/gomoku_wasm.wasm'];
+      versionSource = Buffer.concat([Buffer.from(source), ...dependencies.map(name => fs.readFileSync(path.join(root, name)))]);
+    }
     return `${attr}="${file}?v=${crypto.createHash('sha256').update(versionSource).digest('hex').slice(0,10)}"`;
   });
 }
@@ -31,7 +35,7 @@ const palette = {
  '#d4e1f9':'var(--button-bg)', '#4a90e2':'var(--accent)', '#fff':'var(--surface)', '#ffffff':'var(--surface)'
 };
 for (const [tool] of tools) write(`src/styles/freshcup/${tool}.theme.css`, read(`src/styles/freshcup/${tool}.css`).replace(/#[a-f\d]{3,8}\b/gi,hex=>palette[hex.toLowerCase()]||hex));
-for (const route of ['','about','tools','tools/acronym','tools/favicon','tools/aicu','tools/arg','tools/arg/reference','tools/text','minigame','minigame/link','minigame/minesweeper','minigame/spider','minigame/wordle','freshcup']) write((route?route+'/':'')+'index.html',render());
+for (const route of ['','about','tools','tools/acronym','tools/favicon','tools/aicu','tools/arg','tools/arg/reference','tools/text','minigame','minigame/link','minigame/minesweeper','minigame/spider','minigame/wordle','minigame/gomoku','freshcup']) write((route?route+'/':'')+'index.html',render());
 for (const [id,,url] of tools) {
   if(url) write('freshcup/'+url+'index.html',render(id));
   // Original root-level public URLs remain usable as lightweight redirects.

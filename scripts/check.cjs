@@ -7,6 +7,7 @@ routes.push('tools/aicu/index.html');
 routes.push('tools/arg/index.html');
 routes.push('tools/arg/reference/index.html');
 routes.push('tools/text/index.html');
+routes.push('minigame/gomoku/index.html');
 const requiredNotices = ['LICENSE.md','FRESHCUP-NONCOMMERCIAL-LICENSE.md','BOSS-NONCOMMERCIAL-LICENSE.md','LONG-WORDLE-NONCOMMERCIAL-LICENSE.md','THIRD_PARTY_AND_CONTENT_NOTICE.md','vendor/CanvasUI-LICENSE.md'];
 for (const notice of requiredNotices) {
  if(!fs.existsSync(path.join(root,notice))) throw Error(`Missing license or notice: ${notice}`);
@@ -27,7 +28,7 @@ for(const route of routes) {
  if(html.indexOf('freshcup-navigation.js') > html.indexOf('</head>')) throw Error(`${route}: F.V. cup navigation listener loads too late`);
  const open=html.indexOf('<main '), fresh=html.indexOf('id="freshcup"'), close=html.indexOf('</main>');
  if(!(open<fresh && fresh<close)) throw Error(`${route}: F.V. cup is outside the shared main content`);
- for(const href of ['/tools/acronym/','/minigame/link/','/minigame/minesweeper/','/minigame/spider/','/minigame/wordle/']) {
+ for(const href of ['/tools/acronym/','/minigame/link/','/minigame/minesweeper/','/minigame/spider/','/minigame/wordle/','/minigame/gomoku/']) {
   if(!html.includes(`href="${href}"`)) throw Error(`${route}: missing direct route ${href}`);
  }
  console.log(`OK ${route}`);

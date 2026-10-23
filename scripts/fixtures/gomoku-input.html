@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Gomoku touch input regression</title>
+<style>body { margin: 0; font: 14px system-ui; } #results { margin: 0; padding: 12px; } iframe { width: 100%; height: 1100px; border: 0; }</style>
+<pre id="results">Running…</pre>
+<iframe id="game" src="../../minigame/gomoku/" title="Gomoku touch input test"></iframe>
+<script>
+const frame = document.getElementById('game');
+const output = document.getElementById('results');
+const check = (ok, message) => { if (!ok) throw Error(message); };
+frame.addEventListener('load', async () => {
+    try {
+        const page = frame.contentWindow, doc = page.document;
+        const byId = id => doc.getElementById('gomoku-' + id);
+        // Gomoku dynamically imports its controller dependencies after document load.
+        for (let i = 0; !byId('board').children.length && i < 100; i++) await new Promise(r => setTimeout(r, 50));
+        check(byId('board').children.length === 225, 'Game did not initialize');
+        doc.querySelector('[data-gomoku-mode="local"]').click();
+        byId('start').click();
+        const cells = byId('board').children;
+        const touch = index => cells[index].dispatchEvent(new page.PointerEvent('click', { bubbles: true, pointerType: 'touch', detail: 1 }));
+        const stones = () => byId('board').querySelectorAll('.black, .white').length;
+        touch(112);
+        check(stones() === 0 && cells[112].classList.contains('preview'), 'First touch placed a stone');
+        if (!page.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            check(page.getComputedStyle(cells[112], '::after').animationName === 'gomoku-preview-spin', 'Preview is not animated');
+        }
+        touch(113);
+        check(stones() === 0 && !cells[112].classList.contains('preview') && cells[113].classList.contains('preview'), 'Preview relocation failed');
+        touch(113);
+        check(stones() === 1 && cells[113].classList.contains('black') && !cells[113].classList.contains('preview'), 'Second touch did not confirm');
+        touch(112);
+        check(cells[112].classList.contains('preview') && byId('board').classList.contains('human-white'), 'White preview failed');
+        byId('undo').click();
+        check(stones() === 0 && !byId('board').querySelector('.preview'), 'Undo did not clear preview');
+        touch(112);
+        byId('start').click();
+        touch(112);
+        check(stones() === 0 && cells[112].classList.contains('preview'), 'Restart retained a stale confirmation');
+        cells[0].dispatchEvent(new page.PointerEvent('click', { bubbles: true, pointerType: 'mouse', detail: 1 }));
+        check(stones() === 1 && !byId('board').querySelector('.preview'), 'Mouse did not place immediately');
+        cells[1].click();
+        check(stones() === 2, 'Keyboard/assistive activation did not place immediately');
+        touch(112);
+        doc.querySelector('[data-gomoku-mode="online"]').click();
+        check(!byId('board').querySelector('.preview'), 'Mode switch did not clear preview');
+        doc.querySelector('[data-gomoku-mode="local"]').click();
+        byId('start').click();
+        touch(112);
+        output.textContent = 'PASS: actual game touch preview, rotation, relocation, confirmation, both colors, undo/restart/mode invalidation, mouse and keyboard.\nPreview below is intentionally unconfirmed.';
+    } catch (error) { output.textContent = 'FAIL: ' + error.message; }
+});
+</script>
+</html>
