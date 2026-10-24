@@ -1,14 +1,20 @@
 const ROOM_ID = /^[a-f0-9]{20}$/;
+const ALLOWED_ORIGINS = new Set([
+  'https://m-e-l-s.github.io',
+  'http://localhost:12001',
+  'http://127.0.0.1:12001',
+]);
 const failure = (error, status) => Response.json({ error }, { status, headers: { 'Cache-Control': 'no-store' } });
 
 export async function routeGomoku(request, env) {
   const url = new URL(request.url);
   const match = url.pathname.match(/^\/api\/gomoku\/rooms\/([a-f0-9]{20})$/);
   if (!match || !ROOM_ID.test(match[1]) || url.href.length > 512) return failure('invalid_room', 400);
-  // Local origins are enabled only on the local Worker, never on workers.dev.
+  // Production accepts only exact preview origins. Local Worker integration
+  // tests may additionally use other loopback origins.
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
   const origin = request.headers.get('Origin');
-  let allowed = origin === 'https://m-e-l-s.github.io';
+  let allowed = ALLOWED_ORIGINS.has(origin);
   try { allowed ||= local && ['localhost', '127.0.0.1', '[::1]'].includes(new URL(origin).hostname); } catch {}
   if (!allowed) return failure('origin_not_allowed', 403);
   if (request.method !== 'GET' || request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return failure('websocket_required', 426);

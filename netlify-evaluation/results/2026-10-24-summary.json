@@ -1,0 +1,35 @@
+{
+  "total": 140,
+  "began": "2026-10-24T09:15:56.576Z",
+  "ended": "2026-10-24T09:20:38.702Z",
+  "summary": {
+    "static": {
+      "samples": 42,
+      "successful": 42,
+      "medianMs": 447,
+      "p95Ms": 842,
+      "maxMs": 1232
+    },
+    "get": {
+      "samples": 42,
+      "successful": 42,
+      "medianMs": 820,
+      "p95Ms": 1279,
+      "maxMs": 1309
+    },
+    "post": {
+      "samples": 42,
+      "successful": 42,
+      "medianMs": 633,
+      "p95Ms": 1004,
+      "maxMs": 1095
+    },
+    "options": {
+      "samples": 14,
+      "successful": 14,
+      "medianMs": 803,
+      "p95Ms": 1051,
+      "maxMs": 1051
+    }
+  }
+}

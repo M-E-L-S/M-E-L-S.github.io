@@ -2,6 +2,7 @@ const version = new URL(import.meta.url).search;
 const { GomokuGame, BUDGETS, SIZE, coordinate, mateProof } = await import('./gomoku-model.js' + version);
 const { EngineWorker } = await import('./gomoku-client.js' + version);
 const { OnlineGame } = await import('./gomoku-online.js' + version);
+const { NetlifyGomoku } = await import('./gomoku-netlify.js' + version);
 const { onlineFeedback } = await import('./gomoku-feedback.js' + version);
 const { MovePreview, isTouchClick } = await import('./gomoku-input.js' + version);
 const byId = id => document.getElementById('gomoku-' + id);
@@ -15,10 +16,17 @@ let nextHostColor = 1, hostContext = '', invitationSeen = null;
 let soundSnapshot = null;
 const sound = window.MELSGameAudio.create(byId('sound-btn'), () => visible);
 const preview = new MovePreview();
-const online = new OnlineGame(() => render());
-const isOnline = () => mode === 'online';
+const cloud = new OnlineGame(() => render());
+const netlify = new NetlifyGomoku(() => render());
+let online = cloud;
+const isOnline = () => mode === 'online' || mode === 'netlify';
 const isAITurn = () => !!ai[game.turn];
 const positionKey = () => `${mode}:${online.state?.room || ''}:${game.moves.length}:${game.turn}`;
+function invitationURL() {
+    const url = new URL('/minigame/gomoku/', location.origin);
+    url.hash = (mode === 'netlify' ? 'backend=netlify&' : '') + 'room=' + online.session.room;
+    return url.href;
+}
 
 function moveSound() {
     sound.play('stone');
@@ -36,7 +44,7 @@ function render() {
         if (context && context !== hostContext) nextHostColor = state.hostColor || state.you;
         hostContext = context;
     }
-    const ready = network ? connected && state?.players.every(Boolean) && !state.offer : started;
+    const ready = network ? connected && state?.players.every(Boolean) && !state.offer && !online.pending : started;
     const enabled = ready && visible && !thinking && game.outcome === null && (network ? game.turn === game.human : !isAITurn());
     preview.sync(positionKey(), enabled);
     const last = game.moves.at(-1), winning = new Set(game.winningLine.map(([x, y]) => y * SIZE + x));
@@ -61,7 +69,7 @@ function render() {
         byId('ai-' + color).classList.toggle('active', ai[color]);
         const button = byId('color-' + color), selected = nextHostColor === color;
         button.classList.toggle('active', selected); button.setAttribute('aria-pressed', String(selected));
-        button.disabled = !!online.session && (!connected || !state?.isHost || !!state.offer);
+        button.disabled = !!online.session && (!connected || !state?.isHost || !!state.offer || !!online.pending);
     }
     byId('local-options').hidden = network;
     byId('color-control').hidden = !network || !!online.session && !state?.isHost;
@@ -69,21 +77,26 @@ function render() {
     byId('undo').disabled = !ready || !(network ? game.canUndo : game.canUndoLocal(ai));
     byId('undo').textContent = network ? '申请悔棋' : '悔棋';
     byId('start').textContent = network ? online.session ? '申请重开' : '创建房间' : '开始 / 重新开局';
-    byId('start').disabled = network && !!online.session && (!connected || !state?.players.every(Boolean) || !!state.offer);
+    byId('start').disabled = network && !!online.session && (!connected || !state?.players.every(Boolean) || !!state.offer || !!online.pending);
     byId('online-panel').hidden = !network;
     byId('join').disabled = !!online.session; byId('room-input').disabled = !!online.session;
+    byId('online-help').textContent = mode === 'netlify'
+        ? '此模式使用独立房间。长时间无操作会暂停同步，可点击重新连接继续。房间保留 24 小时。'
+        : '创建房间后分享邀请链接，好友加入即可开局。房间保留 24 小时；同一浏览器可恢复原座位。';
     byId('room-actions').hidden = !online.session; byId('room-code').textContent = online.session?.room || '';
     byId('reconnect').hidden = connected || ['connecting', 'reconnecting'].includes(online.status);
     byId('copy-room').disabled = !state;
+    byId('invitation').hidden = !network || !state;
+    if (network && state) byId('invitation').textContent = byId('invitation').href = invitationURL();
     byId('offer').hidden = !network || !state?.offer;
     if (state?.offer) {
         const own = state.offer.by === state.you, offer = state.offer;
         const colors = offer.kind === 'restart' && offer.hostColor ? `（房主执${offer.hostColor === 1 ? '黑' : '白'}）` : '';
         byId('offer-text').textContent = `${own ? '你' : '对方'}申请${offer.kind === 'undo' ? '悔棋' : '重新开局'}${colors}${own ? '，等待对方同意' : ''}`;
         byId('accept').hidden = own;
-        byId('accept').disabled = !connected || !state.players.every(Boolean);
+        byId('accept').disabled = !connected || !state.players.every(Boolean) || !!online.pending;
         byId('decline').textContent = own ? '取消申请' : '拒绝';
-        byId('decline').disabled = !connected || !state.players.every(Boolean);
+        byId('decline').disabled = !connected || !state.players.every(Boolean) || !!online.pending;
     }
     byId('rules').textContent = network
         ? '15 × 15 自由五子棋，无禁手。只有房主可选择执棋颜色。'
@@ -107,7 +120,7 @@ function render() {
     else if (network) status = game.turn === state.you ? `轮到你落子 · ${colorName(state.you)}` : '等待对方落子';
     else status = `${colorName(game.turn)}${isAITurn() ? ' AI 等待继续' : '落子'}`;
     byId('status').textContent = preview.index !== null ? '再次点按预选位置确认落子' : network ? status : message || status;
-    byId('detail').textContent = network ? online.error || (state ? '双方在线时可继续对局' : '') : thinking ? '本手已思考 0.0 秒' : lastSearch;
+    byId('detail').textContent = network ? online.error || online.syncHint || (state ? '双方在线时可继续对局' : '') : thinking ? '本手已思考 0.0 秒' : lastSearch;
     byId('proof').hidden = network || !proof;
     if (proof) byId('proof-text').textContent = `${colorName(proof.winner)}确定杀棋 · 至多 ${proof.plies} 次落子`;
     if (network) {
@@ -161,28 +174,36 @@ function startLocal() {
 }
 function rememberMode() { try { sessionStorage.setItem('mels_gomoku_mode_v1', mode); } catch {} }
 function roomURL(room, push = false) {
-    const url = new URL(location.href); url.pathname = '/minigame/gomoku/'; url.hash = room ? 'room=' + room : '';
+    const url = new URL(location.href); url.pathname = '/minigame/gomoku/';
+    const hash = new URLSearchParams();
+    if (mode === 'netlify') hash.set('backend', 'netlify');
+    if (room) hash.set('room', room);
+    url.hash = hash.toString();
     if (url.href !== location.href) history[push ? 'pushState' : 'replaceState']({ ...history.state }, '', url);
-    invitationSeen = room;
+    invitationSeen = `${mode}:${room || ''}`;
 }
 function selectMode(next) {
     sound.stop();
     invalidate(); online.disconnect(); mode = next; rememberMode();
+    online = mode === 'netlify' ? netlify : cloud; soundSnapshot = null; hostContext = '';
     started = false; game = new GomokuGame(); lastSearch = ''; proof = null; pausedAI = false; render();
     if (isOnline()) {
-        if (online.session) roomURL(online.session.room);
+        roomURL(online.session?.room);
         if (visible) online.resume();
-    } else if (new URLSearchParams(location.hash.slice(1)).has('room')) roomURL(null);
+    } else roomURL(null);
 }
 function syncRoomURL() {
-    const candidate = new URLSearchParams(location.hash.slice(1)).get('room');
+    const hash = new URLSearchParams(location.hash.slice(1)), candidate = hash.get('room');
     const room = /^[a-f0-9]{20}$/.test(candidate || '') ? candidate : null;
-    if (room === invitationSeen) return;
-    invitationSeen = room;
+    const requested = hash.get('backend') === 'netlify' ? 'netlify' : room ? 'online' : mode;
+    const context = `${requested}:${room || ''}`;
+    if (context === invitationSeen) return;
+    invitationSeen = context;
     sound.stop(); soundSnapshot = null;
+    if (requested !== mode) { online.disconnect(); mode = requested; online = mode === 'netlify' ? netlify : cloud; hostContext = ''; }
     invalidate(); online.prepareRoom(room); started = false; proof = null; lastSearch = '';
     byId('room-input').value = room || '';
-    if (room) { mode = 'online'; rememberMode(); }
+    if (room || requested === 'netlify') rememberMode();
     render();
     if (room && visible && online.session) online.resume();
 }
@@ -224,7 +245,7 @@ for (const color of [1, 2]) {
 byId('start').addEventListener('click', () => {
     if (!isOnline()) { startLocal(); return; }
     if (online.session) online.send('offer', { kind: 'restart', ...(online.state?.isHost ? { hostColor: nextHostColor } : {}) });
-    else { online.create(nextHostColor); roomURL(online.session.room, true); }
+    else { online.create(mode === 'netlify' ? { hostColor: nextHostColor } : nextHostColor); roomURL(online.session.room, true); }
 });
 byId('speed').addEventListener('change', updateBudget);
 byId('undo').addEventListener('click', () => {
@@ -235,18 +256,18 @@ byId('undo').addEventListener('click', () => {
 });
 byId('retry').addEventListener('click', () => { pausedAI = false; void think(); });
 byId('join-form').addEventListener('submit', event => {
-    event.preventDefault(); online.join(byId('room-input').value);
+    event.preventDefault();
+    online.join(byId('room-input').value);
     if (online.session) roomURL(online.session.room, true);
 });
-byId('reconnect').addEventListener('click', () => online.resume());
+byId('reconnect').addEventListener('click', () => online.resume(true));
 byId('leave').addEventListener('click', () => { online.forget(); hostContext = ''; roomURL(null); });
 byId('accept').addEventListener('click', () => online.send('respond', { accept: true }));
 byId('decline').addEventListener('click', () => online.send('respond', { accept: false }));
 byId('copy-room').addEventListener('click', async () => {
     if (!online.session) return;
-    const url = new URL('/minigame/gomoku/', location.origin); url.hash = 'room=' + online.session.room;
-    try { await navigator.clipboard.writeText(url.href); byId('detail').textContent = '邀请链接已复制'; }
-    catch { byId('detail').textContent = '复制失败，请将房间码发给好友'; }
+    try { await navigator.clipboard.writeText(invitationURL()); byId('detail').textContent = '邀请链接已复制'; }
+    catch { byId('detail').textContent = '复制失败，请长按或复制下方邀请链接'; }
 });
 function updateBudget() {
     const budget = BUDGETS[byId('speed').value];
@@ -273,5 +294,6 @@ window.addEventListener('pagehide', () => { setVisible(false); online.disconnect
 window.addEventListener('pageshow', () => { syncRoomURL(); syncVisibility(); });
 window.addEventListener('hashchange', syncRoomURL);
 window.addEventListener('popstate', () => { syncRoomURL(); syncVisibility(); });
-try { if (sessionStorage.getItem('mels_gomoku_mode_v1') === 'online') mode = 'online'; } catch {}
+try { const saved = sessionStorage.getItem('mels_gomoku_mode_v1'); if (['online', 'netlify'].includes(saved)) mode = saved; } catch {}
+online = mode === 'netlify' ? netlify : cloud;
 syncRoomURL(); updateBudget(); render(); syncVisibility();

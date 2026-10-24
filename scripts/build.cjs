@@ -20,7 +20,7 @@ function render(tool='scoreboard_5') {
     const source=read(file.replace(/^\//,''));
     let versionSource=file.replace(/^\//,'')==='src/scripts/arg.js'?source+read('src/scripts/arg-engine.js')+read('src/scripts/arg-parallel.js')+read('src/scripts/arg-worker.js')+read('src/scripts/arg-acg.js')+read('assets/data/arg-acg-names.json')+read('assets/data/arg-acg-words.txt'):file.replace(/^\//,'')==='src/scripts/text-workbench.js'?source+read('src/scripts/text-core.js')+read('src/scripts/text-worker.js')+read('src/scripts/text-docx.js'):source;
     if (file.replace(/^\//,'') === 'src/scripts/gomoku.js') {
-      const dependencies = ['src/scripts/gomoku-model.js', 'src/scripts/gomoku-client.js', 'src/scripts/gomoku-online.js', 'src/scripts/gomoku-feedback.js', 'src/scripts/gomoku-input.js', 'assets/gomoku/worker.js', 'assets/gomoku/gomoku_wasm.js', 'assets/gomoku/gomoku_wasm.wasm'];
+      const dependencies = ['src/scripts/gomoku-model.js', 'src/scripts/gomoku-client.js', 'src/scripts/gomoku-online.js', 'src/scripts/game-room-client.js', 'src/scripts/gomoku-netlify.js', 'src/scripts/gomoku-feedback.js', 'src/scripts/gomoku-input.js', 'assets/gomoku/worker.js', 'assets/gomoku/gomoku_wasm.js', 'assets/gomoku/gomoku_wasm.wasm'];
       versionSource = Buffer.concat([Buffer.from(source), ...dependencies.map(name => fs.readFileSync(path.join(root, name)))]);
     }
     return `${attr}="${file}?v=${crypto.createHash('sha256').update(versionSource).digest('hex').slice(0,10)}"`;

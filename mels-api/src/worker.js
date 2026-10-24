@@ -3,7 +3,11 @@ import { routeGomoku } from './gomoku-router.js';
 export { GomokuRoom } from './gomoku-room.js';
 
 const CONFIG = {
-  allowedOrigin: "https://m-e-l-s.github.io",
+  allowedOrigins: new Set([
+    "https://m-e-l-s.github.io",
+    "http://127.0.0.1:12001",
+    "http://localhost:12001",
+  ]),
   upstreamOrigin: "https://api.aicu.cc",
   liveDanmakuOrigin: "https://ukamnads.icu",
 
@@ -69,11 +73,9 @@ function corsHeaders(request) {
     Vary: "Origin",
   };
 
-  if (
-    request.headers.get("Origin") === CONFIG.allowedOrigin
-  ) {
-    headers["Access-Control-Allow-Origin"] =
-      CONFIG.allowedOrigin;
+  const origin = request.headers.get("Origin");
+  if (CONFIG.allowedOrigins.has(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
   }
 
   return headers;
@@ -1108,7 +1110,7 @@ export default {
 
       // 保留无 Origin 请求，便于地址栏或命令行测试。
       // 此检查是浏览器来源约束，不是身份认证。
-      if (origin && origin !== CONFIG.allowedOrigin) {
+      if (origin && !CONFIG.allowedOrigins.has(origin)) {
         return jsonResponse(
           request,
           { ok: false, error: "origin_not_allowed" },

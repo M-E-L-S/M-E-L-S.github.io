@@ -42,9 +42,9 @@
 
 运行 `node scripts/check-gomoku.mjs` 验证胜负、悔棋、Worker 取消及真实 WASM 的原生对照结果，包含 51 个原正常模式基线、19 个新手候选评分/搜索工作对照、随机性与模式切换隔离，再运行 `node scripts/check.cjs` 检查静态站点。启动 `python -m http.server 12001` 后，可用 `node scripts/check-gomoku.mjs http://127.0.0.1:12001/` 额外检查实际响应的模块 MIME 类型。
 
-双人联机通过 `gomoku-online.js` 连接现有 `mels-api` Worker。每个房间一个 SQLite Durable Object，使用可休眠 WebSocket；支持房间码/邀请链接、房主下局选色、服务端判定、协商悔棋/重开、刷新重连与 24 小时到期清理。没有轮询或服务端 AI。客户端仅在当前标签页的 sessionStorage 保存模式及最多 8 个房间的重连凭据；邀请链接只有房间码。监听 `hashchange`、`popstate` 与 `pageshow`，同页只改房间号也会清除旧棋盘并切换连接，前进/后退能恢复对应房间身份。
+双人联机通过 `gomoku-online.js` 连接现有 `mels-api` Worker。每个房间一个 SQLite Durable Object，使用可休眠 WebSocket；支持房间码/邀请链接、房主下局选色、服务端判定、协商悔棋/重开、刷新重连与 24 小时到期清理。没有轮询或服务端 AI。客户端在 localStorage 按房间保存重连凭据和服务端到期时间，关闭标签页后从同一浏览器、同一来源打开邀请链接可恢复身份；sessionStorage 只保存当前选择、模式及最多 8 个房间的标签页历史。已有旧标签页的凭据会自动迁移。邀请链接只有房间码。监听 `hashchange`、`popstate` 与 `pageshow`，同页只改房间号也会清除旧棋盘并切换连接，前进/后退能恢复对应房间身份。显式离开会清除持久凭据并通知其他同身份标签页断开；收到服务端到期通知或下次打开页面发现凭据过期时清理。运行 `node scripts/check-gomoku-reconnect.cjs` 验证关闭标签页后恢复、身份接管、多房间隔离、离开同步、迁移和过期。
 
-本地除 Python 静态服务外，还需在 `mels-api/` 运行 `npm run dev`（8780 端口）；线上须单独部署 Worker 的 DO 绑定与迁移。协议、限流、额度取舍、部署顺序及测试方法见 `mels-api/README.md`。
+本地网页默认连接线上真实 Worker：运行 `python -m http.server 12001 --bind 127.0.0.1` 后访问 `/minigame/gomoku/`，无需启动本地 Worker。线上须单独部署 Worker 的 DO 绑定、迁移与来源白名单（本站、`http://localhost:12001`、`http://127.0.0.1:12001`）。独立后端集成测试仍可在 `mels-api/` 运行 `npm run dev`（8780 端口）。协议、限流、额度取舍、部署顺序及测试方法见 `mels-api/README.md`。
 
 扫雷支持各地图选择阶数 1、2、3、4。核心中 `mine` 保存雷的位置，`mineType` / `flagType` 保存单位根的指数，`adjCount` 区分无雷空白与抵消零，`adjSquared` 保存精确的整数模长平方。连片展开只经过无雷空白；标记按单位根指数递增循环，转完后取消；和弦比较旗子之和的模长平方，相符则展开其余邻格，漏标或错位翻到雷时判负，模长不符不展开；胜利只要求翻开所有安全格。运行 `node scripts/check-minesweeper.cjs` 检查全部 12 种组合与旋转、抵消等规则。
 
@@ -57,6 +57,13 @@
 工具子路由：`/freshcup/sarkaz/`、`/freshcup/sami/`、`/freshcup/calculator/`。原来的根目录 `.html` 地址保留为轻量跳转页，不再生成第二套完整工具页面。
 
 所有页面共享顶栏、主题、设置与音乐组件；鲜蔬杯使用原生内容，没有 iframe。主栏目和鲜蔬杯工具切换都使用浏览器 History API，同一文档内切换可保持音乐播放。每个工具子路由仍会生成完整 HTML，因此可以直接输入网址访问、刷新，也支持浏览器前进与后退。
+
+
+## Netlify 五子棋评估
+
+新增独立 Netlify 联机模式，现有 Cloudflare 实现继续使用。通用后端位于 `netlify-games/`，复用房间身份、租约、CAS 原子提交、操作去重和自适应同步；五子棋规则独立注册，不把项目或数据库表绑定到单个游戏。前端配置为 `assets/data/netlify-games.json`，空配置不会连接或反复重试。
+
+[部署与省额度设计](netlify-games/README.md) 包含控制台配置、自动建库迁移和后续游戏适配接口。没有常驻推送或定时清理，页面隐藏停止轮询，闲置约 5 分钟暂停，过期数据随真实建房请求限量清理。`npm --prefix netlify-games test` 检查 PostgreSQL 语句、并发、规则和客户端生命周期。上线后仍须验证真实平台链路与额度；之前的[评估记录](netlify-evaluation/README.md) 仅是官方示例测试。
 
 ## 界面翻译
 
@@ -71,6 +78,8 @@
 五子棋覆盖本地与联机控件、思考档位和计时、落子与胜负、确定杀棋、房间申请及连接错误；棋盘坐标与棋子状态的无障碍标签也随语言切换。回归检查枚举 225 个位置的三种状态、双方 AI 组合、换色/悔棋/重开申请，并检查首页和解密页当前静态文案的翻译覆盖。
 
 ## 游戏音效与触屏输入
+
+Wordle 的九份词库数据只在第一次打开 Wordle 游戏时请求，其他页面与游戏不触发加载；同一文档内返回 Wordle 复用数据，加载期间重复进入也不重复请求。运行 `node scripts/check-wordle-loading.cjs` 检查隐藏页面、首次进入、直接进入和请求去重。ARG 使用独立英语词库，只在提交搜索时加载；ACG Name 数据还要求开启对应开关，不依赖 Wordle 词库。
 
 Wordle 和五子棋使用 `src/scripts/game-audio.js` 的 Web Audio 合成音效，无额外音频资源或请求。首次操作才创建并解锁音频上下文；两个游戏各有默认开启的独立音效按钮。Wordle 覆盖输入、删除、调整对齐、逐字翻牌、错误和胜负；五子棋覆盖落子、悔棋、重开和胜负。联机按连续的新局面播放一次音效，连接恢复、历史快照和重复状态不重播。关闭音效、切走游戏或隐藏页面会取消当前及已排程的声音。
 
@@ -88,11 +97,11 @@ Wordle 和五子棋使用 `src/scripts/game-audio.js` 的 Web Audio 合成音效
 
 ## 本地预览
 
-运行 `python -m http.server 4173 --bind 127.0.0.1`，访问 `http://127.0.0.1:4173/`。页面包含根路径资源，不能直接双击 HTML 验证路由。
+运行 `python -m http.server 12001 --bind 127.0.0.1`，访问 `http://127.0.0.1:12001/`。页面包含根路径资源，不能直接双击 HTML 验证路由。
 # B站记录查询
 
 入口 `/tools/aicu/`，源文件为 `src/pages/aicu.html`、`src/scripts/aicu.js`、`src/styles/aicu.css`。Worker 地址集中在脚本的 `API` 常量中。未授权时遮罩仅覆盖 Aicu 内容区，页面导航与功能切换不受影响。提交查询才请求对应接口，评论与视频弹幕每页 20 条；离开功能或点击取消会中止浏览器请求。
 
-`mels-api/` 是独立部署的 Worker 项目，源码和绑定配置入库，依赖、运行缓存与本地密钥不入库。生产 CORS 只允许 `https://m-e-l-s.github.io`，因此 localhost 页面不能直接完成线上接口查询；不要为本地预览放宽生产 CORS。
+`mels-api/` 是独立部署的 Worker 项目，源码和绑定配置入库，依赖、运行缓存与本地密钥不入库。Aicu 的 CORS 精确允许 `https://m-e-l-s.github.io`、`http://localhost:12001` 和 `http://127.0.0.1:12001`。本地运行 `python -m http.server 12001 --bind 127.0.0.1` 后，打开 `/tools/aicu/` 可测试本地前端连接线上 Worker；新增来源须先部署 Worker 才生效。本地仍需密码和 Bearer 令牌，不开放任意端口、局域网来源或 `null` 来源，不使用 Cookie 凭据。测试结束后可从白名单移除这两个本地来源并重新部署。五子棋线上 WebSocket 握手也精确允许这三个来源。
 
 本地 HTTP 服务中打开 `/scripts/fixtures/aicu.html` 可执行模拟接口的浏览器回归测试，覆盖四类数据、安全渲染、分页、失败、限流与取消；该测试页面不会调用线上 Worker。

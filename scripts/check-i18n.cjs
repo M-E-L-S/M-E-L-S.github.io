@@ -117,7 +117,7 @@ const gomokuStatic = new Set();
 for (const match of gomokuMarkup.matchAll(/>([^<>]*[\u3400-\u9fff][^<>]*)<|(?:aria-label|aria-description|title|placeholder)="([^"]+)"/g)) {
     gomokuStatic.add((match[1] || match[2]).trim());
 }
-for (const file of ['gomoku-client.js', 'gomoku-online.js']) {
+for (const file of ['gomoku-client.js', 'gomoku-online.js', 'game-room-client.js', 'gomoku-netlify.js']) {
     const source = fs.readFileSync('src/scripts/' + file, 'utf8');
     for (const match of source.matchAll(/'([^'\n]*[\u3400-\u9fff][^'\n]*)'/g)) gomokuStatic.add(match[1]);
 }

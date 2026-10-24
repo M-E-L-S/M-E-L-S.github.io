@@ -151,10 +151,16 @@ test('gateway rejects external/missing origins and limits requests before touchi
   const req = (origin, base='https://mels-api.workers.dev') => new Request(`${base}/api/gomoku/rooms/${'a'.repeat(20)}`, { headers: { ...(origin ? {Origin:origin}:{}), Upgrade:'websocket' } });
   assert.equal((await routeGomoku(req('https://evil.example'),env)).status,403);
   assert.equal((await routeGomoku(req(null),env)).status,403);
-  assert.equal((await routeGomoku(req('http://localhost:12001'),env)).status,403);
+  for (const origin of ['http://localhost:12002', 'https://localhost:12001',
+    'http://localhost.evil.test:12001', 'http://192.168.1.1:12001', 'null']) {
+    assert.equal((await routeGomoku(req(origin),env)).status,403);
+  }
   assert.equal(calls,0);
-  assert.equal((await routeGomoku(req('http://localhost:12001','http://127.0.0.1:8787'),env)).status,200);
+  for (const origin of ['http://localhost:12001', 'http://127.0.0.1:12001', 'https://m-e-l-s.github.io']) {
+    assert.equal((await routeGomoku(req(origin),env)).status,200);
+  }
+  assert.equal((await routeGomoku(req('http://localhost:12002','http://127.0.0.1:8780'),env)).status,200);
   env.GOMOKU_CONNECT_LIMITER.limit = async()=>({success:false});
   assert.equal((await routeGomoku(req('https://m-e-l-s.github.io'),env)).status,429);
-  assert.equal(calls,1);
+  assert.equal(calls,4);
 });

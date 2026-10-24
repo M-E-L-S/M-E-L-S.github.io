@@ -18,7 +18,7 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="src/styles/site-design.css?v=20f3b22618">
-    <link rel="stylesheet" href="src/styles/gomoku.css?v=7af23c21cc">
+    <link rel="stylesheet" href="src/styles/gomoku.css?v=59d39c0228">
 <link rel="stylesheet" href="/src/styles/aicu.css?v=874d23fb3e"><link rel="stylesheet" href="/src/styles/arg.css?v=ed09c26db8"><link rel="stylesheet" href="/src/styles/text.css?v=6af4c7fd97"><link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/scoreboard_5.theme.css?v=2d167c41f5"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
 <body>
 <!-- 顶部导航栏 -->
@@ -634,7 +634,8 @@
                 <div class="game-toolbar">
                     <div class="game-difficulty" role="group" aria-label="对战模式">
                         <button type="button" class="diff-btn active" data-gomoku-mode="local" aria-pressed="true">本地对战</button>
-                        <button type="button" class="diff-btn" data-gomoku-mode="online" aria-pressed="false">双人联机</button>
+                        <button type="button" class="diff-btn" data-gomoku-mode="online" aria-pressed="false">Cloudflare 联机</button>
+                        <button type="button" class="diff-btn" data-gomoku-mode="netlify" aria-pressed="false">Netlify 联机</button>
                     </div>
                     <div class="game-actions">
                         <button type="button" class="game-btn primary" id="gomoku-start">开始 / 重新开局</button>
@@ -675,7 +676,8 @@
                         <button type="button" class="game-btn" id="gomoku-reconnect">重新连接</button>
                         <button type="button" class="game-btn" id="gomoku-leave">离开房间</button>
                     </div>
-                    <p class="gomoku-online-help">创建房间后分享邀请链接，好友加入即可开局。房间保留 24 小时；断线后可在原标签页重连。</p>
+                    <p class="gomoku-online-help" id="gomoku-online-help">创建房间后分享邀请链接，好友加入即可开局。房间保留 24 小时；同一浏览器可恢复原座位。</p>
+                    <a class="gomoku-invitation" id="gomoku-invitation" translate="no" hidden></a>
                     <div class="gomoku-offer" id="gomoku-offer" hidden>
                         <span id="gomoku-offer-text" role="status"></span>
                         <button type="button" class="game-btn primary" id="gomoku-accept">同意</button>
@@ -1260,15 +1262,15 @@
 <!-- 音频元素 -->
 <audio id="bg-music" preload="none"></audio>
 
-<script src="src/scripts/i18n.js?v=ff130c1eb4"></script>
+<script src="src/scripts/i18n.js?v=5b57a88ed9"></script>
 <script src="src/scripts/script.js?v=eeb92bfdda"></script>
 <script src="src/scripts/boss-battle.js?v=088753f43b"></script>
 <script src="src/scripts/game.js?v=93d2db048c"></script>
 <script src="src/scripts/minesweeper.js?v=827edf3060"></script>
 <script src="src/scripts/spider.js?v=a530614916"></script>
 <script src="src/scripts/game-audio.js?v=7d718da5a0"></script>
-<script src="src/scripts/wordle.js?v=fa5f11cb47"></script>
-<script type="module" src="src/scripts/gomoku.js?v=33ca0bfec3"></script>
+<script src="src/scripts/wordle.js?v=b9721f367e"></script>
+<script type="module" src="src/scripts/gomoku.js?v=d481b9f728"></script>
 <script src="src/scripts/mini-games.js?v=08fcb4e3f5"></script>
 <script src="vendor/jszip.min.js?v=acc7e41455"></script>
 <script src="src/scripts/utilities.js?v=8db687f071"></script>
@@ -1282,5 +1284,5 @@
 <script src="src/scripts/site.js?v=6a235b9185"></script>
 <script src="src/scripts/home-tools.js?v=8bc96ef1a9"></script>
 <script id="freshcup-tool-script" data-tool="scoreboard_5" src="/src/scripts/freshcup/scoreboard_5.js?v=0224d7befa"></script>
-<script src="/src/scripts/aicu.js?v=086a9ec5a0"></script><script defer src="/src/scripts/arg.js?v=a868f09018"></script></body>
+<script src="/src/scripts/aicu.js?v=cfebe22025"></script><script defer src="/src/scripts/arg.js?v=a868f09018"></script></body>
 </html>

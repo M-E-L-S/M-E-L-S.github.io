@@ -138,6 +138,7 @@
     let draft = '', draftOffset = 0, drag = null;
     let validWords = null, examWords = null, examDefinitions = null, dictionaryState = 'loading';
     let sound;
+    let dictionaryPromise;
 
     function loadStreak() { try { streak = Number(localStorage.getItem(STREAK_KEY)) || 0; } catch (e) { streak = 0; } }
     function saveStreak() { try { localStorage.setItem(STREAK_KEY, String(streak)); } catch (e) { /* ignore */ } }
@@ -149,12 +150,13 @@
     }
 
     function loadDictionary() {
+        if (dictionaryPromise) return dictionaryPromise;
         dictionaryState = 'loading';
         const loadText = path => fetch(path, { cache: 'force-cache' }).then(response => {
             if (!response.ok) throw new Error('HTTP ' + response.status);
             return response.text();
         });
-        return Promise.all([
+        return dictionaryPromise = Promise.all([
             loadText('assets/data/wordle-words.txt'),
             loadText('assets/data/wordle-classic-answers.txt'),
             loadText('assets/data/wordle-cet4.txt'),
@@ -433,7 +435,6 @@
         if (!$('wordle-view')) return;
         sound = window.MELSGameAudio.create($('wordle-sound-btn'), () => visible);
         loadStreak();
-        loadDictionary();
         document.querySelectorAll('.wordle-mode-btn').forEach(btn => btn.addEventListener('click', () => {
             mode = btn.dataset.wordleMode;
             document.querySelectorAll('.wordle-mode-btn').forEach(b => b.classList.toggle('active', b === btn));
@@ -465,8 +466,13 @@
         });
         window.addEventListener('resize', () => { if (visible && game) renderBoard(); });
         newGame();
+        if (visible) loadDictionary();
     }
 
-    globalThis.__WORDLE = { setVisible(on) { visible = !!on; if (!visible) sound?.stop(); }, newGame };
+    globalThis.__WORDLE = { setVisible(on) {
+        visible = !!on;
+        if (visible && sound) loadDictionary();
+        if (!visible) sound?.stop();
+    }, newGame };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

@@ -94,6 +94,35 @@ test('preflight allows Authorization and POST login without exposing protected d
   assert.equal((await fetchWorker(request('auth/login'))).status, 405);
   assert.equal((await fetchWorker(request('history?uid=2', null, { headers: { Origin: 'https://evil.test' } }))).status, 403);
 });
+test('local preview origins are exact and still require authentication', async () => {
+  for (const origin of ['http://127.0.0.1:12001', 'http://localhost:12001']) {
+    const headers = { Origin: origin };
+    const preflight = await fetchWorker(request('auth/login', null, { method: 'OPTIONS', headers: {
+      ...headers, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type'
+    } }));
+    assert.equal(preflight.status, 204);
+    assert.equal(preflight.headers.get('Access-Control-Allow-Origin'), origin);
+    assert.equal(preflight.headers.get('Access-Control-Allow-Credentials'), null);
+    const loggedIn = await fetchWorker(request('auth/login', null, { method: 'POST', headers: {
+      ...headers, 'Content-Type': 'application/json'
+    }, body: JSON.stringify({ password: env.AICU_ACCESS_PASSWORD }) }));
+    assert.equal(loggedIn.status, 200);
+    assert.equal(loggedIn.headers.get('Access-Control-Allow-Origin'), origin);
+    const token = (await loggedIn.json()).token;
+    const session = await fetchWorker(request('auth/session', token, { headers }));
+    assert.equal(session.status, 200);
+    const unauthenticated = await fetchWorker(request('history?uid=2', null, { headers }));
+    assert.equal(unauthenticated.status, 401);
+    assert.equal(unauthenticated.headers.get('Access-Control-Allow-Origin'), origin);
+  }
+  for (const origin of ['null', 'http://localhost:12002', 'https://localhost:12001',
+    'http://localhost.evil.test:12001', 'http://192.168.1.1:12001']) {
+    const response = await fetchWorker(request('auth/session', null, { headers: { Origin: origin } }));
+    assert.equal(response.status, 403);
+    assert.equal(response.headers.get('Access-Control-Allow-Origin'), null);
+  }
+});
+
 test('signed but expired, future, wrong-scope and excessive-lifetime claims fail', async () => {
   const token = await getToken();
   const [header, payload] = token.split('.');

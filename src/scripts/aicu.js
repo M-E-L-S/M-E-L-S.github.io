@@ -39,20 +39,24 @@
             if (authRequest !== controller || controller.signal.aborted) return;
             if (response.status === 401) { removeToken(); throw Error(password === undefined ? 'expired' : 'password'); }
             if (response.status === 429) throw Error('rate');
-            if (!response.ok) throw Error('service');
-            const body = await response.json();
+            if (!response.ok) throw Error(`http:${response.status}`);
+            let body;
+            try { body = await response.json(); } catch { throw Error('format'); }
             const nextToken = password === undefined ? candidate : body.token;
             if (body.ok !== true || typeof nextToken !== 'string' || !nextToken || nextToken.length > 2048 ||
-                !Number.isSafeInteger(body.expiresAt) || body.expiresAt <= Date.now() || body.expiresAt > Date.now() + 86400000) throw Error('service');
+                !Number.isSafeInteger(body.expiresAt) || body.expiresAt <= 0) throw Error('format');
             if (authRequest !== controller || controller.signal.aborted || !isVisible()) return;
             try { localStorage.setItem(STORAGE, nextToken); } catch { throw Error('storage'); }
             token = nextToken; authorized = true; $('auth-content').inert = false; form.inert = false; $('logout').hidden = false;
             clearTimeout(expiryTimer);
-            expiryTimer = setTimeout(() => lock('授权已失效，请重新输入密码。', true), body.expiresAt - Date.now());
+            // Authentication/expiry is enforced by the server. A client clock must
+            // not reject a successful login; fresh logins always have a 24h TTL.
+            const remaining = password === undefined ? Math.min(86400000, Math.max(60000, body.expiresAt - Date.now())) : 86400000;
+            expiryTimer = setTimeout(() => lock('授权已失效，请重新输入密码。', true), remaining);
             overlay.hidden = true;
         } catch (error) {
             if (authRequest !== controller) return;
-            $('auth-status').textContent = error.message === 'password' ? '访问密码不正确。' : error.message === 'expired' ? '授权已失效，请重新输入密码。' : error.message === 'rate' ? '验证过于频繁，请一分钟后重试。' : error.message === 'storage' ? '无法保存授权，请允许本站使用浏览器存储。' : '验证失败，请检查网络或服务配置后重试。';
+            $('auth-status').textContent = error.message === 'password' ? '访问密码不正确。' : error.message === 'expired' ? '授权已失效，请重新输入密码。' : error.message === 'rate' ? '验证过于频繁，请一分钟后重试。' : error.message === 'storage' ? '无法保存授权，请允许本站使用浏览器存储。' : error.message === 'format' ? '登录响应格式异常，请刷新页面后重试。' : error.message.startsWith('http:') ? `授权服务返回 HTTP ${error.message.slice(5)}，请稍后重试。` : controller.signal.aborted ? '授权请求超时，请检查网络后重试。' : '授权请求失败，请检查网络后重试。';
         } finally {
             clearTimeout(timer);
             if (authRequest === controller) {

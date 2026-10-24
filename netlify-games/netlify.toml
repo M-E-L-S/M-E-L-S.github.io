@@ -1,0 +1,10 @@
+[build]
+  publish = "public"
+  ignore = "node ignore-build.mjs"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
