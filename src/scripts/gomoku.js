@@ -213,9 +213,14 @@ for (let y = 0; y < SIZE; ++y) for (let x = 0; x < SIZE; ++x) {
     const cell = document.createElement('button');
     cell.type = 'button'; cell.className = 'gomoku-cell'; cell.tabIndex = x === 7 && y === 7 ? 0 : -1;
     if ([3, 7, 11].includes(x) && [3, 7, 11].includes(y) && (x !== 7 && y !== 7 || x === y)) cell.classList.add('star');
+    let pressedPointerType = '';
+    cell.addEventListener('pointerdown', event => { pressedPointerType = event.pointerType; });
+    cell.addEventListener('pointercancel', () => { pressedPointerType = ''; });
     cell.addEventListener('click', event => {
+        const touch = isTouchClick(event, pressedPointerType);
+        pressedPointerType = '';
         if (cell.getAttribute('aria-disabled') !== 'false') return;
-        if (!preview.confirm(y * SIZE + x, positionKey(), isTouchClick(event))) { sound.play('select'); render(); return; }
+        if (!preview.confirm(y * SIZE + x, positionKey(), touch)) { sound.play('select'); render(); return; }
         if (isOnline()) { online.send('move', { move: [x, y] }); render(); return; }
         if (!game.play([x, y])) return;
         moveSound();
@@ -223,6 +228,7 @@ for (let y = 0; y < SIZE; ++y) for (let x = 0; x < SIZE; ++x) {
     });
     cell.addEventListener('focus', () => cells.forEach(button => { button.tabIndex = button === cell ? 0 : -1; }));
     cell.addEventListener('keydown', event => {
+        pressedPointerType = '';
         const delta = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
         if (!delta) return;
         event.preventDefault();

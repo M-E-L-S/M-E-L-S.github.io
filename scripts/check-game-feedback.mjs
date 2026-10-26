@@ -22,10 +22,15 @@ assert.equal(preview.confirm(112, 'online:new-room:0:1', true), false);
 preview.sync('online:new-room:0:1', false);
 assert.equal(preview.index, null);
 for (const pointerType of ['touch', 'pen']) assert.ok(isTouchClick({ detail: 1, pointerType }));
-assert.equal(isTouchClick({ detail: 1, pointerType: 'mouse' }, () => true), false);
-assert.equal(isTouchClick({ detail: 0, pointerType: 'touch' }, () => true), false);
-assert.equal(isTouchClick({ detail: 1 }, () => true), true);
-assert.equal(isTouchClick({ detail: 1 }, () => false), false);
+assert.equal(isTouchClick({ detail: 1, pointerType: 'mouse' }, '', () => true), false);
+assert.equal(isTouchClick({ detail: 0, pointerType: 'touch' }, 'touch', () => true), false);
+for (const pointerType of ['touch', 'pen']) {
+    assert.equal(isTouchClick({ detail: 1, pointerType: 'mouse' }, pointerType, () => false), true);
+    assert.equal(isTouchClick({ detail: 1 }, pointerType, () => false), true);
+}
+assert.equal(isTouchClick({ detail: 1, pointerType: 'touch' }, 'mouse', () => true), false);
+assert.equal(isTouchClick({ detail: 1 }, '', () => true), true);
+assert.equal(isTouchClick({ detail: 1 }, '', () => false), false);
 console.log('PASS touch input: preview, relocation, confirmation, position/room invalidation, mouse and keyboard');
 
 const state = (moves = [], extra = {}) => ({ connected: true, room: 'room-a', moves, ...extra });

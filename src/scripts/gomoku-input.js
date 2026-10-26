@@ -1,6 +1,8 @@
-export function isTouchClick(event, coarsePointer = () => matchMedia('(hover: none) and (pointer: coarse)').matches) {
+export function isTouchClick(event, pressedPointerType = '', coarsePointer = () => matchMedia('(hover: none) and (pointer: coarse)').matches) {
     if (event.detail === 0) return false; // Keyboard and assistive activation confirm immediately.
-    if (event.pointerType) return event.pointerType === 'touch' || event.pointerType === 'pen';
+    // Safari can report a touch-generated click as "mouse"; prefer the preceding pointerdown.
+    const pointerType = pressedPointerType || event.pointerType;
+    if (pointerType) return pointerType === 'touch' || pointerType === 'pen';
     return coarsePointer();
 }
 

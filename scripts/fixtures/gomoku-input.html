@@ -18,7 +18,13 @@ frame.addEventListener('load', async () => {
         check(byId('board').children.length === 225, 'Game did not initialize');
         doc.querySelector('[data-gomoku-mode="local"]').click();
         const cells = byId('board').children;
-        const touch = index => cells[index].dispatchEvent(new page.PointerEvent('click', { bubbles: true, pointerType: 'touch', detail: 1 }));
+        const pointer = (index, type, pointerType, detail = 0) => cells[index].dispatchEvent(new page.PointerEvent(type, { bubbles: true, pointerType, detail }));
+        // Reproduce iOS Safari: pointerdown/up say touch, but click says mouse.
+        const touch = (index, clickType = 'mouse') => {
+            pointer(index, 'pointerdown', 'touch');
+            pointer(index, 'pointerup', 'touch');
+            pointer(index, 'click', clickType, 1);
+        };
         const stones = () => byId('board').querySelectorAll('.black, .white').length;
         touch(112);
         check(stones() === 0 && cells[112].classList.contains('preview'), 'First touch placed a stone');
@@ -41,13 +47,25 @@ frame.addEventListener('load', async () => {
         check(stones() === 1 && !byId('board').querySelector('.preview'), 'Mouse did not place immediately');
         cells[1].click();
         check(stones() === 2, 'Keyboard/assistive activation did not place immediately');
+        pointer(2, 'pointerdown', 'touch');
+        pointer(2, 'pointercancel', 'touch');
+        pointer(2, 'click', 'mouse', 1);
+        check(stones() === 3, 'Cancelled touch leaked into a later click');
+        pointer(3, 'pointerdown', 'touch');
+        cells[3].dispatchEvent(new page.KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
+        cells[3].click();
+        check(stones() === 4, 'Keyboard activation retained a stale touch');
+        touch(4, 'touch');
+        check(stones() === 4 && cells[4].classList.contains('preview'), 'Standard touch click did not preview');
+        touch(4, 'touch');
+        check(stones() === 5, 'Standard touch click did not confirm');
         touch(112);
         doc.querySelector('[data-gomoku-mode="online"]').click();
         check(!byId('board').querySelector('.preview'), 'Mode switch did not clear preview');
         doc.querySelector('[data-gomoku-mode="local"]').click();
         byId('start').click();
         touch(112);
-        output.textContent = 'PASS: actual game touch preview, rotation, relocation, confirmation, both colors, undo/restart/mode invalidation, mouse and keyboard.\nPreview below is intentionally unconfirmed.';
+        output.textContent = 'PASS: actual game Safari/standard touch preview, rotation, relocation, confirmation, both colors, undo/restart/mode invalidation, cancellation, mouse and keyboard.\nPreview below is intentionally unconfirmed.';
     } catch (error) { output.textContent = 'FAIL: ' + error.message; }
 });
 </script>

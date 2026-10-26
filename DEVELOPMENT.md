@@ -110,7 +110,9 @@ Wordle 和五子棋使用 `src/scripts/game-audio.js` 的 Web Audio 合成音效
 
 五子棋触屏首次点按预选，显示当前棋色的旋转虚线棋子；再次点按同一位置才落子，点其他位置移动预选。鼠标、键盘和辅助技术仍直接落子。局面变化、悔棋、重开、切换模式及离开游戏会清除预选；减少动态效果设置会停用旋转。触屏判断及预选控制位于 `gomoku-input.js`，联机音效去重位于 `gomoku-feedback.js`。
 
-运行 `node scripts/check-game-feedback.mjs` 检查预选确认、联机音效去重、懒加载、静音和排程取消；通过本地服务器访问 `/scripts/fixtures/gomoku-input.html` 可检查真实页面的触屏事件、虚线旋转及鼠标/键盘兼容。
+触屏来源优先采用对应格子的 `pointerdown.pointerType`，避免 iOS Safari 将后续 `click.pointerType` 标成 `mouse` 时跳过预选；点击消费后、指针取消及键盘操作时清除记录。
+
+运行 `node scripts/check-game-feedback.mjs` 检查预选确认、联机音效去重、懒加载、静音和排程取消；通过本地服务器访问 `/scripts/fixtures/gomoku-input.html` 可检查真实页面的 Safari 触屏兼容事件序列、标准触屏事件、虚线旋转及鼠标/键盘兼容。
 
 ## 高级效果
 
