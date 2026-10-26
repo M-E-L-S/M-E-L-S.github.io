@@ -1,4 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Shared by game and utility pickers; DOM order is the only animation order.
+    document.querySelectorAll('.game-picker-menu').forEach(menu => {
+        const syncOrder = () => Array.from(menu.children)
+            .filter(item => item.classList.contains('game-picker-item'))
+            .forEach((item, index) => item.style.setProperty('--picker-index', index));
+        syncOrder();
+        new MutationObserver(syncOrder).observe(menu, { childList: true });
+    });
     document.querySelectorAll('[data-route]').forEach(link => link.addEventListener('click', event => {
         if(event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         const nav = document.querySelector(`.nav-link[data-page="${link.dataset.route}"]`);

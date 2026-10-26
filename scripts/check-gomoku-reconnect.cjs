@@ -18,7 +18,7 @@ function storage(map, changed = () => {}) {
         removeItem(key) { if (map.delete(key)) changed(key, null); }
     };
 }
-function tab(savedSession = new Map()) {
+function tab(savedSession = new Map(), gameId = 'gomoku') {
     const listeners = [], sockets = [];
     const localStorage = storage(durable, (key, newValue) => {
         for (const other of tabs) if (other.listeners !== listeners)
@@ -31,11 +31,11 @@ function tab(savedSession = new Map()) {
         close() { this.readyState = 3; }
     }
     const context = { localStorage, sessionStorage: storage(savedSession), crypto: webcrypto, URL,
-        WebSocket, Date: { now: () => now },
+        WebSocket, structuredClone, Date: { now: () => now },
         addEventListener(type, fn) { assert.equal(type, 'storage'); listeners.push(fn); },
         setTimeout() { return 1; }, clearTimeout() {}, setInterval() { return 1; }, clearInterval() {} };
     vm.runInNewContext(source, context);
-    const game = new context.OnlineGame(() => {});
+    const game = new context.OnlineGame(() => {}, { game: gameId });
     const result = { game, listeners, sockets, savedSession };
     tabs.push(result);
     return result;
@@ -88,5 +88,16 @@ function snapshot(target, expiresAt = now + 3600000) {
     differentRoom.sockets.at(-1).onclose({ code: 4004 });
     assert.equal(differentRoom.game.session, null);
     assert.equal(durable.has(prefix + secondRoom), false, 'server expiry removes credentials immediately');
-    console.log('PASS Gomoku reconnect: new-tab recovery, token privacy, single-seat takeover, independent rooms, leave propagation, legacy migration and expiry');
+    const halma = tab(new Map(), 'halma');
+    halma.game.create({ players: 6, first: 6, hostColor: 6, mirror: true }); snapshot(halma);
+    const halmaRoom = halma.game.session.room, halmaToken = halma.game.session.token;
+    assert.ok(halma.sockets[0].url.includes('/api/halma/rooms/'));
+    assert.ok(halma.sockets[0].protocols.includes('halma.v1'));
+    assert.equal(JSON.parse(new URL(halma.sockets[0].url).searchParams.get('options')).players, 6);
+    const halmaReopened = tab(new Map(), 'halma'); halmaReopened.game.prepareRoom(halmaRoom); halmaReopened.game.resume();
+    assert.equal(halmaReopened.game.session.token, halmaToken);
+    const gomokuSameID = tab(); gomokuSameID.game.join(halmaRoom);
+    assert.notEqual(gomokuSameID.game.session.token, halmaToken, 'game identities remain isolated even for the same room code');
+    assert.ok(gomokuSameID.sockets[0].protocols.includes('gomoku.v1'));
+    console.log('PASS reconnect: new-tab recovery, token privacy, single-seat takeover, independent rooms/games, Halma configuration, leave propagation, legacy migration and expiry');
 })().catch(error => { console.error(error); process.exitCode = 1; });

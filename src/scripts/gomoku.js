@@ -9,7 +9,7 @@ const byId = id => document.getElementById('gomoku-' + id);
 const view = byId('view'), engine = new EngineWorker(), cells = [];
 const colorName = color => color === 1 ? '黑棋' : '白棋';
 const ai = [false, false, false];
-let mode = 'local', game = new GomokuGame(), started = false, visible = false;
+let mode = 'local', game = new GomokuGame(), visible = false;
 let thinking = false, pausedAI = false, revision = 0, timer = null, aiStepTimer = null;
 let message = '', lastSearch = '', proof = null;
 let nextHostColor = 1, hostContext = '', invitationSeen = null;
@@ -44,7 +44,7 @@ function render() {
         if (context && context !== hostContext) nextHostColor = state.hostColor || state.you;
         hostContext = context;
     }
-    const ready = network ? connected && state?.players.every(Boolean) && !state.offer && !online.pending : started;
+    const ready = !network || connected && state?.players.every(Boolean) && !state.offer && !online.pending;
     const enabled = ready && visible && !thinking && game.outcome === null && (network ? game.turn === game.human : !isAITurn());
     preview.sync(positionKey(), enabled);
     const last = game.moves.at(-1), winning = new Set(game.winningLine.map(([x, y]) => y * SIZE + x));
@@ -76,13 +76,13 @@ function render() {
     byId('color-label').textContent = state?.joined.every(Boolean) ? '房主下局执棋' : '房主执棋';
     byId('undo').disabled = !ready || !(network ? game.canUndo : game.canUndoLocal(ai));
     byId('undo').textContent = network ? '申请悔棋' : '悔棋';
-    byId('start').textContent = network ? online.session ? '申请重开' : '创建房间' : '开始 / 重新开局';
+    byId('start').textContent = network ? online.session ? '申请重开' : '创建房间' : '重新开局';
     byId('start').disabled = network && !!online.session && (!connected || !state?.players.every(Boolean) || !!state.offer || !!online.pending);
     byId('online-panel').hidden = !network;
     byId('join').disabled = !!online.session; byId('room-input').disabled = !!online.session;
     byId('online-help').textContent = mode === 'netlify'
-        ? '此模式使用独立房间。长时间无操作会暂停同步，可点击重新连接继续。房间保留 24 小时。'
-        : '创建房间后分享邀请链接，好友加入即可开局。房间保留 24 小时；同一浏览器可恢复原座位。';
+        ? 'Netlify源，境内可尝试使用，可能卡顿。长时间无操作会暂停同步，可点击重新连接继续。'
+        : 'Cloudflare源，需境外使用，更流畅。创建房间后分享邀请链接，好友加入即可开局。';
     byId('room-actions').hidden = !online.session; byId('room-code').textContent = online.session?.room || '';
     byId('reconnect').hidden = connected || ['connecting', 'reconnecting'].includes(online.status);
     byId('copy-room').disabled = !state;
@@ -101,7 +101,7 @@ function render() {
     byId('rules').textContent = network
         ? '15 × 15 自由五子棋，无禁手。只有房主可选择执棋颜色。'
         : '15 × 15 自由五子棋，无禁手。';
-    byId('retry').hidden = network || !started || thinking || game.outcome !== null || !isAITurn();
+    byId('retry').hidden = network || thinking || game.outcome !== null || !isAITurn();
     byId('retry').disabled = !visible;
     byId('retry').textContent = pausedAI ? '继续 AI' : '重试 AI';
     byId('moves').textContent = `${game.moves.length} 手`;
@@ -111,7 +111,6 @@ function render() {
     if (network && !connected) status = ({ idle: '创建房间，或输入好友房间码', connecting: '正在连接房间…', reconnecting: '连接中断，正在重连…', disconnected: '已断开，可重新连接' })[online.status];
     else if (network && !state.joined.every(Boolean)) status = '等待好友加入…';
     else if (network && !state.players.every(Boolean)) status = '对方已断线，等待重连';
-    else if (!network && !started) status = '点击开始，黑棋先行';
     else if (game.outcome === 0) status = '和棋 · 棋盘已满';
     else if (game.outcome !== null) status = `${colorName(game.outcome)}获胜！`;
     else if (network && state.offer) status = '等待处理对局申请';
@@ -138,11 +137,11 @@ function invalidate() {
     timer = null; aiStepTimer = null; thinking = false; message = '';
 }
 function scheduleThink() {
-    if (aiStepTimer || pausedAI || isOnline() || !visible || !started || game.outcome !== null || !isAITurn()) return;
+    if (aiStepTimer || pausedAI || isOnline() || !visible || game.outcome !== null || !isAITurn()) return;
     aiStepTimer = setTimeout(() => { aiStepTimer = null; void think(); }, 120);
 }
 async function think() {
-    if (isOnline() || !started || !visible || thinking || pausedAI || game.outcome !== null || !isAITurn()) return;
+    if (isOnline() || !visible || thinking || pausedAI || game.outcome !== null || !isAITurn()) return;
     const token = ++revision, color = game.turn, began = performance.now();
     let moved = false;
     thinking = true; message = ''; proof = null; render();
@@ -168,7 +167,7 @@ async function think() {
 }
 function startLocal() {
     sound.stop();
-    invalidate(); game = new GomokuGame(); started = true; pausedAI = false;
+    invalidate(); game = new GomokuGame(); pausedAI = false;
     lastSearch = ''; proof = null; render(); scheduleThink();
     sound.play('start');
 }
@@ -186,13 +185,14 @@ function selectMode(next) {
     sound.stop();
     invalidate(); online.disconnect(); mode = next; rememberMode();
     online = mode === 'netlify' ? netlify : cloud; soundSnapshot = null; hostContext = '';
-    started = false; game = new GomokuGame(); lastSearch = ''; proof = null; pausedAI = false; render();
+    game = new GomokuGame(); lastSearch = ''; proof = null; pausedAI = false; render();
     if (isOnline()) {
         roomURL(online.session?.room);
         if (visible) online.resume();
-    } else roomURL(null);
+    } else { roomURL(null); scheduleThink(); }
 }
 function syncRoomURL() {
+    if (location.pathname.replace(/\/$/, '') !== '/minigame/gomoku') return;
     const hash = new URLSearchParams(location.hash.slice(1)), candidate = hash.get('room');
     const room = /^[a-f0-9]{20}$/.test(candidate || '') ? candidate : null;
     const requested = hash.get('backend') === 'netlify' ? 'netlify' : room ? 'online' : mode;
@@ -201,11 +201,12 @@ function syncRoomURL() {
     invitationSeen = context;
     sound.stop(); soundSnapshot = null;
     if (requested !== mode) { online.disconnect(); mode = requested; online = mode === 'netlify' ? netlify : cloud; hostContext = ''; }
-    invalidate(); online.prepareRoom(room); started = false; proof = null; lastSearch = '';
+    invalidate(); online.prepareRoom(room); proof = null; lastSearch = '';
     byId('room-input').value = room || '';
     if (room || requested === 'netlify') rememberMode();
     render();
     if (room && visible && online.session) online.resume();
+    if (!isOnline()) scheduleThink();
 }
 
 for (let y = 0; y < SIZE; ++y) for (let x = 0; x < SIZE; ++x) {
@@ -271,7 +272,7 @@ byId('copy-room').addEventListener('click', async () => {
 });
 function updateBudget() {
     const budget = BUDGETS[byId('speed').value];
-    byId('budget').textContent = `${budget.beginner ? '简单模式 · ' : ''}目标 ${budget.soft_ms / 1000} 秒 · 上限 ${budget.hard_ms / 1000} 秒 · 下一手生效`;
+    byId('budget').textContent = `${budget.beginner ? 'AI随机性增强· ' : ''}目标 ${budget.soft_ms / 1000} 秒 · 上限 ${budget.hard_ms / 1000} 秒 · 下一手生效`;
 }
 function setVisible(next) {
     const changed = visible !== !!next; visible = !!next;

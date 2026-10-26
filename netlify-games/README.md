@@ -1,8 +1,12 @@
 # MELS 游戏联机后端（Netlify）
 
-这是独立的通用房间服务。目前注册五子棋；Cloudflare 后端及 Aicu 转发继续沿用原实现。Netlify 不部署整站、不接入 Aicu、不安装全局 CLI。
+这是独立的通用房间服务，注册五子棋和中国跳棋；Cloudflare 后端及 Aicu 转发独立部署。Netlify 不部署整站、不接入 Aicu、不安装全局 CLI。
+
+跳棋复用现有数据表、身份、租约和同步机制，按开局配置分配 2/3/4/6 席位，无新增数据库迁移。`shared/halma-room.js` 与 Cloudflare 共用权威规则，支持镜像、先手、房主选色，以及全员协商悔棋/重开。相同申请的并发投票通过申请编号合并，旧申请的投票不能批准后续申请；落子等命令仍严格校验版本。动态多人游戏最多进行 8 次 CAS 尝试，固定双人五子棋仍为 4 次。
 
 ## 需要你配置的内容
+
+多人 AI 与换色更新仍复用现有数据表和绑定，无新增迁移。真人加入会跳过房主指定的 AI 席位；AI 着只接受房主身份，计算发生在房主浏览器。悔棋/重开只统计真人投票，交换颜色只需双方确认。旧房间保留旧棋谱布局，重开后使用新版顺时针布局。前后端均需更新后才能使用这些协议。
 
 先把本次代码提交/推送到 GitHub，再在 Netlify **Add new project → Import an existing project** 中选择此仓库。选择 Free，部署配置填写：
 
@@ -22,7 +26,7 @@
 
 部署成功后：
 
-1. 打开 `https://你的站点.netlify.app/api/rooms?health=1`，应看到 `ok: true`、`games: ["gomoku"]`。此检查不访问数据库；它不能证明数据库迁移已成功。
+1. 打开 `https://你的站点.netlify.app/api/rooms?health=1`，应看到 `ok: true`、`games: ["gomoku", "halma"]`。此检查不访问数据库；它不能证明数据库迁移已成功。
 2. 将公开站点地址发来，或自己修改仓库根目录 `assets/data/netlify-games.json`：
 
 ```json
@@ -73,7 +77,7 @@
 
 ```js
 {
-  seats: 2,                         // 也支持其他固定席位数
+  seats: 2,                         // 也支持其他固定席位数，或 state => state.playerCount
   initial(options) { /* 初始私有状态 */ },
   snapshot(state, view) { /* 当前席位可见的 JSON 局面 */ },
   apply(state, command, view) { /* 校验并同步修改状态 */ }

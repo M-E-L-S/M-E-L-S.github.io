@@ -10,6 +10,7 @@
 - `src/scripts/freshcup/`：计分和伤害计算逻辑，查询范围限定在工具区域。
 - `src/styles/site-design.css`：主题变量、页面布局和站点组件设计。
 - `src/styles/components.css`：游戏、音乐与高级视觉效果的基础组件样式。
+- `components.css` 自带 `components` 层，与 `site-design.css` 分别从 HTML 直接加载并按内容加哈希；不要改回无版本号的 CSS `@import`，否则主样式更新后仍可能加载缓存中的旧组件规则。浏览器回归会预先缓存旧版无版本号组件样式再验证新版页面。
 - `src/styles/freshcup/`：工具布局源样式；`.theme.css` 为自动生成文件。
 - `src/styles/freshcup-native.css`：工具与全站共用的视觉规则。
 - `main.c` / `CMakeLists.txt`：伤害计算器早期 C 语言参考实现，不参与网站构建。
@@ -26,9 +27,33 @@
 
 ## 路由
 
+小游戏和小功能选择菜单共用 `site.js` 的动画顺序初始化：按 `.game-picker-menu` 下实际菜单项顺序写入 `--picker-index`，`components.css` 自动计算滑入延迟。菜单项新增、删除或重排会自动更新；不要为具体第几项添加 `nth-child` 动画规则。减少动态效果设置仍由共用 CSS 关闭动画。
+
 首页 `/`；关于 `/about/`；小功能 `/tools/`；小游戏 `/minigame/`；鲜蔬杯 `/freshcup/`。
 
 缩写转义使用 `/tools/acronym/`。小游戏子路由为：连连看 `/minigame/link/`、扫雷 `/minigame/minesweeper/`、蜘蛛纸牌 `/minigame/spider/`、Wordle `/minigame/wordle/`、五子棋 `/minigame/gomoku/`。菜单切换会无刷新更新地址栏，所有子路由都可直接访问、刷新，并支持浏览器前进与后退。
+
+## 中国跳棋
+
+进入页面即可选子落子，无需点击开始；“重新开局”仅用于重置棋盘。五子棋本地对战使用相同行为，AI 开关打开后轮到 AI 即自动思考。
+
+跳棋联机与五子棋并列提供 Cloudflare / Netlify 入口，支持 2/3/4/6 人、普通/镜像、先手及房主选色。房主创建后人数固定，其他玩家按剩余颜色顺序加入；全部真人在线且空位已入座或设为 AI 后即可落子。悔棋撤回到申请者上一手之前，重开可由房主提交新的先手、镜像和执棋颜色，需全部真人同意，AI 不投票。多人可申请与另一位在线真人交换颜色，只需当事双方同意，棋盘与行棋顺序不变。申请有独立编号，同一申请的并发同意可合并，旧申请回应不能批准新申请。
+
+房主可逐颜色为未入座的空位开启/关闭 AI，已有玩家（包括断线保留席位）不能被替换；加入房间自动跳过 AI 席位。AI 由房主的 WASM Worker 计算，只有房主可提交 AI 着，服务端仍校验回合与合法性，房主离线即暂停。客户端在申请、换色、人数或控制权变化时取消旧搜索。普通访客不加载 WASM。
+
+`shared/halma-room.js` 为两后端共用的权威规则适配，复用 `halma-rules.js` 的纯规则工厂和同一棋盘几何；浏览器仍通过 `halma-model.js` 传递整条依赖版本。Cloudflare 新增 `HalmaRoom` 和 `halma-v1` SQLite DO 迁移，沿用自动心跳响应、24 小时到期及握手限流。`gomoku-online.js` 的 WebSocket 客户端支持独立游戏协议与存储空间，原五子棋接口不变。Netlify 在通用注册表加入 `halma`，按开局配置分配席位，无额外表或服务；共享规则和几何修改会触发后端构建。
+
+`python scripts/check-halma-browser.py --online` 启动本机真实 Cloudflare 运行时和内存 PostgreSQL Netlify handler，以三个独立浏览器身份验证建房、邀请、同步、全员悔棋/重开、换色、刷新与离开恢复。仅测试环境重定向到本地服务；正式页面仍使用既有 Cloudflare / Netlify 地址。日志、DO 状态及截图位于 `build/halma-online-browser/`，不安装新工具。生产使用前须先部署 `mels-api` 新绑定/迁移及 Netlify 新注册表，再发布前端。
+
+各人数模式都有先手颜色下拉框，选项限定为该模式参与的颜色，同页内分别保留选择。未走子时立即改变轮到方；已有走子时用于下一局，保留当前棋盘。之后按颜色列表循环轮转，重复历史与 WASM 参数均从所选先手开始。
+
+入口 `/minigame/halma/`，页面 `src/pages/halma.html`，控制器 `src/scripts/halma.js`，规则与几何为 `halma-model.js` / `halma-rules.js` / `halma-geometry.js`。每方十子，营地底色与空格着色表示该颜色的目标营。新布局与新版引擎完全一致：双人 `[0,3]`，三人倒三角 `[3,1,5]`，四人右上倾斜 `[0,5,3,2]`，六人 `[0,5,4,3,2,1]`，均顺时针轮转。旧房间缺少 `layoutVersion` 时沿用旧布局解释棋谱，全员同意重开后迁移到版本 2，本次不新增数据库/DO 迁移。
+
+本地每种人数均有逐颜色独立 AI 开关，默认手动；简单/普通/高级三档与五子棋预算相同。`halma-client.js` 首次 AI 回合才加载 `assets/halma/` 的新版多人 WASM SDK，局面传递人数以及 seat→side `[1,-1,2,3,4,5]` 映射，所有搜索在可终止 Worker 中运行。预计剩余步数按座位显示，未知为“—”，不显示杀棋信息。
+
+`halma-motion.js` 按完整路径逐段播放，每次落点才触发一次落子音效；镜像远跳跨越任意距离仍只计一次。减少动态效果时保持逐跳音效节奏；取消、悔棋、切游戏、隐藏页面或新局会清除未完成的动画/音效计时。远端连续快照也使用同一播放逻辑，重连历史不重播。`node scripts/check-halma-motion.mjs` 验证每跳次数、时序及中断清理。
+
+运行 `node scripts/check-halma.mjs` 对照真实 WASM 的普通/镜像合法着、胜负、历史、多人轮转、悔棋和 SDK 取消；`python scripts/check-halma-browser.py` 使用已安装 Edge 验证真实网页与 WASM、加载隔离、模式切换及移动布局，截图和 profile 均在仓库 `build/halma-browser/`。引擎来源与更新流程见 `assets/halma/README.md`。
 
 ## 五子棋
 

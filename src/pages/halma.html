@@ -1,0 +1,90 @@
+<div class="game-view" id="halma-view" hidden>
+    <div class="gomoku-options" role="group" aria-label="对战模式">
+        <button type="button" class="diff-btn active" data-halma-mode="local" aria-pressed="true">本地对战</button>
+        <button type="button" class="diff-btn" data-halma-mode="online" aria-pressed="false">Cloudflare 联机</button>
+        <button type="button" class="diff-btn" data-halma-mode="netlify" aria-pressed="false">Netlify 联机</button>
+    </div>
+    <div class="game-toolbar">
+        <div class="game-difficulty" role="group" aria-label="跳棋人数">
+            <button type="button" class="diff-btn active" data-halma-players="2" aria-pressed="true">2 人</button>
+            <button type="button" class="diff-btn" data-halma-players="3" aria-pressed="false">3 人</button>
+            <button type="button" class="diff-btn" data-halma-players="4" aria-pressed="false">4 人</button>
+            <button type="button" class="diff-btn" data-halma-players="6" aria-pressed="false">6 人</button>
+        </div>
+        <div class="game-actions">
+            <button type="button" class="game-btn primary" id="halma-start">重新开局</button>
+            <button type="button" class="game-btn" id="halma-undo" disabled>悔棋</button>
+            <button type="button" class="game-btn icon-btn" id="halma-sound-btn" title="音效开关" aria-label="音效开关" aria-pressed="true"><i class="fas fa-volume-high" aria-hidden="true"></i></button>
+        </div>
+    </div>
+    <div class="halma-options">
+        <label class="gomoku-speed-label">先手颜色
+            <select id="halma-first" aria-describedby="halma-first-hint">
+                <option value="1">红方</option>
+                <option value="2">蓝方</option>
+            </select>
+        </label>
+        <span class="gomoku-budget" id="halma-first-hint"></span>
+        <button type="button" class="game-btn gomoku-ai-toggle" id="halma-mirror" aria-pressed="false">镜像模式</button>
+        <label class="gomoku-speed-label" id="halma-host-control" hidden>房主执棋
+            <select id="halma-host-color" aria-label="房主执棋选择">
+                <option value="1">红方</option><option value="2">蓝方</option>
+            </select>
+        </label>
+    </div>
+    <div class="gomoku-online-panel" id="halma-online-panel" hidden>
+        <form id="halma-join-form" class="gomoku-join-form">
+            <label for="halma-room-input">加入好友房间</label>
+            <input id="halma-room-input" type="text" maxlength="20" placeholder="输入 20 位房间码" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <button type="submit" class="game-btn" id="halma-join">加入房间</button>
+        </form>
+        <div class="gomoku-room-actions" id="halma-room-actions" hidden>
+            <span>房间 <strong id="halma-room-code"></strong></span>
+            <button type="button" class="game-btn" id="halma-copy-room">复制邀请链接</button>
+            <button type="button" class="game-btn" id="halma-reconnect">重新连接</button>
+            <button type="button" class="game-btn" id="halma-leave">离开房间</button>
+        </div>
+        <p class="gomoku-online-help" id="halma-online-help"></p>
+        <p class="gomoku-online-help">房主选择人数、先手、镜像及执棋颜色；其余玩家依次入座。所有真人在线时可落子，悔棋与重开需所有真人同意。人数在建房后固定。</p>
+        <div class="gomoku-room-actions" id="halma-swap-control" hidden>
+            <label class="gomoku-speed-label">交换颜色<select id="halma-swap-target" aria-label="交换颜色对象"></select></label>
+            <button type="button" class="game-btn" id="halma-swap">申请交换</button>
+            <span>双方同意后交换控制权，棋子位置和行棋顺序保持不变。</span>
+        </div>
+        <a class="gomoku-invitation" id="halma-invitation" translate="no" hidden></a>
+        <div class="gomoku-offer" id="halma-offer" hidden>
+            <span id="halma-offer-text" role="status"></span>
+            <button type="button" class="game-btn primary" id="halma-accept">同意</button>
+            <button type="button" class="game-btn" id="halma-decline">拒绝</button>
+        </div>
+    </div>
+    <div class="gomoku-layout">
+        <div class="halma-board" id="halma-board" role="group" aria-label="中国跳棋棋盘，可用方向键移动、回车选子及落子"></div>
+        <aside class="gomoku-info" aria-label="对局状态">
+            <p class="gomoku-kicker">CHINESE CHECKERS</p>
+            <h3 id="halma-status" role="status" aria-live="polite">红方选子</h3>
+            <p id="halma-side"></p>
+            <div class="halma-ai-options" id="halma-ai-options">
+                <div class="game-actions" id="halma-ai-toggles" role="group" aria-label="AI 执棋开关"></div>
+                <label class="gomoku-speed-label">思考深度
+                    <select id="halma-speed" aria-describedby="halma-budget">
+                        <option value="simple">简单</option>
+                        <option value="fast" selected>普通</option>
+                        <option value="light">高级</option>
+                    </select>
+                </label>
+                <span class="gomoku-budget" id="halma-budget">目标 0.3 秒 · 上限 1 秒 · 下一手生效</span>
+                <p class="gomoku-online-help" id="halma-ai-help" hidden>房主可为未入座的颜色开启 AI 补位。AI 由房主浏览器计算，房主离线时暂停。</p>
+            </div>
+            <p id="halma-moves">0 手</p>
+            <p id="halma-detail"></p>
+            <div class="gomoku-proof" id="halma-estimate" role="status" hidden>
+                <strong>预计剩余步数（搜索时）</strong>
+                <p id="halma-estimate-text"></p>
+                <p>连续多跳算一步；≥ 表示下界，— 表示未知。</p>
+            </div>
+            <button type="button" class="game-btn" id="halma-retry" hidden>重试 AI</button>
+        </aside>
+    </div>
+    <p class="game-tips">每方 10 子，目标为正对面的营地。镜像模式下的跳跃不再限制棋子相邻，可以隔空跳跃。</p>
+</div>

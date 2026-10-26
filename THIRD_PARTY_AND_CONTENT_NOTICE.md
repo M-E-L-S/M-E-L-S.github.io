@@ -188,6 +188,13 @@ That restriction applies only to material M-E-L-S has the right to license;
 it does not supersede third-party licenses or claim ownership of facts, game
 mechanics, methods, names, or trademarks.
 
+### Halma WASM engine
+
+`assets/halma/` includes the local Halma project's classic Chinese Checkers engine
+under the MIT license. Its WebAssembly runtime also includes Emscripten and libc++
+components. Original notices are retained in `assets/halma/licenses/`; source,
+version provenance and update instructions are in `assets/halma/README.md`.
+
 ## 3. Mixed-Licensing Summary
 
 In summary:

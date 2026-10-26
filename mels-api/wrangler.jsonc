@@ -6,9 +6,9 @@
   "compatibility_date": "2026-09-17",
   "dev": { "ip": "127.0.0.1", "port": 8780 },
   "durable_objects": {
-    "bindings": [{ "name": "GOMOKU_ROOMS", "class_name": "GomokuRoom" }]
+    "bindings": [{ "name": "GOMOKU_ROOMS", "class_name": "GomokuRoom" }, { "name": "HALMA_ROOMS", "class_name": "HalmaRoom" }]
   },
-  "migrations": [{ "tag": "gomoku-v1", "new_sqlite_classes": ["GomokuRoom"] }],
+  "migrations": [{ "tag": "gomoku-v1", "new_sqlite_classes": ["GomokuRoom"] }, { "tag": "halma-v1", "new_sqlite_classes": ["HalmaRoom"] }],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -27,6 +27,8 @@
   },
 
   "ratelimits": [
+    { "name": "HALMA_CONNECT_LIMITER", "namespace_id": "1007", "simple": { "limit": 20, "period": 60 } },
+    { "name": "HALMA_CREATE_LIMITER", "namespace_id": "1008", "simple": { "limit": 10, "period": 60 } },
     { "name": "GOMOKU_CONNECT_LIMITER", "namespace_id": "1005", "simple": { "limit": 20, "period": 60 } },
     { "name": "GOMOKU_CREATE_LIMITER", "namespace_id": "1006", "simple": { "limit": 10, "period": 60 } },
     { "name": "AICU_LOGIN_LIMITER", "namespace_id": "1003", "simple": { "limit": 5, "period": 60 } },

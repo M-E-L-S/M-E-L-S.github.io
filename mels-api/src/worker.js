@@ -1,6 +1,7 @@
 import { authorize, login } from './auth.js';
 import { routeGomoku } from './gomoku-router.js';
 export { GomokuRoom } from './gomoku-room.js';
+export { HalmaRoom } from './halma-room.js';
 
 const CONFIG = {
   allowedOrigins: new Set([
@@ -1106,6 +1107,7 @@ export default {
   async fetch(request, env, ctx) {
     try {
       if (new URL(request.url).pathname.startsWith('/api/gomoku/')) return await routeGomoku(request, env);
+      if (new URL(request.url).pathname.startsWith('/api/halma/')) return await routeGomoku(request, env, 'halma');
       const origin = request.headers.get("Origin");
 
       // 保留无 Origin 请求，便于地址栏或命令行测试。

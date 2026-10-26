@@ -122,6 +122,32 @@ for (const file of ['gomoku-client.js', 'gomoku-online.js', 'game-room-client.js
     for (const match of source.matchAll(/'([^'\n]*[\u3400-\u9fff][^'\n]*)'/g)) gomokuStatic.add(match[1]);
 }
 for (const source of gomokuStatic) assert.ok(!/[\u3400-\u9fff]/.test(i18n.t(source)), source);
+const halmaStatic = new Set();
+for (const match of fs.readFileSync('src/pages/halma.html', 'utf8').matchAll(/>([^<>]*[\u3400-\u9fff][^<>]*)<|(?:aria-label|title)="([^"]+)"/g)) {
+    halmaStatic.add((match[1] || match[2]).trim());
+}
+const halmaFixtures = new Map([
+    ['红方申请重新开局 · 已同意 2/6 · 橙方先手 · 镜像模式 · 房主执紫方', 'Red requested a restart · Approved 2/6 · Orange first · Mirror jumps · Host: Purple'],
+    ['蓝方申请悔棋 · 已同意 1/3', 'Blue requested an undo · Approved 1/3'],
+    ['你执紫方', 'You play Purple'],
+    ['中国跳棋 · 小游戏 · MELS', 'Chinese Checkers · Games · MELS'],
+    ['切换游戏，当前：中国跳棋', 'Switch game (current: Chinese Checkers)'],
+    ['红方：≥12 步 · 蓝方：— 步', 'Red: ≥12 moves · Blue: — moves'],
+    ['搜索深度 5 · 用时 1.2 秒', 'Depth 5 · 1.2 s']
+]);
+for (const [side, englishSide] of [['红方', 'Red'], ['蓝方', 'Blue'], ['绿方', 'Green'], ['黄方', 'Yellow'], ['紫方', 'Purple'], ['橙方', 'Orange']]) {
+    halmaFixtures.set(`${side}：玩家`, `${englishSide}: Player`);
+    halmaFixtures.set(`${side}：AI`, `${englishSide}: AI`);
+    halmaFixtures.set(`${side}选子`, `${englishSide}: select a piece`);
+    halmaFixtures.set(`${side}选择落点`, `${englishSide}: select a destination`);
+    halmaFixtures.set(`${side}获胜！`, `${englishSide} wins!`);
+    halmaFixtures.set(`点击开始，${side}先行`, `Select Start. ${englishSide} moves first.`);
+    for (const position of ['0,0', '-4,2', '8,-4']) for (const destination of ['', '，可落子']) {
+        halmaFixtures.set(`${position}，${side}${destination}`, `${position}, ${englishSide}${destination ? ', legal destination' : ''}`);
+    }
+}
+for (const source of halmaStatic) assert.ok(!/[\u3400-\u9fff]/.test(i18n.t(source)), source);
+for (const [source, expected] of halmaFixtures) assert.equal(i18n.t(source), expected, source);
 for (const file of ['src/pages/home-sections.html', 'src/pages/arg.html']) {
     const markup = fs.readFileSync(file, 'utf8').replace(/<code\b[^>]*>[\s\S]*?<\/code>/g, '');
     for (const match of markup.matchAll(/>([^<>]*[\u3400-\u9fff][^<>]*)</g)) {
@@ -129,7 +155,7 @@ for (const file of ['src/pages/home-sections.html', 'src/pages/arg.html']) {
         assert.ok(!/[\u3400-\u9fff]/.test(i18n.t(source)), `${file}: ${source}`);
     }
 }
-const gomokuSources = [...new Set([...gomokuFixtures.keys(), ...gomokuStatic])];
+const gomokuSources = [...new Set([...gomokuFixtures.keys(), ...gomokuStatic, ...halmaStatic, ...halmaFixtures.keys()])];
 root.childNodes = gomokuSources.map(text);
 i18n.setLanguage('en');
 assert.ok(root.childNodes.every(n => !/[\u3400-\u9fff]/.test(n.nodeValue)));

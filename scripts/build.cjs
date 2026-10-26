@@ -5,6 +5,7 @@ const crypto = require('node:crypto');
 const read = p => fs.readFileSync(path.join(root,p),'utf8');
 const write = (p,s) => { const dest=path.join(root,p); fs.mkdirSync(path.dirname(dest),{recursive:true}); fs.writeFileSync(dest,s.replace(/[\t ]+$/gm,'')); };
 let shell = read('src/site.html');
+shell = shell.replace('<!-- HALMA_VIEW -->', read('src/pages/halma.html')).replace('</head>', '<link rel="stylesheet" href="/src/styles/halma.css"></head>');
 shell = shell.replace('<!-- AICU_VIEW -->', read('src/pages/aicu.html')).replace('</head>', '<link rel="stylesheet" href="/src/styles/aicu.css"></head>').replace('</body>', '<script src="/src/scripts/aicu.js"></script></body>');
 shell = shell.replace('<!-- ARG_VIEW -->', read('src/pages/arg.html')).replace('</head>', '<link rel="stylesheet" href="/src/styles/arg.css"></head>').replace('</body>', '<script defer src="/src/scripts/arg.js"></script></body>');
 shell = shell.replace('<!-- TEXT_VIEW -->', read('src/pages/text.html')).replace('</head>', '<link rel="stylesheet" href="/src/styles/text.css"></head>');
@@ -23,6 +24,10 @@ function render(tool='scoreboard_5') {
       const dependencies = ['src/scripts/gomoku-model.js', 'src/scripts/gomoku-client.js', 'src/scripts/gomoku-online.js', 'src/scripts/game-room-client.js', 'src/scripts/gomoku-netlify.js', 'src/scripts/gomoku-feedback.js', 'src/scripts/gomoku-input.js', 'assets/gomoku/worker.js', 'assets/gomoku/gomoku_wasm.js', 'assets/gomoku/gomoku_wasm.wasm'];
       versionSource = Buffer.concat([Buffer.from(source), ...dependencies.map(name => fs.readFileSync(path.join(root, name)))]);
     }
+    if (file.replace(/^\//,'') === 'src/scripts/halma.js') {
+      const dependencies = ['src/scripts/halma-model.js', 'src/scripts/halma-rules.js', 'src/scripts/halma-geometry.js', 'src/scripts/halma-client.js', 'src/scripts/halma-motion.js', 'src/scripts/halma-online.js', 'src/scripts/gomoku-online.js', 'src/scripts/game-room-client.js', 'assets/halma/client.js', 'assets/halma/worker.js', 'assets/halma/api.js', 'assets/halma/halma.js', 'assets/halma/halma.wasm'];
+      versionSource = Buffer.concat([Buffer.from(source), ...dependencies.map(name => fs.readFileSync(path.join(root, name)))]);
+    }
     return `${attr}="${file}?v=${crypto.createHash('sha256').update(versionSource).digest('hex').slice(0,10)}"`;
   });
 }
@@ -35,7 +40,7 @@ const palette = {
  '#d4e1f9':'var(--button-bg)', '#4a90e2':'var(--accent)', '#fff':'var(--surface)', '#ffffff':'var(--surface)'
 };
 for (const [tool] of tools) write(`src/styles/freshcup/${tool}.theme.css`, read(`src/styles/freshcup/${tool}.css`).replace(/#[a-f\d]{3,8}\b/gi,hex=>palette[hex.toLowerCase()]||hex));
-for (const route of ['','about','tools','tools/acronym','tools/favicon','tools/aicu','tools/arg','tools/arg/reference','tools/text','minigame','minigame/link','minigame/minesweeper','minigame/spider','minigame/wordle','minigame/gomoku','freshcup']) write((route?route+'/':'')+'index.html',render());
+for (const route of ['','about','tools','tools/acronym','tools/favicon','tools/aicu','tools/arg','tools/arg/reference','tools/text','minigame','minigame/link','minigame/minesweeper','minigame/spider','minigame/wordle','minigame/gomoku','minigame/halma','freshcup']) write((route?route+'/':'')+'index.html',render());
 for (const [id,,url] of tools) {
   if(url) write('freshcup/'+url+'index.html',render(id));
   // Original root-level public URLs remain usable as lightweight redirects.

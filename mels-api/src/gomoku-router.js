@@ -6,9 +6,9 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 const failure = (error, status) => Response.json({ error }, { status, headers: { 'Cache-Control': 'no-store' } });
 
-export async function routeGomoku(request, env) {
+export async function routeGomoku(request, env, game = 'gomoku') {
   const url = new URL(request.url);
-  const match = url.pathname.match(/^\/api\/gomoku\/rooms\/([a-f0-9]{20})$/);
+  const match = url.pathname.match(new RegExp(`^/api/${game}/rooms/([a-f0-9]{20})$`));
   if (!match || !ROOM_ID.test(match[1]) || url.href.length > 512) return failure('invalid_room', 400);
   // Production accepts only exact preview origins. Local Worker integration
   // tests may additionally use other loopback origins.
@@ -18,13 +18,15 @@ export async function routeGomoku(request, env) {
   try { allowed ||= local && ['localhost', '127.0.0.1', '[::1]'].includes(new URL(origin).hostname); } catch {}
   if (!allowed) return failure('origin_not_allowed', 403);
   if (request.method !== 'GET' || request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return failure('websocket_required', 426);
-  if (!env.GOMOKU_ROOMS || !env.GOMOKU_CONNECT_LIMITER) return failure('service_unavailable', 503);
+  const binding = game === 'halma' ? 'HALMA' : 'GOMOKU';
+  const rooms = env[binding + '_ROOMS'], connectLimiter = env[binding + '_CONNECT_LIMITER'], createLimiter = env[binding + '_CREATE_LIMITER'];
+  if (!rooms || !connectLimiter) return failure('service_unavailable', 503);
   // Stop abusive handshakes before allocating/reading a room. Not a strict global cap.
-  const result = await env.GOMOKU_CONNECT_LIMITER.limit({ key: request.headers.get('CF-Connecting-IP') || 'local' });
+  const result = await connectLimiter.limit({ key: request.headers.get('CF-Connecting-IP') || 'local' });
   if (!result.success) return failure('too_many_connections', 429);
   if (url.searchParams.get('create') === '1') {
-    if (!env.GOMOKU_CREATE_LIMITER) return failure('service_unavailable', 503);
-    if (!(await env.GOMOKU_CREATE_LIMITER.limit({ key: 'rooms' })).success) return failure('too_many_rooms', 429);
+    if (!createLimiter) return failure('service_unavailable', 503);
+    if (!(await createLimiter.limit({ key: 'rooms' })).success) return failure('too_many_rooms', 429);
   }
-  return env.GOMOKU_ROOMS.get(env.GOMOKU_ROOMS.idFromName(match[1])).fetch(request);
+  return rooms.get(rooms.idFromName(match[1])).fetch(request);
 }

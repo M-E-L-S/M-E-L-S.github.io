@@ -22,15 +22,18 @@ export function createService(repository, clock = Date.now, games = defaultGames
       if (!['open', 'sync', 'leave', 'command'].includes(input.action)) fail('invalid_message');
       if (input.action === 'command' && (!validHex(input.requestId, 32) || !input.command || typeof input.command !== 'object' || Array.isArray(input.command) || JSON.stringify(input.command).length > 512)) fail('invalid_message');
       const key = digest(input.token), operation = input.action === 'command' ? digest(JSON.stringify(input.command)) : null;
-      for (let attempt = 0; attempt < 4; attempt++) {
+      for (let attempt = 0; attempt < (typeof game.seats === 'function' ? 8 : 4); attempt++) {
         const now = clock(), saved = await repository.get(input.room, input.action !== 'command');
         let room = saved ? structuredClone(saved.data) : null, changed = false, seat;
         if (!room) {
           if (input.action !== 'open' || input.create !== true) fail('room_not_found');
           if (!trustedClient) fail('service_unavailable');
           if (!await repository.limitCreation(digest(trustedClient), now)) fail('too_many_rooms');
+          const state = game.initial(input.options);
+          const seats = typeof game.seats === 'function' ? game.seats(state) : game.seats;
+          if (!Number.isInteger(seats) || seats < 1 || seats > 8) fail('invalid_options');
           room = { id: input.room, game: input.game, revision: 0, expiresAt: now + TTL,
-            seats: Array(game.seats).fill(null), state: game.initial(input.options), receipts: [] };
+            seats: Array(seats).fill(null), state, receipts: [] };
           seat = 0; changed = true;
         } else {
           if (room.game !== input.game) fail('room_not_found');
@@ -40,7 +43,7 @@ export function createService(repository, clock = Date.now, games = defaultGames
         if (input.action === 'open') {
           if (seat === -1) {
             if (input.create) fail('room_exists');
-            seat = room.seats.indexOf(null);
+            seat = game.emptySeat ? game.emptySeat(room.state, room.seats) : room.seats.indexOf(null);
             if (seat === -1) fail('room_full');
             ++room.revision; changed = true;
           }
@@ -63,7 +66,8 @@ export function createService(repository, clock = Date.now, games = defaultGames
                 return { ok: true, replayed: true, now, state: snapshot(room, seat, now, game) };
               }
               const bad = error => ({ ok: false, error, now, state: snapshot(room, seat, now, game) });
-              if (input.revision !== room.revision) return bad('stale_state');
+              if (input.revision !== room.revision && !(Number.isSafeInteger(input.revision) && input.revision >= 0 && input.revision < room.revision
+                && game.acceptsStale?.(room.state, input.command))) return bad('stale_state');
               if (now - identity.rateAt >= 10000) { identity.rateAt = now; identity.count = 0; }
               if (identity.count >= 20) return bad('too_many_operations');
               try { game.apply(room.state, input.command, viewOf(room, seat, now)); }

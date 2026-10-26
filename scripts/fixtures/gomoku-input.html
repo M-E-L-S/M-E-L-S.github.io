@@ -17,7 +17,6 @@ frame.addEventListener('load', async () => {
         for (let i = 0; !byId('board').children.length && i < 100; i++) await new Promise(r => setTimeout(r, 50));
         check(byId('board').children.length === 225, 'Game did not initialize');
         doc.querySelector('[data-gomoku-mode="local"]').click();
-        byId('start').click();
         const cells = byId('board').children;
         const touch = index => cells[index].dispatchEvent(new page.PointerEvent('click', { bubbles: true, pointerType: 'touch', detail: 1 }));
         const stones = () => byId('board').querySelectorAll('.black, .white').length;

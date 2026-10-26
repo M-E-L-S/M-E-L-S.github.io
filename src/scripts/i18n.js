@@ -300,6 +300,10 @@
     Object.assign(english, {
         '五子棋': 'Gomoku', '对战模式': 'Game mode', '本地对战': 'Local play', '双人联机': 'Online play',
         'Cloudflare 联机': 'Cloudflare online', 'Netlify 联机': 'Netlify online',
+        'Cloudflare源，需境外使用，更流畅。创建房间后分享邀请链接，好友加入即可开局。': 'Cloudflare service, for use outside mainland China with smoother play. Create a room and share the invitation link with a friend.',
+        'Netlify源，境内可尝试使用，可能卡顿。长时间无操作会暂停同步，可点击重新连接继续。': 'Netlify service, available to try in mainland China; delays may occur. Sync pauses after prolonged inactivity; reconnect to continue.',
+        '15 × 15 自由五子棋，无禁手。': '15 × 15 freestyle Gomoku, with no forbidden moves.',
+        '15 × 15 自由五子棋，无禁手。只有房主可选择执棋颜色。': '15 × 15 freestyle Gomoku, with no forbidden moves. Only the host can choose a color.',
         '此模式使用独立房间。长时间无操作会暂停同步，可点击重新连接继续。房间保留 24 小时。': 'This mode uses separate rooms. Sync pauses after prolonged inactivity; reconnect to continue. Rooms last for 24 hours.',
         'Netlify 联机尚未启用': 'Netlify online is not enabled yet',
         '联机服务暂不可用，正在重试': 'The online service is temporarily unavailable. Retrying.',
@@ -318,7 +322,7 @@
         '长时间无操作，自动同步已暂停，请重新连接': 'Automatic sync paused after prolonged inactivity. Reconnect to continue.',
         '复制失败，请长按或复制下方邀请链接': 'Copy failed. Long-press or copy the invitation link below.',
         '创建房间后分享邀请链接，好友加入即可开局。房间保留 24 小时；同一浏览器可恢复原座位。': 'Share the invitation after creating a room. Rooms last for 24 hours; the same browser can recover its seat.',
-        '开始 / 重新开局': 'Start / Restart', '悔棋': 'Undo', '申请悔棋': 'Request undo',
+        '开始 / 重新开局': 'Start / Restart', '重新开局': 'Restart', '悔棋': 'Undo', '申请悔棋': 'Request undo',
         '申请重开': 'Request restart', '创建房间': 'Create room', '重试 AI': 'Retry AI', '继续 AI': 'Resume AI',
         'AI 执棋开关': 'AI player controls', 'AI 执白': 'AI plays White', 'AI 执黑': 'AI plays Black',
         '思考深度': 'Thinking depth', '普通': 'Normal',
@@ -361,6 +365,41 @@
         '房间已到期，请创建新房间': 'The room expired. Create a new room.',
         '连接已断开；房间不存在、已满或服务暂不可用，请检查房间码后重试': 'Disconnected. The room may not exist, may be full, or the service may be unavailable. Check the room code and try again.'
     });
+    Object.assign(english, {
+        '中国跳棋': 'Chinese Checkers', '跳棋人数': 'Number of players',
+        '你': 'You', '待加入': 'Waiting', '在线': 'Online', '离线': 'Offline', '普通规则': 'Normal rules',
+        '交换颜色': 'Swap colors', '交换颜色对象': 'Player to swap with', '申请交换': 'Request swap',
+        '营地底色表示该颜色的目标营；各方按顺时针顺序行棋。': 'Camp colors indicate each player’s destination. Turns proceed clockwise.',
+        '旧版房间：同意重开后启用新布局与多人 AI': 'Legacy room: agree to restart to enable the new layout and multiplayer AI',
+        '房主选择人数、先手、镜像及执棋颜色；其余玩家依次入座。所有真人在线时可落子，悔棋与重开需所有真人同意。人数在建房后固定。': 'The host chooses the player count, starting color, mirror rules and their color. Other players take the remaining seats. All human players must be online to play and approve undo or restart requests. The player count is fixed after creation.',
+        '全部己子离开出发营，且目标营每格都有棋子时获胜，对手留子不会阻止胜利；三次重复局面或无合法着判和。本地切换人数或镜像模式会重新开局，每方均可独立开启 AI；悔棋后轮到 AI 时暂停，可点击继续 AI。': 'Win by leaving your starting camp and filling the opposite camp; opposing pieces there do not prevent victory. Threefold repetition or no legal moves is a draw. Changing the player count or mirror rules restarts local play. Each color has an independent AI switch. Undo pauses an AI turn; select Resume AI to continue.',
+        '双方同意后交换控制权，棋子位置和行棋顺序保持不变。': 'Both players must agree to swap control. Piece positions and turn order stay the same.',
+        '房主可为未入座的颜色开启 AI 补位。AI 由房主浏览器计算，房主离线时暂停；已有玩家的席位不会被 AI 替换。': 'The host can fill unclaimed colors with AI. AI runs in the host browser and pauses when the host is offline. Reserved player seats cannot be replaced by AI.',
+        '房主可为未入座的颜色开启 AI 补位。AI 由房主浏览器计算，房主离线时暂停。': 'The host can fill unclaimed colors with AI. AI runs in the host browser and pauses when the host is offline.',
+        '已有玩家的席位不能改为 AI': 'A reserved player seat cannot be replaced by AI',
+        '请选择另一位在线玩家交换颜色': 'Select another online player to swap colors with',
+        '等待玩家加入…': 'Waiting for players to join…', '有玩家未在线，等待重连': 'A player is offline. Waiting for reconnection.',
+        '等待全员处理对局申请': 'Waiting for all players to respond',
+        '房主设置在全员同意重开后生效': 'Host settings apply after everyone agrees to restart',
+        '全部己子离开出发营，且目标营每格都有棋子时获胜，对手留子不会阻止胜利；三次重复局面或无合法着判和。本地切换人数或镜像模式会重新开局，本地双人支持 AI；双方 AI 悔棋后暂停，可点击继续 AI。': 'Win by leaving your starting camp and filling every space in the opposite camp; opposing pieces there do not block victory. Threefold repetition or no legal moves is a draw. In local play, changing the player count or mirror rules restarts the game. Local two-player games support AI. Undo pauses AI self-play; select Resume AI to continue.',
+        '只有房主可以修改开局设置': 'Only the host can change game settings',
+        '已有玩家加入，更改设置需全员同意重开': 'Players have joined. Everyone must agree to restart with new settings.',
+        '开局设置无效，请重新选择': 'Invalid game settings. Please select again.',
+        '房主选择人数、先手、镜像及执棋颜色；其余玩家依次入座。全员在线时可落子，悔棋与重开需全员同意。人数在建房后固定。': 'The host chooses the player count, starting color, mirror rules and their color. Other players take the remaining seats. All players must be online to play, and everyone must approve undo or restart requests. The player count is fixed once the room is created.',
+        '先手颜色': 'Starting color', '未走子时立即生效，否则下局生效': 'Applies now before the first move, otherwise next game',
+        '2 人': '2 players', '3 人': '3 players', '4 人': '4 players', '6 人': '6 players',
+        '镜像模式': 'Mirror jumps', 'AI 执红': 'AI plays Red', 'AI 执蓝': 'AI plays Blue',
+        '红方': 'Red', '蓝方': 'Blue', '绿方': 'Green', '黄方': 'Yellow', '紫方': 'Purple', '橙方': 'Orange',
+        '点击开始，红方先行': 'Select Start. Red moves first.',
+        '中国跳棋棋盘，可用方向键移动、回车选子及落子': 'Chinese Checkers board. Use arrow keys to navigate and Enter to select a piece or destination.',
+        '预计剩余步数（搜索时）': 'Estimated moves remaining (at search start)',
+        '连续多跳算一步；≥ 表示下界，— 表示未知。': 'A jump sequence counts as one move; ≥ marks a lower bound and — means unknown.',
+        '和棋 · 重复局面或无合法着': 'Draw · Repeated position or no legal moves',
+        '正在走子…': 'Moving…', 'AI 暂时不可用，请重试': 'AI is temporarily unavailable. Please retry.',
+        '每方 10 子，目标为正对面的营地。选择己方棋子，再点击高亮落点；可走相邻一步或连续跳跃，允许后退及进入其他营地。镜像模式可绕单个棋子等距远跳，中间其余位置须为空。': 'Each player has 10 pieces and aims for the opposite camp. Select your piece, then a highlighted destination. Move one adjacent step or a sequence of jumps. Backward moves and other camps are allowed. Mirror jumps cross a single piece at equal distances, with all other intervening spaces empty.',
+        '每方 10 子，目标为正对面的营地。镜像模式下的跳跃不再限制棋子相邻，可以隔空跳跃。': 'Each player has 10 pieces and aims for the opposite camp. Mirror mode allows long-distance jumps without requiring adjacent pieces.',
+        '全部己子离开出发营，且目标营每格都有棋子时获胜，对手留子不会阻止胜利；三次重复局面或无合法着判和。切换人数或镜像模式会重新开局。仅双人模式支持 AI；双方 AI 悔棋后暂停，可点击继续 AI。': 'Win by leaving your starting camp and filling every space in the opposite camp; opposing pieces there do not block victory. Threefold repetition or no legal moves is a draw. Changing the player count or mirror rules starts a new game. AI is available for two players. Undo pauses AI self-play; select Resume AI to continue.'
+    });
     // Longest first prevents a short label from consuming a more specific phrase.
     const fragments = Object.entries(englishFragments).sort((a, b) => b[0].length - a[0].length);
     const originals = new WeakMap();
@@ -380,7 +419,20 @@
         let translated = Object.hasOwn(english, core) ? english[core] : undefined;
         let dynamic;
         if (!translated) {
-            if ((dynamic = core.match(/^([A-O](?:[1-9]|1[0-5]))，(黑棋|白棋|空位)$/))) translated = `${dynamic[1]}, ${english[dynamic[2]]}`;
+            if ((dynamic = core.match(/^点击开始，(红方|蓝方|绿方|黄方|紫方|橙方)先行$/))) translated = `Select Start. ${english[dynamic[1]]} moves first.`;
+            else if ((dynamic = core.match(/^(-?\d+,-?\d+)，(红方|蓝方|绿方|黄方|紫方|橙方|空位)(，可落子)?$/))) translated = `${dynamic[1]}, ${english[dynamic[2]]}${dynamic[3] ? ', legal destination' : ''}`;
+            else if ((dynamic = core.match(/^(红方|蓝方|绿方|黄方|紫方|橙方)：(AI|玩家|你|待加入|在线|离线)$/))) translated = `${english[dynamic[1]]}: ${english[dynamic[2]] || dynamic[2]}`;
+            else if ((dynamic = core.match(/^你执(红方|蓝方|绿方|黄方|紫方|橙方)$/))) translated = `You play ${english[dynamic[1]]}`;
+            else if ((dynamic = core.match(/^(红方|蓝方|绿方|黄方|紫方|橙方)申请(悔棋|重新开局) · 已同意 (\d+)\/(\d+)(?: · (红方|蓝方|绿方|黄方|紫方|橙方)先手 · (镜像模式|普通规则) · 房主执(红方|蓝方|绿方|黄方|紫方|橙方))?$/))) translated = `${english[dynamic[1]]} requested ${dynamic[2] === '悔棋' ? 'an undo' : 'a restart'} · Approved ${dynamic[3]}/${dynamic[4]}${dynamic[5] ? ` · ${english[dynamic[5]]} first · ${english[dynamic[6]]} · Host: ${english[dynamic[7]]}` : ''}`;
+            else if ((dynamic = core.match(/^(红方|蓝方|绿方|黄方|紫方|橙方)(选子|选择落点)$/))) translated = `${english[dynamic[1]]}: ${dynamic[2] === '选子' ? 'select a piece' : 'select a destination'}`;
+            else if ((dynamic = core.match(/^(红方|蓝方|绿方|黄方|紫方|橙方)获胜！$/))) translated = `${english[dynamic[1]]} wins!`;
+            else if ((dynamic = core.match(/^(红方|蓝方|绿方|黄方|紫方|橙方) AI 正在思考…$/))) translated = `${english[dynamic[1]]} AI is thinking…`;
+            else if ((dynamic = core.match(/^AI 执(红|蓝|绿|黄|紫|橙)$/))) translated = `AI plays ${english[dynamic[1] + '方']}`;
+            else if ((dynamic = core.match(/^(红方|蓝方|绿方|黄方|紫方|橙方)：([≥\d—]+) 步$/))) translated = `${english[dynamic[1]]}: ${dynamic[2]} moves`;
+            else if ((dynamic = core.match(/^(红方|蓝方|绿方|黄方|紫方|橙方)申请与(红方|蓝方|绿方|黄方|紫方|橙方)交换颜色$/))) translated = `${english[dynamic[1]]} requests a color swap with ${english[dynamic[2]]}`;
+            else if ((dynamic = core.match(/^搜索深度 (\d+) · 用时 (\d+(?:\.\d+)?) 秒$/))) translated = `Depth ${dynamic[1]} · ${dynamic[2]} s`;
+            else if ((dynamic = core.match(/^红方：([≥\d—]+) 步 · 蓝方：([≥\d—]+) 步$/))) translated = `Red: ${dynamic[1]} moves · Blue: ${dynamic[2]} moves`;
+            else if ((dynamic = core.match(/^([A-O](?:[1-9]|1[0-5]))，(黑棋|白棋|空位)$/))) translated = `${dynamic[1]}, ${english[dynamic[2]]}`;
             else if ((dynamic = core.match(/^([A-O](?:[1-9]|1[0-5]))，预选(黑棋|白棋)，再次点按落子$/))) translated = `${dynamic[1]}, ${english[dynamic[2]]} preview, tap again to place`;
             else if ((dynamic = core.match(/^(\d+) 手$/))) translated = `${dynamic[1]} move${dynamic[1] === '1' ? '' : 's'}`;
             else if ((dynamic = core.match(/^黑棋：(AI|玩家) · 白棋：(AI|玩家)$/))) translated = `Black: ${english[dynamic[1]] || dynamic[1]} · White: ${english[dynamic[2]] || dynamic[2]}`;

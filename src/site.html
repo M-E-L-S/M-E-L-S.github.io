@@ -17,6 +17,7 @@
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="src/styles/components.css">
     <link rel="stylesheet" href="src/styles/site-design.css?v=2">
     <link rel="stylesheet" href="src/styles/gomoku.css">
 </head>
@@ -349,6 +350,11 @@
                         <span class="game-picker-name">Wordle</span>
                         <i class="fas fa-check game-picker-check" aria-hidden="true"></i>
                     </a>
+                    <a href="/minigame/halma/" class="game-picker-item" id="game-picker-item-halma" role="option" data-game="halma" aria-selected="false">
+                        <span class="game-picker-emoji" aria-hidden="true">🔴</span>
+                        <span class="game-picker-name">中国跳棋</span>
+                        <i class="fas fa-check game-picker-check" aria-hidden="true"></i>
+                    </a>
                     <a href="/minigame/gomoku/" class="game-picker-item" id="game-picker-item-gomoku"
                         role="option" data-game="gomoku" aria-selected="false">
                         <span class="game-picker-emoji" aria-hidden="true">⚫</span>
@@ -359,6 +365,7 @@
             </div>
         </div>
         <div class="game-panel">
+            <!-- HALMA_VIEW -->
             <!-- 五子棋 -->
             <div class="game-view" id="gomoku-view" hidden>
                 <div class="game-toolbar">
@@ -368,7 +375,7 @@
                         <button type="button" class="diff-btn" data-gomoku-mode="netlify" aria-pressed="false">Netlify 联机</button>
                     </div>
                     <div class="game-actions">
-                        <button type="button" class="game-btn primary" id="gomoku-start">开始 / 重新开局</button>
+                        <button type="button" class="game-btn primary" id="gomoku-start">重新开局</button>
                         <button type="button" class="game-btn" id="gomoku-undo" disabled>悔棋</button>
                         <button type="button" class="game-btn icon-btn" id="gomoku-sound-btn" title="音效开关" aria-label="音效开关" aria-pressed="true"><i class="fas fa-volume-high" aria-hidden="true"></i></button>
                     </div>
@@ -406,7 +413,7 @@
                         <button type="button" class="game-btn" id="gomoku-reconnect">重新连接</button>
                         <button type="button" class="game-btn" id="gomoku-leave">离开房间</button>
                     </div>
-                    <p class="gomoku-online-help" id="gomoku-online-help">创建房间后分享邀请链接，好友加入即可开局。房间保留 24 小时；同一浏览器可恢复原座位。</p>
+                    <p class="gomoku-online-help" id="gomoku-online-help">Cloudflare源，需境外使用，更流畅。创建房间后分享邀请链接，好友加入即可开局。</p>
                     <a class="gomoku-invitation" id="gomoku-invitation" translate="no" hidden></a>
                     <div class="gomoku-offer" id="gomoku-offer" hidden>
                         <span id="gomoku-offer-text" role="status"></span>
@@ -418,7 +425,7 @@
                     <div class="gomoku-board" id="gomoku-board" role="group" aria-label="15 行 15 列五子棋棋盘，可用方向键移动、回车落子" aria-description="触屏操作：首次点按预选，再次点按同一位置落子；点按其他位置可更换预选。"></div>
                     <aside class="gomoku-info" aria-label="对局状态">
                         <p class="gomoku-kicker">FIVE IN A ROW</p>
-                        <h3 id="gomoku-status" role="status" aria-live="polite">点击开始，黑棋先行</h3>
+                        <h3 id="gomoku-status" role="status" aria-live="polite">黑棋落子</h3>
                         <p id="gomoku-side">黑棋：玩家 · 白棋：玩家</p>
                         <p id="gomoku-moves">0 手</p>
                         <p id="gomoku-detail"></p>
@@ -794,6 +801,7 @@
 <script src="src/scripts/game-audio.js"></script>
 <script src="src/scripts/wordle.js"></script>
 <script type="module" src="src/scripts/gomoku.js"></script>
+<script type="module" src="src/scripts/halma.js"></script>
 <script src="src/scripts/mini-games.js?v=2"></script>
 <script src="vendor/jszip.min.js"></script>
 <script src="src/scripts/utilities.js?v=1"></script>

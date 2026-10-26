@@ -1,24 +1,25 @@
 // ==========================================================
 // 小游戏切换器
 // 职责：标题栏「小游戏」右侧的箭头按钮展开自绘菜单，
-//       在连连看、扫雷、蜘蛛纸牌、Wordle 和五子棋之间切换，
+//       在连连看、扫雷、蜘蛛纸牌、Wordle、五子棋和中国跳棋之间切换，
 //       并把「当前是否可见」通知给对应游戏，使其自动暂停 / 继续。
 // 依赖：game.js 暴露的 __LLK.setVisible、minesweeper.js 暴露的 __MINE.setVisible、
-//       spider.js / wordle.js / gomoku.js 暴露的对应 setVisible 钩子
+//       spider.js / wordle.js / gomoku.js / halma.js 暴露的对应 setVisible 钩子
 // ==========================================================
 (function () {
     'use strict';
     if (typeof document === 'undefined') return;
 
     const CHOICE_KEY = 'winy_minigame_choice_v1';
-    const GAMES = ['llk', 'mine', 'spider', 'wordle', 'gomoku'];
-    const NAMES = { llk: '连连看', mine: '扫雷', spider: '蜘蛛纸牌', wordle: 'Wordle', gomoku: '五子棋' };
+    const GAMES = ['llk', 'mine', 'spider', 'wordle', 'gomoku', 'halma'];
+    const NAMES = { llk: '连连看', mine: '扫雷', spider: '蜘蛛纸牌', wordle: 'Wordle', gomoku: '五子棋', halma: '中国跳棋' };
     const ROUTES = {
         llk: '/minigame/link/',
         mine: '/minigame/minesweeper/',
         spider: '/minigame/spider/',
         wordle: '/minigame/wordle/',
-        gomoku: '/minigame/gomoku/'
+        gomoku: '/minigame/gomoku/',
+        halma: '/minigame/halma/'
     };
     const GAME_BY_ROUTE = Object.fromEntries(Object.entries(ROUTES).map(([game, route]) => [route.replace(/\/$/, ''), game]));
 
@@ -43,7 +44,7 @@
     }
 
     // 各游戏把自己的控制钩子挂在全局，这里按 id 查表转发可见性
-    const HOOKS = { llk: '__LLK', mine: '__MINE', spider: '__SPIDER', wordle: '__WORDLE', gomoku: '__GOMOKU' };
+    const HOOKS = { llk: '__LLK', mine: '__MINE', spider: '__SPIDER', wordle: '__WORDLE', gomoku: '__GOMOKU', halma: '__HALMA' };
 
     function notify(id, visible) {
         const hook = globalThis[HOOKS[id]];
