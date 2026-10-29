@@ -40,21 +40,47 @@ function render(results, container, acgData=null, matchAcgNames=null) {
     container.querySelectorAll('.arg-copy').forEach(button=>{bindText(button,'复制结果');button.addEventListener('click',async()=>{await navigator.clipboard.writeText(results[+button.dataset.copy].text);bindText(button,'已复制');});});
 }
 
-function init() {
+async function init() {
     const form=document.getElementById('arg-form'),input=document.getElementById('arg-input'),results=document.getElementById('arg-results'),summary=document.getElementById('arg-summary'),run=document.getElementById('arg-run'),stop=document.getElementById('arg-stop'),acgToggle=document.getElementById('arg-acg-toggle');
     if(!form)return;
+    const {validateKeyConfig}=await enginePromise;
     const depthSelect=document.getElementById('arg-depth'),budgetSelect=document.getElementById('arg-budget'),modeSelect=document.getElementById('arg-mode'),workerSelect=document.getElementById('arg-workers'),effortSelect=document.getElementById('arg-effort');
+    const keyPanel=document.getElementById('arg-key-panel'),keyGrid=document.getElementById('arg-key-fields'),keyError=document.getElementById('arg-key-error'),keyInputs=new Map();
+    for(let index=0;index<5;index++){
+        const label=document.createElement('label'),title=document.createElement('span'),control=document.createElement('input'),error=document.createElement('small');
+        bindText(title,'密钥 {index}',{index:index+1});
+        control.id=`arg-key-${index}`;control.type='text';control.maxLength=256;control.spellcheck=false;control.autocomplete='off';control.setAttribute('translate','no');
+        error.id=control.id+'-error';error.className='arg-key-error';error.hidden=true;
+        control.setAttribute('aria-describedby','arg-key-formats '+error.id);label.append(title,control,error);
+        (index===0?keyGrid:document.getElementById('arg-more-key-fields')).append(label);keyInputs.set(String(index),{control,error});
+    }
+    const readKeys=()=>[...keyInputs.values()].map(({control})=>control.value);
+    const validateKeys=()=>{
+        const validation=validateKeyConfig(readKeys()),active=modeSelect.value==='keyed';
+        for(const [id,{control,error}] of keyInputs){const problem=active&&validation.errors.find(item=>item.field===id);control.setAttribute('aria-invalid',String(!!problem));error.hidden=!problem;if(problem)bindText(error,problem.message);}
+        keyError.hidden=!active||!validation.errors.length;
+        if(!keyError.hidden)bindText(keyError,validation.errors.some(item=>item.field)?'请修正标出的密钥格式后再开始搜索。':'密钥模式至少需要一组有效密钥。');
+        return validation;
+    };
+    keyPanel.addEventListener('input',validateKeys);
     const reportedThreads=Math.max(1,Math.floor(navigator.hardwareConcurrency||4));
     const workerCounts=[];
     const maxWorkers=Math.min(8,reportedThreads,navigator.deviceMemory&&navigator.deviceMemory<8?4:8);
     for(let count=1;count<=maxWorkers;count*=2)workerCounts.push(count);
     if(workerCounts.at(-1)!==maxWorkers)workerCounts.push(maxWorkers);
     for(const count of workerCounts)workerSelect.add(new Option(String(count),String(count),false,count===Math.min(2,reportedThreads)));
-    bindText(document.getElementById('arg-thread-info'),navigator.hardwareConcurrency?'检测到本机有 {count} 个可用逻辑线程；搜索力度会按照实际情况自动调整总节点数。':'浏览器未报告逻辑线程数，暂按 {count} 个提供选项；搜索力度会自适应调整搜索宽度。',{count:reportedThreads});
+    bindText(document.getElementById('arg-thread-info'),navigator.hardwareConcurrency?'检测到本机有 {count} 个可用逻辑线程；搜索力度与 Worker 数量共同决定文本节点预算。':'浏览器未报告逻辑线程数，暂按 {count} 个提供选项；搜索力度与 Worker 数量共同决定文本节点预算。',{count:reportedThreads});
+    let wasKeyMode=false,unrestrictedDepth=depthSelect.value;
     const updateMode=()=>{
-        const parallel=modeSelect.value==='parallel';
+        const parallel=modeSelect.value==='parallel',keyMode=modeSelect.value==='keyed';
         document.querySelectorAll('.arg-standard-control').forEach(element=>element.hidden=parallel);
         document.querySelectorAll('.arg-parallel-control').forEach(element=>element.hidden=!parallel);
+        keyPanel.hidden=!keyMode;
+        if(keyMode&&!wasKeyMode)unrestrictedDepth=depthSelect.value;
+        for(const option of depthSelect.options){option.disabled=keyMode&&+option.value>5;option.hidden=option.disabled;}
+        if(keyMode&&+depthSelect.value>5)depthSelect.value='5';
+        if(!keyMode&&wasKeyMode)depthSelect.value=unrestrictedDepth;
+        wasKeyMode=keyMode;validateKeys();
     };
     modeSelect.addEventListener('change',updateMode);updateMode();
     const searchPanel=document.getElementById('arg-search-panel'),referencePanel=document.getElementById('arg-reference-panel');
@@ -62,11 +88,13 @@ function init() {
         if(!location.pathname.startsWith('/tools/arg'))return;
         const reference=location.pathname.startsWith('/tools/arg/reference');
         searchPanel.hidden=reference;referencePanel.hidden=!reference;
+        referencePanel.querySelectorAll('.arg-reference-highlight').forEach(entry=>entry.classList.remove('arg-reference-highlight'));
         document.querySelectorAll('[data-arg-page]').forEach(link=>link.toggleAttribute('aria-current',(link.dataset.argPage==='reference')===reference));
         document.title=reference?'支持的编码与密码 · ARG 辅助器 · MELS':'ARG 辅助器 · 小功能 · MELS';
         if(reference&&location.hash){
             const entry=document.getElementById(decodeURIComponent(location.hash.slice(1)));
             entry?.closest('.arg-category')?.setAttribute('open','');
+            if(entry&&referencePanel.contains(entry))entry.classList.add('arg-reference-highlight');
         }
     };
     showArgPage();addEventListener('popstate',showArgPage);
@@ -93,6 +121,8 @@ function init() {
     });
     form.addEventListener('submit',async event=>{
         event.preventDefault();const text=input.value.trim();if(!text){input.focus();return;}
+        const keyMode=modeSelect.value==='keyed',keys=keyMode?readKeys():undefined;
+        if(keyMode){const validation=validateKeys();if(validation.errors.length){const invalid=validation.errors.find(item=>item.field);if(invalid&&invalid.field!=='0')document.getElementById('arg-more-keys').open=true;(keyInputs.get(invalid?.field)?.control??keyInputs.values().next().value.control).focus();return;}}
         controller?.abort();controller=new AbortController();const current=controller;run.disabled=true;stop.hidden=false;results.setAttribute('aria-busy','true');bindText(summary,'正在生成并排序搜索节点…');
         try {
             bindText(summary,'正在加载英文词库…');
@@ -100,7 +130,7 @@ function init() {
             const [module,englishWords,acgData,acgModule]=await Promise.all([parallel?parallelModulePromise():enginePromise,loadEnglishDictionary().catch(error=>{console.warn('English dictionary unavailable; using fallback scoring',error);return null;}),useAcg?loadAcgData():null,useAcg?acgModulePromise():null]);
             if(current.signal.aborted)return;
             bindText(summary,'正在生成并排序搜索节点…');
-            const outcome=await (parallel?module.searchParallel(text,{maxDepth,effort,workerCount,signal:current.signal,englishWords,acgWords:acgData?.words,onProgress:s=>{if(controller===current)bindText(summary,'{workers} 个 Worker：已展开 {expanded} 个节点，生成 {generated} 个候选状态。',{...s,workers:workerCount});}}):module.search(text,{maxDepth,maxNodes,signal:current.signal,englishWords,acgWords:acgData?.words,onProgress:s=>{if(controller===current)bindText(summary,'已展开 {expanded} 个节点，生成 {generated} 个候选状态，队列中还有 {queued} 个。',s);}}));
+            const outcome=await (parallel?module.searchParallel(text,{maxDepth,effort,workerCount,signal:current.signal,englishWords,acgWords:acgData?.words,onProgress:s=>{if(controller===current)bindText(summary,'{workers} 个 Worker：已展开 {expanded} 个节点，生成 {generated} 个候选状态。',{...s,workers:workerCount});}}):module.search(text,{maxDepth,maxNodes,keyMode,keys,signal:current.signal,englishWords,acgWords:acgData?.words,onProgress:s=>{if(controller===current)bindText(summary,'已展开 {expanded} 个节点，生成 {generated} 个候选状态，队列中还有 {queued} 个。',s);}}));
             if(controller!==current)return;
             render(outcome.candidates,results,acgData,acgModule?.matchAcgNames);const s=outcome.stats;bindText(summary,s.aborted?'搜索已停止。展开 {expanded} 个节点，生成 {generated} 个候选状态，显示前 {count} 个候选。':'搜索完成。展开 {expanded} 个节点，生成 {generated} 个候选状态，显示前 {count} 个候选。',{...s,count:outcome.candidates.length});
         } catch (error) {

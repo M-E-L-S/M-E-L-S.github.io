@@ -19,6 +19,24 @@
 
 修改后在仓库根目录运行 `node scripts/build.cjs`，生成各路由的 HTML 和工具主题样式。不要分别修改生成的 `index.html`，否则下次构建会覆盖它们。脚本为静态资源加入内容哈希，更新后浏览器会加载新版脚本与样式。
 
+## ARG 文本状态搜索
+
+普通、密钥、并行模式共用 `src/scripts/arg-engine.js`。节点保存文本、深度、已用密钥、路径及评分，不保存待执行解码器。每次出队执行全部输入合法的方法，新文本立即观察明文候选。`maxQ` 是新文本上合法解码器及有限前瞻的最高分，`q=maxQ+keyBonus`，`P=q+alpha*P_parent`。默认 alpha=0.5；每取 7 次高 P，再取 1 次高 q，同分 FIFO。层累计配额均分总节点预算，未用额度顺延，达到配额后进入下一层。同层按文本与已用密钥集合合并，跨层舍弃更长循环路径。
+
+密钥模式一个默认输入框，可展开至五个，不指定密码类型；引擎尝试每个密钥的合法解释，最多五层，单线程。新密钥实际步骤奖励 2，复用奖励 1，普通步骤为 0；评估文本不预支未来密钥奖励。两个堆先按本步档位（新密钥 > 复用 > 普通），再按累计密钥步骤数，再比较 P/q。同状态替换采用相同的 P 堆排序。硬优先保证普通评分不能挤过密钥步骤，但仍受层配额和总预算限制，会挤压先普通编码、后使用密钥的路线。
+
+Caesar、Atbash、Affine、Vigenère、Beaufort、Porta、方阵密码与 Hill 只接受英文字母和空白；方阵与 Hill 另检查分组长度。Keyboard Shift 严格限制四行键盘字符及 ASCII 大写对应键位，不透传空白；逐方向检查所有字符的目标位置，任何字符越界则该方向整体非法。列移位重排任意合法文本，Nihilist 使用数字密文。非法输入或无合法输出的解码器评分为 0。
+
+强格式按语法评分。Base 字符集模型以六个 Base 字符集与字母文本、普通 ASCII 为等先验竞争模型；`baseModel:'presence'` 为默认 Bernoulli 出现/未出现模型，`'counts'` 为字符次数模型，均在对数域归一化。明确填充或 ASCII85 包裹按强格式固定分 0.96。已有实验中两模型对有效普通样例的命中与工作量相同，未据此认定哪种更优。
+
+Reverse、栅栏、列移位、Caesar、Atbash、Keyboard Shift 共用一次变换前瞻，限 500 字符：剩余至少两层时验证后继格式能实际产生合法且至少八字符的输出，取 `0.9*格式分`；剩余至少一层时复用完整明文观察器，取 `0.95*明文分/100`。与基础分取最大值，不递归、不叠加。栅栏与 Reverse 基础分 0.14，Caesar 与 Atbash 为 0.30。`lookahead:false` 可关闭；缓存区分剩余层数与词典。明文前瞻增加计算成本，不消耗文本节点预算。
+
+Worker 执行相同展开函数，协调器按批次顺序消费，支持两种 Base 模型；密钥模式不启动 Worker。结果步骤链接展开、定位并显式高亮介绍卡片，兼容 History API 导航。介绍卡片仅简述原理，输入格式集中在密钥设置中。
+
+验证命令：`node scripts/check-arg-text.mjs`、`node scripts/check-arg-scoring.mjs`、`node scripts/check-arg-fixtures.mjs`、`node scripts/check-arg.mjs`、`node scripts/check-arg-worker.mjs`、`node scripts/check-arg-keyed.mjs`。浏览器检查用 `python scripts/check-arg-browser.py`，复用已安装 Edge 与 `mels-api/node_modules/ws`，产物保留在被忽略的 `build/arg-browser/`。
+
+普通样例保留原 ID、密文、预期、深度和预算，当前 19 例及批处理检查全部通过；删除了使用非字母 Caesar 的旧构造，以及 ID 3/24/27/28 的非字母 Atbash、ID 5 的空格键盘构造，并调整专用测试引用。给定密钥五例均第一名命中，第五例展开 9503、生成 428475。合法的先四层 Base64 后用密钥的旧 500 节点功能测试仍未命中，保留断言，不通过删除合法失败或增加预算掩盖硬优先的代价。临时参数实验脚本与评估产物只在本地保留，不提交仓库。
+
 ## ARG 的 ACG Name 词库
 
 `python scripts/build-arg-acg.py` 会读取 Bangumi Archive 的 `aux/latest.json`，下载其中指向的最新 ZIP，校验 SHA-256，仅提取 `character.jsonlines`。已有 ZIP 时可运行 `python scripts/build-arg-acg.py --archive <dump.zip>`。Archive 通常每周三北京时间 05:00 更新；词库是构建时快照，更新后提交 `assets/data/arg-acg-names.json` 和 `assets/data/arg-acg-words.txt`，再运行 `node scripts/build.cjs` 部署到 GitHub Pages。
@@ -88,7 +106,7 @@
 
 新增独立 Netlify 联机模式，现有 Cloudflare 实现继续使用。通用后端位于 `netlify-games/`，复用房间身份、租约、CAS 原子提交、操作去重和自适应同步；五子棋规则独立注册，不把项目或数据库表绑定到单个游戏。前端配置为 `assets/data/netlify-games.json`，空配置不会连接或反复重试。
 
-[部署与省额度设计](netlify-games/README.md) 包含控制台配置、自动建库迁移和后续游戏适配接口。没有常驻推送或定时清理，页面隐藏停止轮询，闲置约 5 分钟暂停，过期数据随真实建房请求限量清理。`npm --prefix netlify-games test` 检查 PostgreSQL 语句、并发、规则和客户端生命周期。上线后仍须验证真实平台链路与额度；之前的[评估记录](netlify-evaluation/README.md) 仅是官方示例测试。
+[部署与省额度设计](netlify-games/README.md) 包含控制台配置、自动建库迁移和后续游戏适配接口。没有常驻推送或定时清理，页面隐藏停止轮询，闲置约 5 分钟暂停，过期数据随真实建房请求限量清理。`npm --prefix netlify-games test` 检查 PostgreSQL 语句、并发、规则和客户端生命周期。上线后仍须验证真实平台链路与额度。
 
 ## 界面翻译
 

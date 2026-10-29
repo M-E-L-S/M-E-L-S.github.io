@@ -100,3 +100,11 @@ Thumbs.db
 # Environment files
 .env
 .env.local
+
+# Local evaluation and one-off ARG experiments
+/netlify-evaluation/
+/scripts/benchmark-arg-alpha.mjs
+/scripts/benchmark-arg-ordinary.mjs
+/scripts/benchmark-arg-scoring.mjs
+/scripts/check-arg-keyed-prior.mjs
+/scripts/summarize-arg-alpha.mjs

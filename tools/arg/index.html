@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="src/styles/components.css?v=49e6422d2e">
     <link rel="stylesheet" href="src/styles/site-design.css?v=fc89f9b494">
     <link rel="stylesheet" href="src/styles/gomoku.css?v=59d39c0228">
-<link rel="stylesheet" href="/src/styles/halma.css?v=5f561ad7b2"><link rel="stylesheet" href="/src/styles/aicu.css?v=874d23fb3e"><link rel="stylesheet" href="/src/styles/arg.css?v=ed09c26db8"><link rel="stylesheet" href="/src/styles/text.css?v=6af4c7fd97"><link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/scoreboard_5.theme.css?v=2d167c41f5"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
+<link rel="stylesheet" href="/src/styles/halma.css?v=5f561ad7b2"><link rel="stylesheet" href="/src/styles/aicu.css?v=874d23fb3e"><link rel="stylesheet" href="/src/styles/arg.css?v=f606d8fbe8"><link rel="stylesheet" href="/src/styles/text.css?v=6af4c7fd97"><link id="freshcup-tool-theme" rel="stylesheet" href="/src/styles/freshcup/scoreboard_5.theme.css?v=2d167c41f5"><link rel="stylesheet" href="/src/styles/freshcup-native.css?v=8400d5e6e9"></head>
 <body>
 <!-- 顶部导航栏 -->
 <a class="skip-link" href="#main-content">跳至主要内容</a>
@@ -434,12 +434,12 @@
             placeholder="粘贴各类编码、密码甚至多层嵌套密码……"></textarea>
         <div class="arg-controls">
             <label>搜索模式
-                <select id="arg-mode"><option value="standard">标准模式</option><option value="parallel">并行模式</option></select>
+                <select id="arg-mode"><option value="standard">标准模式</option><option value="parallel">并行模式</option><option value="keyed">密钥模式</option></select>
             </label>
             <label>最大深度
-                <select id="arg-depth"><option>1</option><option>2</option><option selected>5</option><option>6</option><option>8</option><option>10</option></select>
+                <select id="arg-depth"><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>8</option><option>10</option></select>
             </label>
-            <label class="arg-standard-control">有效节点预算
+            <label class="arg-standard-control">文本节点预算
                 <select id="arg-budget"><option>100</option><option selected>500</option><option>1000</option><option>2000</option><option value="10000">10,000</option></select>
             </label>
             <label class="arg-parallel-control" hidden>Worker 数量
@@ -451,7 +451,28 @@
             <button class="game-btn primary" id="arg-run" type="submit"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> 开始解密</button>
             <button class="game-btn" id="arg-stop" type="button" hidden>停止</button>
         </div>
-        <p class="arg-depth-note">最大深度限定连续解码层数。</p>
+        <section id="arg-key-panel" class="arg-key-panel" aria-labelledby="arg-key-title" hidden>
+            <h4 id="arg-key-title">密钥设置</h4>
+            <p>在此模式下，引擎会优先尝试使用你的密钥。也会考虑不全部使用或者重复使用。</p>
+            <div class="arg-key-entry">
+                <div>
+                    <div id="arg-key-fields" class="arg-key-fields"></div>
+                    <details id="arg-more-keys"><summary>更多密钥（最多 5 个）</summary><div id="arg-more-key-fields" class="arg-key-fields"></div></details>
+                </div>
+                <aside id="arg-key-formats">
+                    <strong>接受的输入格式</strong>
+                    <ul>
+                        <li>1–64 个英文字母，如 LEMON；完整方阵可用 25 个不重复字母（I/J 合并）表示。</li>
+                        <li>两段或三段英文字母，用 / 分隔，如 SIMPLE / EASY 或 ONE / TWO / THREE；每段 1–64 个字母。</li>
+                        <li>两个整数 a, b：a 需要与26互质，b 为 0–25，如 5, 8。</li>
+                        <li>1 到 n 的数字排列（2≤n≤32），用空格或逗号分隔，如 3 1 4 2。</li>
+                        <li>2×2 或 3×3 整数矩阵，行用分号分隔，列用空格或逗号分隔，如 3 3; 2 5；元素为 0–25，矩阵须模 26 可逆。</li>
+                    </ul>
+                </aside>
+            </div>
+            <p id="arg-key-error" class="arg-key-error" role="alert" hidden></p>
+        </section>
+        <p class="arg-depth-note">最大深度限定连续解码层数；节点预算按取出的文本状态计数。</p>
         <p class="arg-parallel-warning arg-parallel-control" role="alert" hidden>⚠ 并行模式会使用 CPU 多线程同时计算。Worker 越多，CPU 和内存占用越高，设备可能发热或出现卡顿。</p>
         <p class="arg-depth-note arg-parallel-control" id="arg-thread-info" hidden></p>
     </form>
@@ -467,35 +488,48 @@
             <h3>支持的编码与密码</h3>
         </header>
         <details class="arg-category" open><summary>编码（固定映射） <span>21 项</span></summary><div class="arg-reference-grid">
-            <section id="decoder-base64"><h4>Base64</h4><p>将二进制数据表示为 ASCII 字符。识别标准字母表、四字符分组与可选的 = 补位；解码结果必须是有效 UTF-8。</p><code class="arg-example">SGVsbG8gV29ybGQ= → Hello World</code></section>
-            <section id="decoder-base32"><h4>Base32</h4><p>使用 A–Z 和 2–7 表示数据，常见于密钥和不区分大小写的文本传输；解码结果必须是有效 UTF-8。</p><code class="arg-example">JBSWY3DPEBLW64TMMQ====== → Hello World</code></section>
-            <section id="decoder-base58"><h4>Base58</h4><p>使用 Bitcoin 字母表并排除容易混淆的 0、O、I、l。格式本身没有校验和。</p><code class="arg-example">JxF12TrwUP45BMd → Hello World</code></section>
-            <section id="decoder-ascii85"><h4>ASCII85</h4><p>以五个可打印字符表示四个字节，支持 Adobe 的 &lt;~ … ~&gt; 包裹格式和零字节缩写 z。</p><code class="arg-example">&lt;~87cURD]i,"Ebo7~&gt; → Hello World</code></section>
-            <section id="decoder-base85"><h4>Base85（RFC 1924 / Git）</h4><p>与 ASCII85 同属 85 进制编码，但使用不同的字母表；此项支持 RFC 1924 / Git 风格，解码结果必须是有效 UTF-8。</p><code class="arg-example">NM&amp;qnZy;B1a%^M → Hello World</code></section>
-            <section id="decoder-base91"><h4>Base91</h4><p>使用 91 字符字母表进行可变长度位打包，结果必须是有效 UTF-8。</p><code class="arg-example">fPNKd → test</code></section>
-            <section id="decoder-hex"><h4>Hex 十六进制</h4><p>把每个字节写成两个十六进制数字，支持空格、冒号、逗号和连字符分隔；结果必须是有效 UTF-8。</p><code class="arg-example">48 65 6c 6c 6f → Hello</code></section>
-            <section id="decoder-url"><h4>URL Percent-Encoding</h4><p>识别 %xx 转义，并按照 URI 组件规则每次还原一层。搜索器会继续检测解码后的结果，因此可以自动处理多层百分号编码。</p><code class="arg-example">Hello%2520World → Hello%20World → Hello World</code></section>
-            <section id="decoder-html"><h4>HTML Entity</h4><p>支持十进制、十六进制数字实体，以及 amp、lt、gt、quot、apos。</p><code class="arg-example">&amp;#72;&amp;#105; → Hi</code></section>
-            <section id="decoder-binary"><h4>Binary 二进制字符码</h4><p>每 8 位还原一个字节并按 UTF-8 解码。支持 0/1 或任意两种字符；字节组用单个空格分隔或连续书写，单词用 /、|、换行或多个空格分隔。</p><code class="arg-example">01001000 01101001 → Hi</code></section>
-            <section id="decoder-octal"><h4>Octal 八进制字符码</h4><p>将空格或常见标点分隔的八进制字节还原为 UTF-8 文本。</p><code class="arg-example">110 145 154 154 157 → Hello</code></section>
-            <section id="decoder-decimal"><h4>Decimal 十进制字符码</h4><p>把 0–255 的十进制数字序列转换为字符，支持空白、冒号、逗号和连字符分隔。</p><code class="arg-example">72 105 → Hi</code></section>
-            <section id="decoder-unicode"><h4>Unicode / Hex Escape</h4><p>还原 JavaScript 和 JSON 文本中常见的 \uXXXX 与 \xXX 转义。</p><code class="arg-example">\u0048\u0069 → Hi</code></section>
-            <section id="decoder-a1z26"><h4>A1Z26</h4><p>把 1–26 映射为 A–Z，支持空格及常见标点作为数字分隔符。</p><code class="arg-example">8 5 12 12 15 → HELLO</code></section>
-            <section id="decoder-bacon"><h4>Bacon Cipher</h4><p>每五个二元符号映射到 A–Z。支持 A/B 或任意两种符号；字母组用单个空格分隔或连续书写，单词用 /、|、换行或多个空格分隔。</p><code class="arg-example">aabbb aabaa ababb ababb abbba → HELLO</code></section>
-            <section id="decoder-morse"><h4>Morse 摩尔斯电码</h4><p>支持拉丁字母与数字。点、划可用任意两种可打印符号表示；字母用单个空格分隔，单词用 /、|、换行或多个空格分隔。</p><code class="arg-example">.... .. / - .... . .-. . → HI THERE</code></section>
-            <section id="decoder-polybius"><h4>Polybius 5×5</h4><p>无密钥标准方阵，I/J 共用一格；每两个 1–5 数字表示行和列。</p><code class="arg-example">23 15 31 31 34 → HELLO</code></section>
-            <section id="decoder-adfgx"><h4>ADFGX（无换位）</h4><p>使用标准 5×5 方阵将 A、D、F、G、X 字母对映射为文字，不处理需要密钥的列换位层。</p><code class="arg-example">DF AX FA FA FG → HELLO</code></section>
-            <section id="decoder-tap"><h4>Tap Code 敲击码</h4><p>每两串敲击组成一个字母，点或其他重复字符均可，敲击串之间用单个空格分隔；单词用 /、|、换行或多个空格分隔，C/K 共用一格。</p><code class="arg-example">xx xxx x xxxxx → HE</code></section>
-            <section id="decoder-atbash"><h4>Atbash</h4><p>把拉丁字母表首尾互换：A↔Z、B↔Y。它是自反变换，应用两次会回到原文。</p><code class="arg-example">Svool → Hello</code></section>
-            <section id="decoder-reverse"><h4>Reverse 文本反转</h4><p>按 Unicode 字符顺序反转输入，用于常见的倒写谜题。它同样是自反变换。</p><code class="arg-example">dlroW olleH → Hello World</code></section>
+            <section id="decoder-base64"><h4>Base64</h4><p>用 64 种字符表示二进制数据，常见于邮件附件和网页中的嵌入资源。</p><code class="arg-example">SGVsbG8gV29ybGQ= → Hello World</code></section>
+            <section id="decoder-base32"><h4>Base32</h4><p>用 32 种字符表示二进制数据，字母与数字的组合便于抄写和传递。</p><code class="arg-example">JBSWY3DPEBLW64TMMQ====== → Hello World</code></section>
+            <section id="decoder-base58"><h4>Base58</h4><p>一种常见于加密货币地址的编码，通过去掉外形相近的字符减少抄写混淆。</p><code class="arg-example">JxF12TrwUP45BMd → Hello World</code></section>
+            <section id="decoder-ascii85"><h4>ASCII85</h4><p>用五个可打印字符表示四个字节，比十六进制和 Base64 更紧凑。</p><code class="arg-example">&lt;~87cURD]i,"Ebo7~&gt; → Hello World</code></section>
+            <section id="decoder-base85"><h4>Base85（RFC 1924 / Git）</h4><p>以 85 种字符紧凑地表示二进制数据；RFC 1924 与 Git 使用的字母表不同于 ASCII85。</p><code class="arg-example">NM&amp;qnZy;B1a%^M → Hello World</code></section>
+            <section id="decoder-base91"><h4>Base91</h4><p>用 91 种可打印字符表示二进制数据，通过可变长度的位分组提高编码密度。</p><code class="arg-example">fPNKd → test</code></section>
+            <section id="decoder-hex"><h4>Hex 十六进制</h4><p>用十六进制数字表示数据，每两个数字对应一个字节，常见于文件内容和字节码的展示。</p><code class="arg-example">48 65 6c 6c 6f → Hello</code></section>
+            <section id="decoder-url"><h4>URL Percent-Encoding</h4><p>把字节写成百分号加两位十六进制数，让文字和特殊字符能在网址中传递。</p><code class="arg-example">Hello%2520World → Hello%20World → Hello World</code></section>
+            <section id="decoder-html"><h4>HTML Entity</h4><p>用字符名称或数字编号表示文字，避免尖括号等字符被当作网页标签。</p><code class="arg-example">&amp;#72;&amp;#105; → Hi</code></section>
+            <section id="decoder-binary"><h4>Binary 二进制字符码</h4><p>用 0 和 1 表示数值，再通过字符编码把这些数值与文字对应起来。</p><code class="arg-example">01001000 01101001 → Hi</code></section>
+            <section id="decoder-octal"><h4>Octal 八进制字符码</h4><p>用 0–7 表示数值；在字符码谜题中，这些数值对应文字的编码。</p><code class="arg-example">110 145 154 154 157 → Hello</code></section>
+            <section id="decoder-decimal"><h4>Decimal 十进制字符码</h4><p>把文字的字符码写成十进制数字，是数字与文字之间最直观的转换之一。</p><code class="arg-example">72 105 → Hi</code></section>
+            <section id="decoder-unicode"><h4>Unicode / Hex Escape</h4><p>用反斜杠和十六进制数字表示字符，常见于程序代码与字符串中的字符转义。</p><code class="arg-example">\u0048\u0069 → Hi</code></section>
+            <section id="decoder-a1z26"><h4>A1Z26</h4><p>按字母在字母表中的位置编号：A 为 1、B 为 2，依此类推到 Z 为 26。</p><code class="arg-example">8 5 12 12 15 → HELLO</code></section>
+            <section id="decoder-bacon"><h4>Bacon Cipher</h4><p>把字母换成五位 A/B 组合，再将两类符号藏入字体、大小写等细微差别中。</p><code class="arg-example">aabbb aabaa ababb ababb abbba → HELLO</code></section>
+            <section id="decoder-morse"><h4>Morse 摩尔斯电码</h4><p>用长短两种信号的组合表示字母和数字，既可通过电报码传递，也可藏在声音或闪光中。</p><code class="arg-example">.... .. / - .... . .-. . → HI THERE</code></section>
+            <section id="decoder-polybius"><h4>Polybius 5×5</h4><p>把字母放入方阵，以行号和列号代替字母，将文字转换为坐标。</p><code class="arg-example">23 15 31 31 34 → HELLO</code></section>
+            <section id="decoder-adfgx"><h4>ADFGX</h4><p>先用 A、D、F、G、X 表示字母的方阵坐标，再通过列换位打乱顺序，结合替换与换位两种思路。</p><code class="arg-example">DF AX FA FA FG → HELLO</code></section>
+            <section id="decoder-tap"><h4>Tap Code 敲击码</h4><p>用两组敲击的次数表示字母在方阵中的行列位置，让文字能通过敲击声传递。</p><code class="arg-example">xx xxx x xxxxx → HE</code></section>
+            <section id="decoder-atbash"><h4>Atbash</h4><p>把字母表首尾互换：A↔Z、B↔Y。应用两次就会回到原文。</p><code class="arg-example">Svool → Hello</code></section>
+            <section id="decoder-reverse"><h4>Reverse 文本反转</h4><p>把文字从末尾倒写到开头，是谜题中常见的隐藏信息方式。</p><code class="arg-example">dlroW olleH → Hello World</code></section>
         </div></details>
-        <details class="arg-category"><summary>密码（需要密钥） <span>3 项</span></summary><div class="arg-reference-grid">
-            <section id="decoder-caesar"><h4>Caesar / ROT13</h4><p>枚举 1–25 的全部字母移位，不改变非字母字符。ROT13 是位移 13 的自反特例。</p><code class="arg-example">Uryyb Jbeyq → Hello World</code></section>
-            <section id="decoder-railfence"><h4>Rail Fence 栅栏密码</h4><p>按标准之字形栅栏还原，枚举 2–10 栏；短文本不会枚举超过字符数一半的栏数。字母、数字、空白及各种可打印编码符号都作为字符参与重排。</p><code class="arg-example">WECRLTEERDSOEEFEAOCAIVDEN → WEAREDISCOVEREDFLEEATONCE（3 栏）</code></section>
-            <section id="decoder-keyboardshift"><h4>Keyboard Shift 键盘移位</h4><p>按美式 QWERTY 键盘的行列位置，枚举左、右、上、下位移 1 或 2 个键；上下位移按相同列序号对应。保留字母大小写；越过键盘边界的方案不作为候选。</p><code class="arg-example">Jr;;p → Hello（左移 1 键）；Asdfgh → Qwerty（上移 1 行）</code></section>
+        <details class="arg-category"><summary>密码（密钥模式专用） <span>11 项</span></summary><div class="arg-reference-grid">
+            <section id="decoder-affine"><h4>Affine</h4><p>把字母编号后进行乘法与加法运算，生成一套由两个数决定的替换字母表。</p><code class="arg-example">IHHWVCSWFRCP → AFFINECIPHER（5, 8）</code></section>
+            <section id="decoder-vigenere"><h4>Vigenère</h4><p>用循环关键词决定每个字母的移位量，让同一个明文字母在不同位置变成不同密文。</p><code class="arg-example">LXFOPVEFRNHR → ATTACKATDAWN（LEMON）</code></section>
+            <section id="decoder-beaufort"><h4>Beaufort</h4><p>用循环关键词的字母编号减去明文字母编号得到密文，加密和解密采用同一种运算。</p></section>
+            <section id="decoder-porta"><h4>Porta</h4><p>由关键词选择 13 组互反替换表，字母表前后两半彼此替换，加密和解密使用同一套规则。</p></section>
+            <section id="decoder-columnar"><h4>列移位</h4><p>把文字逐行写入表格，再按密钥指定的顺序逐列读出，只改变字符顺序。</p></section>
+            <section id="decoder-nihilist"><h4>Nihilist</h4><p>先用带密钥的 Polybius 方阵把字母变成坐标数，再与循环关键词的坐标数相加。</p></section>
+            <section id="decoder-playfair"><h4>Playfair</h4><p>用一个密钥方阵成对替换字母，根据两字母在方阵中的行、列或矩形关系完成加密。</p></section>
+            <section id="decoder-twosquare"><h4>二方密码</h4><p>用两个密钥方阵成对处理字母，通过字母位置形成的矩形关系完成替换。</p></section>
+            <section id="decoder-trisquare"><h4>三方密码</h4><p>用三个密钥方阵交织字母坐标，把两个明文字母变成三个密文字母，并引入随机位置。</p></section>
+            <section id="decoder-foursquare"><h4>四方密码</h4><p>把两个标准方阵与两个密钥方阵排成四格，通过交叉行列坐标成对替换字母。</p></section>
+            <section id="decoder-hill"><h4>Hill</h4><p>把一组字母看作向量，用密钥矩阵进行模运算，让每个密文字母由多个明文字母共同决定。</p></section>
+        </div><p class="arg-source">延伸阅读：<a href="https://www.cryptogram.org/resource-area/cipher-types/" target="_blank" rel="noopener noreferrer">American Cryptogram Association</a></p></details>
+        <details class="arg-category"><summary>密码（无需提供密钥） <span>3 项</span></summary><div class="arg-reference-grid">
+            <section id="decoder-caesar"><h4>Caesar / ROT13</h4><p>把字母表循环平移固定的位置；ROT13 是平移 13 位的特例，应用两次即可还原。</p><code class="arg-example">Uryyb Jbeyq → Hello World</code></section>
+            <section id="decoder-railfence"><h4>Rail Fence 栅栏密码</h4><p>把文字沿几行之间的之字形轨迹写下，再逐行读出，以打乱字符的顺序。</p><code class="arg-example">WECRLTEERDSOEEFEAOCAIVDEN → WEAREDISCOVEREDFLEEATONCE（3 栏）</code></section>
+            <section id="decoder-keyboardshift"><h4>Keyboard Shift 键盘移位</h4><p>把字符替换成键盘上相邻位置的字符，像是整段文字都把手放偏了位置。</p><code class="arg-example">Jr;;p → Hello（左移 1 键）；Asdfgh → Qwerty（上移 1 行）</code></section>
         </div></details>
         <details class="arg-category"><summary>特殊领域 <span>1 项</span></summary><div class="arg-reference-grid">
-            <section id="decoder-acg-name"><h4>ACG Name</h4><p>使用 Bangumi 中具有罗马字或英文名、简体中文名的角色。要求姓或名至少三个字母。结果中出现可能的姓名时，会显示对应的 Bangumi 页面；重名和姓名片段只显示罗马音。</p><label class="arg-domain-toggle"><input id="arg-acg-toggle" type="checkbox"> 启用 ACG Name</label><p class="arg-source">数据来源：<a href="https://github.com/bangumi/Archive" target="_blank" rel="noopener noreferrer">Bangumi Archive</a></p></section>
+            <section id="decoder-acg-name"><h4>ACG Name</h4><p>动漫、漫画与游戏中的角色名也能成为谜题线索，罗马字拼写、别名和姓名拆分都可能藏着提示。</p><label class="arg-domain-toggle"><input id="arg-acg-toggle" type="checkbox"> 启用 ACG Name</label><p class="arg-source">数据来源：<a href="https://github.com/bangumi/Archive" target="_blank" rel="noopener noreferrer">Bangumi Archive</a></p></section>
         </div></details>
         <details class="arg-category"><summary>数学与代码 <span>暂未收录</span></summary><p>后续增加这一类时会在这里列出。</p></details>
     </article>
@@ -1359,7 +1393,7 @@
 <!-- 音频元素 -->
 <audio id="bg-music" preload="none"></audio>
 
-<script src="src/scripts/i18n.js?v=7095f1612f"></script>
+<script src="src/scripts/i18n.js?v=f014bcf66a"></script>
 <script src="src/scripts/script.js?v=eeb92bfdda"></script>
 <script src="src/scripts/boss-battle.js?v=088753f43b"></script>
 <script src="src/scripts/game.js?v=93d2db048c"></script>
@@ -1382,5 +1416,5 @@
 <script src="src/scripts/site.js?v=957f938779"></script>
 <script src="src/scripts/home-tools.js?v=8bc96ef1a9"></script>
 <script id="freshcup-tool-script" data-tool="scoreboard_5" src="/src/scripts/freshcup/scoreboard_5.js?v=0224d7befa"></script>
-<script src="/src/scripts/aicu.js?v=cfebe22025"></script><script defer src="/src/scripts/arg.js?v=a868f09018"></script></body>
+<script src="/src/scripts/aicu.js?v=cfebe22025"></script><script defer src="/src/scripts/arg.js?v=ad42449fda"></script></body>
 </html>

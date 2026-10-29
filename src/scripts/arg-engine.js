@@ -1,6 +1,173 @@
-const encoder = new TextEncoder();
 const trigramModels = new WeakMap();
 const prefixModels = new WeakMap();
+
+// Format parsers are private; callers supply an untyped pool of up to five keys.
+const keyFields=['affine','keyword','columnar','nihilist','playfair','twosquare','trisquare','foursquare','hill'].map(id=>({id}));
+const keyAlphabet='ABCDEFGHIKLMNOPQRSTUVWXYZ';
+const keyMod=(n,m=26)=>(n%m+m)%m;
+const keyInverse=n=>Array.from({length:26},(_,i)=>i).find(i=>keyMod(i*n)===1);
+const letterCipherInput=text=>admissibleText(text)&&/^[A-Za-z\s]+$/.test(text)&&/[A-Za-z]/.test(text);
+const keyLetters=text=>text.toUpperCase().replace(/J/g,'I');
+const keySquare=word=>[...new Set(keyLetters(word)+keyAlphabet)].join('');
+const squareText=text=>letterCipherInput(text)?keyLetters(text.replace(/\s/g,'')):'';
+const keyResult=(text,label,parameter)=>text?[{text,label,parameter}]:[];
+function mapKeyLetters(text,transform){
+    if(!letterCipherInput(text))return '';
+    let index=0;
+    return text.replace(/[A-Za-z]/g,c=>{
+        const base=c<='Z'?65:97;
+        return String.fromCharCode(base+keyMod(transform(c.charCodeAt(0)-base,index++)));
+    });
+}
+function columnarDecode(text,order){
+    const chars=[...text],columns=Array(order.length),rows=Math.floor(chars.length/order.length),extra=chars.length%order.length;
+    let offset=0;
+    for(const column of order){const length=rows+(column<extra?1:0);columns[column]=chars.slice(offset,offset+length);offset+=length;}
+    return Array.from({length:rows+(extra?1:0)},(_,row)=>columns.map(column=>column[row]??'').join('')).join('');
+}
+function squareDecode(text,squares,kind){
+    const source=squareText(text),size=kind==='trisquare'?3:2;
+    if(!source||source.length%size)return '';
+    let output='';
+    for(let i=0;i<source.length;i+=size){
+        const a=squares[0].indexOf(source[i]),b=squares[1]?.indexOf(source[i+1]);
+        if(kind==='playfair'){
+            const second=squares[0].indexOf(source[i+1]),r=Math.floor(a/5),s=Math.floor(second/5),c=a%5,d=second%5;
+            output+=r===s?squares[0][r*5+keyMod(c-1,5)]+squares[0][s*5+keyMod(d-1,5)]:c===d?squares[0][keyMod(r-1,5)*5+c]+squares[0][keyMod(s-1,5)*5+d]:squares[0][r*5+d]+squares[0][s*5+c];
+        }else if(kind==='twosquare'){
+            const right=squares[1].indexOf(source[i]),left=squares[0].indexOf(source[i+1]);
+            output+=squares[0][Math.floor(right/5)*5+left%5]+squares[1][Math.floor(left/5)*5+right%5];
+        }else if(kind==='foursquare'){
+            output+=keyAlphabet[Math.floor(a/5)*5+b%5]+keyAlphabet[Math.floor(b/5)*5+a%5];
+        }else{
+            const middle=squares[2].indexOf(source[i+1]),last=squares[1].indexOf(source[i+2]);
+            output+=squares[0][Math.floor(middle/5)*5+a%5]+squares[1][Math.floor(last/5)*5+middle%5];
+        }
+    }
+    // Padding letters are deliberately retained: X can be genuine plaintext.
+    return output;
+}
+function nihilistNumbers(text){
+    if(!/^[\d\s,]+$/.test(text))return null;
+    const trimmed=text.trim();
+    const tokens=/^\d+$/.test(trimmed)&&trimmed.length>3&&trimmed.length%2===0?trimmed.match(/../g):trimmed.split(/[\s,]+/);
+    if(!tokens.length||tokens.some(token=>!/^\d{2,3}$/.test(token)))return null;
+    const values=tokens.map(token=>+token<=10?+token+100:+token);
+    return values.every(n=>n>=22&&n<=110)?values:null;
+}
+function determinant(matrix){
+    if(matrix.length===1)return matrix[0][0];
+    return matrix[0].reduce((sum,n,column)=>sum+(column%2?-1:1)*n*determinant(matrix.slice(1).map(row=>row.filter((_,i)=>i!==column))),0);
+}
+function inverseKeyMatrix(matrix){
+    const inverse=keyInverse(determinant(matrix));
+    if(inverse===undefined)return null;
+    return matrix.map((row,r)=>row.map((_,c)=>keyMod(inverse*((r+c)%2?-1:1)*determinant(matrix.filter((_,i)=>i!==c).map(line=>line.filter((_,i)=>i!==r))))));
+}
+
+function parseTypedKey(config={}){
+    const keyed=[],errors=[];
+    const add=(id,name,decode,probe=t=>{
+        if(!letterCipherInput(t))return 0;
+        const letters=(t.match(/[A-Za-z]/g)||[]).length,content=[...t].filter(c=>! /\s/.test(c)).length;
+        return letters>=2?.46*(letters/content)**1.5:0;
+    })=>keyed.push({id,name,keyed:true,decode,probe});
+    const word=value=>{if(!/^[A-Za-z]{1,64}$/.test(value))throw new Error();return value.toUpperCase();};
+    for(const field of keyFields){
+        const raw=String(config[field.id]??'').trim();
+        if(!raw)continue;
+        try{
+            if(raw.length>256)throw new Error();
+            if(field.id==='affine'){
+                if(!/^\d{1,2}[\s,]+\d{1,2}$/.test(raw))throw new Error();
+                const [a,b]=raw.split(/[\s,]+/).map(Number),inverse=keyInverse(a);
+                if(a<1||a>25||inverse===undefined||b>25)throw new Error();
+                add('affine','Affine',t=>keyResult(mapKeyLetters(t,n=>inverse*(n-b)),`Affine (${a}, ${b})`,{a,b}));
+            }else if(field.id==='keyword'){
+                const key=word(raw),values=[...key].map(c=>c.charCodeAt(0)-65);
+                for(const [id,name] of [['vigenere','Vigenère'],['beaufort','Beaufort'],['porta','Porta']])add(id,name,t=>keyResult(mapKeyLetters(t,(n,i)=>{
+                    const k=values[i%values.length];
+                    return id==='vigenere'?n-k:id==='beaufort'?k-n:n<13?13+keyMod(n+Math.floor(k/2),13):keyMod(n-13-Math.floor(k/2),13);
+                }),`${name} (${key})`,key));
+            }else if(field.id==='columnar'){
+                let order;
+                if(/^[A-Za-z]{2,32}$/.test(raw))order=[...raw.toUpperCase()].map((c,i)=>({c,i})).sort((a,b)=>a.c.localeCompare(b.c)||a.i-b.i).map(item=>item.i);
+                else{
+                    if(!/^\d{1,2}(?:[\s,]+\d{1,2})+$/.test(raw))throw new Error();
+                    const ranks=raw.split(/[\s,]+/).map(Number);
+                    if(ranks.length>32||new Set(ranks).size!==ranks.length||ranks.some(n=>n<1||n>ranks.length))throw new Error();
+                    order=ranks.map((n,i)=>({n,i})).sort((a,b)=>a.n-b.n).map(item=>item.i);
+                }
+                add('columnar','Columnar',t=>keyResult(columnarDecode(t,order),`Columnar (${raw.toUpperCase()})`,order),t=>[...t].length>=order.length?.44:0);
+            }else if(field.id==='hill'){
+                const rows=raw.split(';').map(row=>row.trim());
+                if(![2,3].includes(rows.length)||rows.some(row=>!/^\d{1,2}(?:[\s,]+\d{1,2})+$/.test(row)))throw new Error();
+                const matrix=rows.map(row=>row.split(/[\s,]+/).map(Number));
+                if(matrix.some(row=>row.length!==rows.length||row.some(n=>n>25)))throw new Error();
+                const inverse=inverseKeyMatrix(matrix),size=rows.length;
+                if(!inverse)throw new Error();
+                add('hill','Hill',t=>{
+                    if(!letterCipherInput(t))return [];
+                    const chars=t.toUpperCase().replace(/\s/g,'');
+                    if(chars.length%size)return [];
+                    let output='';
+                    for(let i=0;i<chars.length;i+=size){const block=[...chars.slice(i,i+size)].map(c=>c.charCodeAt(0)-65);for(const row of inverse)output+=String.fromCharCode(65+keyMod(row.reduce((sum,n,j)=>sum+n*block[j],0)));}
+                    return keyResult(output,`Hill ${size}×${size} (${raw})`,matrix);
+                },t=>letterCipherInput(t)&&t.replace(/\s/g,'').length%size===0?.48:0);
+            }else{
+                const parts=raw.split('/').map(part=>word(part.trim())),count=field.id==='trisquare'?3:field.id==='playfair'?1:2;
+                if(parts.length!==count)throw new Error();
+                const squares=parts.map(keySquare);
+                if(field.id==='nihilist'){
+                    const square=squares[0],coordinate=c=>{const i=square.indexOf(c);return (Math.floor(i/5)+1)*10+i%5+1;},key=[...keyLetters(parts[1])].map(coordinate);
+                    const decode=t=>{
+                        const values=nihilistNumbers(t);
+                        if(!values)return [];
+                        let output='';
+                        for(let i=0;i<values.length;i++){const n=values[i]-key[i%key.length],r=Math.floor(n/10)-1,c=n%10-1;if(r<0||r>4||c<0||c>4)return [];output+=square[r*5+c];}
+                        return keyResult(output,`Nihilist (${parts.join(' / ')})`,parts);
+                    };
+                    add('nihilist','Nihilist',decode,t=>decode(t).length?.86:0);
+                }else{
+                    const size=field.id==='trisquare'?3:2;
+                    const name={playfair:'Playfair',twosquare:'Two-square',trisquare:'Tri-square',foursquare:'Four-square'}[field.id];
+                    add(field.id,name,t=>keyResult(squareDecode(t,squares,field.id),`${name} (${parts.join(' / ')})`,parts),t=>{const s=squareText(t);return s.length>=size&&s.length%size===0?.48:0;});
+                }
+            }
+        }catch{errors.push({field:field.id,message:'密钥格式不受支持，请按此栏说明填写。'});}
+    }
+    if(!keyed.length&&!errors.length)errors.push({field:'',message:'密钥模式至少需要一组有效密钥。'});
+    return {decoders:keyed,errors};
+}
+
+export function validateKeyConfig(keys=[]){
+    const errors=[],groups=new Map();
+    if(!Array.isArray(keys)||keys.length>5)return {decoders:[],errors:[{field:'',message:'最多输入 5 个密钥。'}]};
+    keys.forEach((value,index)=>{
+        const raw=typeof value==='string'?value.trim():'';
+        if(!raw){if(typeof value!=='string')errors.push({field:String(index),message:'密钥格式不受支持，请按输入格式提示填写。'});return;}
+        const keyId=raw.toUpperCase().replace(/\s*([/;])\s*/g,'$1').replace(/[\s,]+/g,',');
+        let matched=false;
+        for(const {id} of keyFields){
+            const parsed=parseTypedKey({[id]:raw});
+            if(parsed.errors.length)continue;
+            matched=true;
+            for(const decoder of parsed.decoders){
+                let group=groups.get(decoder.id);
+                if(!group){group={...decoder,variants:[],keys:new Set()};groups.set(decoder.id,group);}
+                if(!group.keys.has(keyId)){group.keys.add(keyId);group.variants.push({...decoder,keyId});}
+            }
+        }
+        if(!matched)errors.push({field:String(index),message:'密钥格式不受支持，请按输入格式提示填写。'});
+    });
+    const decoders=[...groups.values()].map(({variants,keys,...decoder})=>({...decoder,
+        keyVariants:variants,
+        probe:text=>Math.max(...variants.map(variant=>variant.probe(text))),
+        decode:(text,keyIds=null)=>variants.filter(variant=>!keyIds||keyIds.includes(variant.keyId)).flatMap(variant=>variant.decode(text).map(result=>({...result,keyId:variant.keyId})))
+    }));
+    if(!decoders.length&&!errors.length)errors.push({field:'',message:'密钥模式至少需要一组有效密钥。'});
+    return {decoders,errors};
+}
 
 function englishTrigramScore(text, englishWords) {
     if (!englishWords || !/^[A-Za-z]{10,}$/.test(text)) return 0;
@@ -105,7 +272,6 @@ function textQuality(text, englishWords=null, acgWords=null) {
     return { score: Math.max(0, Math.min(100, score)), evidence, plainTextLikely, trigramSignal, readableCoverage };
 }
 
-const same = (a, b) => a === b;
 const clean = text => text.trim();
 const one = (text, label) => text == null ? [] : [{ text, label }];
 const utf8 = bytes => new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(bytes));
@@ -120,58 +286,46 @@ const broadAlphabets=new Map([
     ['base85',base85Alphabet],['base91',base91Alphabet]
 ]);
 const alphabetSets=new Map([...broadAlphabets].map(([id,alphabet])=>[id,new Set(alphabet)]));
-const characterSupport=new Map();
-for(const alphabet of alphabetSets.values())for(const char of alphabet)characterSupport.set(char,(characterSupport.get(char)||0)+1);
-function broadAlphabetConfidence(id,text,baseline){
-    const alphabet=alphabetSets.get(id);
+const baseModels=[...alphabetSets].map(([name,set])=>[name,new Set(name==='base32'?[...set,...'abcdefghijklmnopqrstuvwxyz']:set)]);
+baseModels.push(['letters',new Set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')],['other',new Set(Array.from({length:95},(_,i)=>String.fromCharCode(32+i)))]);
+export const DEFAULT_BASE_MODEL='presence';
+export function baseAlphabetPosterior(id,text,mode=DEFAULT_BASE_MODEL){
     let compact=text.replace(/\s/g,'');
     if(id==='ascii85'&&compact.startsWith('<~')&&compact.endsWith('~>'))compact=compact.slice(2,-2);
     const source=[...compact];
-    if(!source.length||source.some(char=>!alphabet.has(char)))return 0;
-    const counts=new Map();
-    for(const char of source)counts.set(char,(counts.get(char)||0)+1);
-    let distinctive=0;
-    for(const [char,count] of counts){
-        const support=characterSupport.get(char);
-        if(support<=3)distinctive+=Math.min(count,8)*(broadAlphabets.size-support)/(broadAlphabets.size-1);
-    }
-    return baseline+(Math.max(baseline,.92)-baseline)*(1-Math.exp(-distinctive/5));
+    if(!source.length)return 0;
+    // Equal model priors; letters and unstructured printable ASCII are explicit
+    // alternatives, so legal input need not be classified as a Base encoding.
+    const distinct=new Set(source),logs=baseModels.map(([name,set])=>{
+        if(source.some(c=>!set.has(c)))return [name,-Infinity];
+        const k=set.size,n=source.length,d=distinct.size;
+        if(mode==='counts')return [name,-n*Math.log(k)];
+        if(mode!=='presence')throw new RangeError('Unknown Base model');
+        // Bernoulli naive Bayes: both present and absent symbols are evidence.
+        const absent=n*Math.log1p(-1/k),present=Math.log(-Math.expm1(absent));
+        return [name,d*present+(k-d)*absent];
+    });
+    const best=Math.max(...logs.map(([,value])=>value));
+    if(!Number.isFinite(best))return 0;
+    const target=logs.find(([name])=>name===id)?.[1]??-Infinity;
+    return Math.exp(target-best)/logs.reduce((sum,[,value])=>sum+Math.exp(value-best),0);
+}
+function baseScore(id,text,mode=DEFAULT_BASE_MODEL){
+    const posterior=baseAlphabetPosterior(id,text,mode);
+    const compact=id==='ascii85'?text.replace(/\s/g,'').replace(/^<~/,'').replace(/~>$/,''):text.replace(/\s/g,'');
+    const alphabet=baseModels.find(([name])=>name===id)[1];
+    if(!compact||[...compact].some(c=>!alphabet.has(c)))return 0;
+    if(id==='ascii85'&&/^<~[\s\S]*~>$/.test(text.trim()))return .96;
+    if(['base64','base32'].includes(id)&&/=\s*$/.test(text))return .96;
+    return posterior;
 }
 const commonWords=new Set('a i am an as at be by do go he hi if in is it me my no of on or so to up us we all and any are but can day did end for get got had has her him his how its let may new not now off old one our out own say see she the too two use was way who why yes yet you your after again about been being come could every first found from give going good great have here into just know like little look make many more most much must name never only other over part people right said same some such take than that their them then there these they thing think this those time under want were what when where which while will with word work would years hello world secret message discover discovered flee once'.split(' '));
-const englishLetterFrequency=[8.2,1.5,2.8,4.3,12.7,2.2,2,6.1,7,.15,.77,4,2.4,6.7,7.5,1.9,.095,6,6.3,9.1,2.8,.98,2.4,.15,2,.074];
-function englishUnigramEvidence(text){
-    const letters=text.match(/[A-Za-z]/g)||[];
-    if(letters.length<20)return 0;
-    const likelihood=letters.reduce((sum,char)=>sum+Math.log(englishLetterFrequency[char.toUpperCase().charCodeAt(0)-65]/100),0)/letters.length;
-    return Math.max(0,Math.min(1,(likelihood+3.5)/.65));
-}
 function atbashProbe(text){
     const letters=text.match(/[A-Za-z]/g)||[];
-    if(letters.length<4)return 0;
-    const coverage=letters.length/Math.max(1,[...text].filter(char=>!/[\s]/.test(char)).length);
-    if(letters.length<20||coverage<.9)return .24;
-    // A reflected English unigram profile is evidence for Atbash itself;
-    // this deliberately does not use the result board's word scoring.
-    const reflected=letters.map(char=>String.fromCharCode(90-(char.toUpperCase().charCodeAt(0)-65))).join('');
-    return .24+englishUnigramEvidence(reflected)*.59;
-}
-const orderWords=[...commonWords].filter(word=>word.length>=3);
-function wordOrderEvidence(text){
-    const compact=text.replace(/\s/g,'');
-    if(!/^[A-Za-z]{12,80}$/.test(compact))return 0;
-    const lower=compact.toLowerCase();
-    let total=0;
-    for(const word of orderWords){
-        if(word.length<4&&word!=='can'&&word!=='the')continue;
-        if(lower.includes(word))total+=Math.min(word.length,6);
-    }
-    return total;
+    return letterCipherInput(text)&&letters.length>=4?.3:0;
 }
 function reverseProbe(text){
-    if(text.length<4)return 0;
-    const backward=wordOrderEvidence([...text].reverse().join(''));
-    const forward=wordOrderEvidence(text);
-    return backward>=10&&backward>=forward+7?.14+Math.min(.78,(backward-forward-6)*.2):.14;
+    return text.length>=4?.14:0;
 }
 
 function wordPrefixBonus(word,englishWords){
@@ -398,18 +552,20 @@ function probeRailFence(text){
     const source=text.trim();
     const chars=[...source];
     if(chars.length<8||chars.length>500||!chars.some(char=>!/\s/u.test(char))||/[\p{C}]/u.test(source.replace(/[\n\r\t]/g,'')))return 0;
-    const hasDigits=/\p{N}/u.test(source),hasSymbols=/[^\p{L}\p{N}\s]/u.test(source);
-    return hasSymbols?(hasDigits?.10:.16):(hasDigits?.22:.28);
+    return .14;
 }
 const keyboardRows=['1234567890-=','qwertyuiop[]\\',"asdfghjkl;'",'zxcvbnm,./'];
+const keyboardCharacter=char=>char>='A'&&char<='Z'?char.toLowerCase():char;
 function decodeKeyboardShift(text){
+    // Every input character must belong to the physical keyboard table.
+    // A direction is legal only when every character has a target in it.
+    if(!text.length||[...text].some(char=>!keyboardRows.some(row=>row.includes(keyboardCharacter(char)))))return [];
     const results=[];
     const shifts=[...[-2,-1,1,2].map(offset=>({axis:'horizontal',offset})),...[-2,-1,1,2].map(offset=>({axis:'vertical',offset}))];
     for(const {axis,offset} of shifts){
         let valid=true;
         const decoded=[...text].map(char=>{
-            const lower=char.toLowerCase(),rowIndex=keyboardRows.findIndex(keys=>keys.includes(lower));
-            if(rowIndex<0)return char;
+            const lower=keyboardCharacter(char),rowIndex=keyboardRows.findIndex(keys=>keys.includes(lower));
             const column=keyboardRows[rowIndex].indexOf(lower);
             const target=axis==='horizontal'?keyboardRows[rowIndex][column+offset]:keyboardRows[rowIndex+offset]?.[column];
             if(!target){valid=false;return char;}
@@ -423,14 +579,8 @@ function decodeKeyboardShift(text){
     return results;
 }
 function probeKeyboardShift(text){
-    const chars=[...text],mapped=chars.filter(c=>keyboardRows.some(row=>row.includes(c.toLowerCase()))).length;
-    if(chars.length<5||chars.length>500||mapped/chars.length<.75)return 0;
-    const letters=(text.match(/[A-Za-z]/g)||[]).length;
-    if(letters<2)return mapped>=5&&/^[0-9=\-\s]+$/.test(text)?.18:0;
-    if(letters<20||chars.length>160)return .34;
-    let evidence=0;
-    for(const result of decodeKeyboardShift(text))evidence=Math.max(evidence,englishUnigramEvidence(result.text));
-    return .34+evidence*.5;
+    if(text.length<5||text.length>500||!decodeKeyboardShift(text).length)return 0;
+    return .34;
 }
 
 export const decoders = [
@@ -453,9 +603,9 @@ export const decoders = [
     { id:'polybius', name:'Polybius', probe:t=>{const digits=t.replace(/[^1-5]/g,'');return /^[1-5\s,:;|/-]+$/.test(t)&&digits.length>=4&&digits.length%2===0?(digits.length>=20?.96:.76):0;}, decode:decodePolybius },
     { id:'adfgx', name:'ADFGX', probe:t=>{const s=t.replace(/[\s/]/g,'');return s.length>=4&&s.length%2===0&&/^[ADFGX]+$/i.test(s)?(s.length>=20?.92:.7):0;}, decode:decodeAdfgx },
     { id:'tap', name:'Tap Code', probe:t=>{const runs=splitCodeWords(t).flatMap(word=>word.trim().split(/[ \t]+/));return runs.length>=4&&decodeTapCode(t).length?(runs.every(run=>/^\.+$/.test(run))?.9:.68):0;}, decode:decodeTapCode },
-    { id:'atbash', name:'Atbash', probe:atbashProbe, decode:t=>one(t.replace(/[A-Za-z]/g,c=>String.fromCharCode((c<='Z'?155:219)-c.charCodeAt(0))),'Atbash') },
+    { id:'atbash', name:'Atbash', probe:atbashProbe, decode:t=>letterCipherInput(t)?one(t.replace(/[A-Za-z]/g,c=>String.fromCharCode((c<='Z'?155:219)-c.charCodeAt(0))),'Atbash'):[] },
     { id:'reverse', name:'Reverse', probe:reverseProbe, decode:t=>one([...t].reverse().join(''),'Reverse') },
-    { id:'caesar', name:'Caesar', probe:t=>(t.match(/[A-Za-z]/g)||[]).length>=4?.3:0, decode:t=>Array.from({length:25},(_,i)=>{const shift=i+1;return{text:t.replace(/[A-Za-z]/g,c=>{const a=c<='Z'?65:97;return String.fromCharCode((c.charCodeAt(0)-a-shift+26)%26+a)}),label:shift===13?'ROT13':`Caesar -${shift}`,parameter:shift};}) },
+    { id:'caesar', name:'Caesar', probe:t=>letterCipherInput(t)&&(t.match(/[A-Za-z]/g)||[]).length>=4?.3:0, decode:t=>letterCipherInput(t)?Array.from({length:25},(_,i)=>{const shift=i+1;return{text:t.replace(/[A-Za-z]/g,c=>{const a=c<='Z'?65:97;return String.fromCharCode((c.charCodeAt(0)-a-shift+26)%26+a)}),label:shift===13?'ROT13':`Caesar -${shift}`,parameter:shift};}):[] },
     { id:'railfence', name:'Rail Fence', probe:probeRailFence, decode:decodeRailFence },
     { id:'keyboardshift', name:'Keyboard Shift', probe:probeKeyboardShift, decode:decodeKeyboardShift }
 ];
@@ -480,138 +630,22 @@ for(const decoder of decoders){
     };
 }
 
-// These probes describe specific input structures. Broad alphabet matches such as
-// unpadded Base64 are too common to predict whether another layer will be useful.
-const strongFollowupIds=new Set(['adfgx','binary','bacon','morse','polybius','tap','hex','url','html','unicode','a1z26','octal','decimal']);
-const byteFollowupIds=new Set(['base58','ascii85','base85','base91']);
-const base58Decoder=decoders.find(decoder=>decoder.id==='base58');
-const base85Decoder=decoders.find(decoder=>decoder.id==='base85');
-const caesarDecoder=decoders.find(decoder=>decoder.id==='caesar');
-const originalProbes=new Map(decoders.map(decoder=>[decoder.id,decoder.probe]));
-const transpositionEvidenceCache=new Map();
-function transpositionEvidence(text){
-    if(transpositionEvidenceCache.has(text))return transpositionEvidenceCache.get(text);
-    let best=0,confirmed=false;
-    for(const decoder of decoders){
-        if(decoder.id==='reverse'||decoder.id==='railfence'||decoder.id==='caesar'||decoder.id==='atbash'||decoder.id==='keyboardshift')continue;
-        const confidence=decoder.probe(text);
-        if(confidence>best)best=confidence;
-        if(['url','html','unicode'].includes(decoder.id)&&confidence>=.85&&decoder.decode(text).length)confirmed=true;
-    }
-    const content=[...text].filter(char=>!/[\s/|]/.test(char));
-    const symbols=new Set(content);
-    let latent=content.length>=8&&symbols.size===2?.62:0;
-    const slashCount=(text.match(/\\/g)||[]).length,percentCount=(text.match(/%/g)||[]).length;
-    if(slashCount>=2&&/[ux]/i.test(text)&&/[0-9a-f]/i.test(text))latent=Math.max(latent,.72);
-    if(percentCount>=2&&/[0-9a-f]/i.test(text))latent=Math.max(latent,.68);
-    const result={best:Math.max(best,latent),confirmed};
-    if(transpositionEvidenceCache.size>=128)transpositionEvidenceCache.clear();
-    transpositionEvidenceCache.set(text,result);
-    return result;
-}
+// Raw decoder-local scores. Bounded position lookahead is applied in evaluateText.
 for(const decoder of decoders){
-    const rawProbe=originalProbes.get(decoder.id);
+    const probe=decoder.probe;
     decoder.probe=text=>{
-        const baseline=rawProbe(text);
-        if(broadAlphabets.has(decoder.id))return baseline?broadAlphabetConfidence(decoder.id,text,baseline):0;
+        const baseline=probe(text);
+        if(broadAlphabets.has(decoder.id))return baseline?baseScore(decoder.id,text):0;
         if(['caesar','atbash','keyboardshift'].includes(decoder.id)){
-            const content=[...text].filter(char=>!/\s/.test(char));
-            if(!content.length)return 0;
-            const active=content.filter(char=>decoder.id==='keyboardshift'?keyboardRows.some(row=>row.includes(char.toLowerCase())):/[A-Za-z]/.test(char)).length;
-            return baseline*(active/content.length)**1.5;
-        }
-        if(decoder.id==='reverse'||decoder.id==='railfence'){
-            if(!baseline)return 0;
-            const {best,confirmed}=transpositionEvidence(text);
-            const confidence=Math.max(baseline,Math.min(.72,.08+best*.58));
-            return confirmed?Math.min(confidence,.25):confidence;
+            const chars=[...text].filter(c=>!/\s/.test(c));
+            const active=chars.filter(c=>decoder.id==='keyboardshift'?keyboardRows.some(row=>row.includes(c.toLowerCase())):/[A-Za-z]/.test(c)).length;
+            return chars.length?baseline*(active/chars.length)**1.5:0;
         }
         return baseline;
     };
 }
-
-const modulo26=value=>(value%26+26)%26;
-// Character substitutions commute with Rail Fence and Reverse. Reduce their
-// combined affine map before spending another search depth on an equivalent path.
-const isPermutation=id=>id==='railfence'||id==='reverse';
-const isAffine=id=>id==='caesar'||id==='atbash';
-
-function redundantAffineStep(node,decoder,result){
-    const operations=[{decoder:decoder.id,parameter:result.parameter}];
-    for(let cursor=node;cursor?.step;cursor=cursor.parent){
-        if(cursor.step.segmented)break;
-        if(isAffine(cursor.step.decoder))operations.unshift(cursor.step);
-        else if(!isPermutation(cursor.step.decoder))break;
-    }
-    if(operations.length<2)return false;
-    let sign=1,offset=0;
-    for(const operation of operations){
-        const nextSign=operation.decoder==='atbash'?-1:1;
-        const nextOffset=operation.decoder==='atbash'?25:-operation.parameter;
-        offset=modulo26(nextSign*offset+nextOffset);
-        sign*=nextSign;
-    }
-    const minimum=sign===1?(offset===0?0:1):(offset===25?1:2);
-    return operations.length>minimum;
-}
-
-function keyboardVector(parameter){
-    return typeof parameter==='number'?{axis:'horizontal',offset:parameter}:{axis:'vertical',offset:(parameter.direction==='up'?-1:1)*parameter.steps};
-}
-
-function redundantKeyboardStep(node,result){
-    const current=keyboardVector(result.parameter),permutations=[];
-    let cursor=node;
-    while(cursor?.step&&!cursor.step.segmented&&isPermutation(cursor.step.decoder)){
-        permutations.unshift(cursor.step);
-        cursor=cursor.parent;
-    }
-    if(cursor?.step?.segmented||cursor?.step?.decoder!=='keyboardshift')return false;
-    const previous=keyboardVector(cursor.step.parameter);
-    if(previous.axis!==current.axis)return false;
-    const offset=previous.offset+current.offset;
-    if(Math.abs(offset)>2)return false;
-    // Keyboard rows have different lengths and can change case at the digit
-    // boundary, so confirm the shorter route actually produces the same text.
-    let shorter=cursor.parent.text;
-    if(offset){
-        const variant=decodeKeyboardShift(shorter).find(candidate=>{
-            const vector=keyboardVector(candidate.parameter);
-            return vector.axis===current.axis&&vector.offset===offset;
-        });
-        if(!variant)return false;
-        shorter=variant.text;
-    }
-    for(const step of permutations){
-        if(step.decoder==='railfence'&&!probeRailFence(shorter))return false;
-        shorter=step.decoder==='reverse'?[...shorter].reverse().join(''):decodeRailFence(shorter).find(candidate=>candidate.parameter===step.parameter)?.text;
-        if(shorter==null)return false;
-    }
-    return shorter.toLowerCase()===result.text.toLowerCase();
-}
-
-function redundantReverseStep(node){
-    for(let cursor=node;cursor?.step;cursor=cursor.parent){
-        if(cursor.step.segmented)return false;
-        if(cursor.step.decoder==='reverse')return true;
-        if(!isAffine(cursor.step.decoder)&&cursor.step.decoder!=='keyboardshift')return false;
-    }
-    return false;
-}
-
-function redundantTransform(node,decoder,result){
-    if(isAffine(decoder.id))return redundantAffineStep(node,decoder,result);
-    if(decoder.id==='keyboardshift')return redundantKeyboardStep(node,result);
-    if(decoder.id==='reverse')return redundantReverseStep(node);
-    return false;
-}
-
-// Expansion is pure: workers can evaluate nodes independently, while the
-// coordinator retains ownership of deduplication, ranking and beam pruning.
-// Search jobs are (text state, next decoder) pairs. Text quality belongs to
-// the result board; it never contributes to the priority of these jobs.
 export function admissibleText(text){
-    return !!text&&![...text].some(char=>char==='\ufffd'||(/\p{C}/u.test(char)&&!/[\r\n\t]/.test(char)));
+    return !!text&&![...text].some(c=>c==='\ufffd'||(/\p{C}/u.test(c)&&!/[\r\n\t]/.test(c)));
 }
 
 function plaintextResults(text,englishWords,acgWords){
@@ -639,216 +673,239 @@ function plaintextResults(text,englishWords,acgWords){
     return results;
 }
 
-const searchDecoders=new Map(decoders.map(decoder=>[decoder.id,decoder]));
-const lookaheadDecoders=decoders.filter(decoder=>strongFollowupIds.has(decoder.id)||byteFollowupIds.has(decoder.id)||decoder.id==='base64'||decoder.id==='base32');
-const polybiusDecoder=searchDecoders.get('polybius'),morseDecoder=searchDecoders.get('morse'),baconDecoder=searchDecoders.get('bacon');
-function safeDecode(decoder,text){try{return decoder.decode(text);}catch{return[];}}
-// A rail/shift lookahead reaches the same intermediate text from many actions.
-// Bound the cache so a long search does not retain its entire speculative tree.
-const formatConfidenceCache=new Map();
-function validatedFormatConfidence(text){
-    const cached=formatConfidenceCache.get(text);
+// Shared recurrence and sampling defaults. Terminal evidence enters only
+// through the explicitly bounded transform lookahead.
+export const DEFAULT_ALPHA=.5;
+export const DEFAULT_Q_INTERVAL=7;
+
+// Eligibility is separate from a decoder's heuristic score. A legal decoder
+// with score zero is still executed. Invalid outputs never become states.
+function acceptsInput(decoder,text){
+    const compact=text.replace(/\s/g,'');
+    switch(decoder.id){
+        case 'url':return /%[0-9a-f]{2}/i.test(text);
+        case 'html':return /&(?:#\d+|#x[0-9a-f]+|amp|lt|gt|quot|apos);/i.test(text);
+        case 'unicode':return /\\(?:u[0-9a-f]{4}|x[0-9a-f]{2})/i.test(text);
+        case 'hex':return /^(?:\s*[0-9a-f]{2}[\s,:-]*)+$/i.test(text);
+        case 'base64':return compact.length>=4&&compact.length%4===0&&/^[A-Za-z0-9+/]+={0,2}$/.test(compact);
+        case 'base32':return /^[A-Z2-7]+=*$/i.test(compact)&&compact.length>=2;
+        case 'base58':return /^[1-9A-HJ-NP-Za-km-z]+$/.test(text.trim());
+        case 'ascii85':return /^(?:<~)?[!-u\sz]+(?:~>)?$/.test(text.trim());
+        case 'base85':case 'base91':return [...compact].every(c=>alphabetSets.get(decoder.id).has(c));
+        case 'decimal':return /^\s*\d{1,3}(?:[\s,:-]+\d{1,3})+\s*$/.test(text)&&text.trim().split(/[\s,:-]+/).every(n=>+n<=255);
+        case 'octal':return /^\s*[0-7]{2,3}(?:[\s,:-]+[0-7]{2,3})+\s*$/.test(text);
+        case 'a1z26':return /^[\d\s,:;|/-]+$/.test(text);
+        case 'polybius':return /^[1-5\s,:;|/-]+$/.test(text);
+        case 'adfgx':return /^[ADFGX\s/|]+$/i.test(text);
+        case 'binary':return !!binarySymbols(text);
+        case 'bacon':return !!fixedCodeWords(text,5,2);
+        case 'morse':return validMorseCharacters(text);
+        case 'tap':return !!decodeTapCode(text).length;
+        case 'caesar':case 'affine':case 'vigenere':case 'beaufort':case 'porta':
+        case 'playfair':case 'twosquare':case 'trisquare':case 'foursquare':case 'hill':return letterCipherInput(text);
+        case 'atbash':return letterCipherInput(text);
+        case 'reverse':return [...text].length>=2;
+        case 'railfence':return text.length>=4&&text.length<=500;
+        default:return true; // Remaining decoders validate within decode().
+    }
+}
+
+export function createSearchContext(keys=null,{lookahead=true,baseModel=DEFAULT_BASE_MODEL,englishWords=null,acgWords=null}={}){
+    if(!['presence','counts'].includes(baseModel))throw new RangeError('Unknown Base model');
+    const keyed=keys===null?[]:validateKeyConfig(keys);
+    if(keys!==null&&keyed.errors.length){const error=new Error(keyed.errors[0].message);error.keyErrors=keyed.errors;throw error;}
+    return {decoders:[...decoders,...(keys===null?[]:keyed.decoders)],lookahead,baseModel,englishWords,acgWords,cache:new Map(),scoreCache:new Map(),lookaheadCache:new Map(),formatCache:new Map(),plaintextCache:new Map()};
+}
+
+function analyzeText(text,context){
+    if(!admissibleText(text))return {methods:[],attempted:0};
+    const cached=context.cache.get(text);
+    if(cached)return cached;
+    const methods=[];
+    let attempted=0;
+    for(const decoder of context.decoders){
+        if(!acceptsInput(decoder,text))continue;
+        attempted++;
+        let results=[];
+        try{results=decoder.decode(text).filter(r=>admissibleText(r.text));}catch{}
+        if(!results.length)continue;
+        const raw=decoder.keyed?0:decoder.probe(text);
+        const scores=decoder.keyed?decoder.keyVariants.filter(v=>results.some(r=>r.keyId===v.keyId)).map(v=>({keyId:v.keyId,base:v.probe(text)})):[{base:broadAlphabets.has(decoder.id)&&raw>0?baseScore(decoder.id,text,context.baseModel):raw}];
+        methods.push({decoder:decoder.id,results,scores});
+    }
+    const analysis={methods,attempted};
+    if(context.scoreCache){
+        if(context.scoreCache.size>=16384)context.scoreCache.delete(context.scoreCache.keys().next().value);
+        context.scoreCache.set(text,methods.flatMap(method=>method.scores));
+    }
+    // Memoization only bounds retained calculations, never the search frontier.
+    if(context.cache.size>=256)context.cache.clear();
+    context.cache.set(text,analysis);
+    return analysis;
+}
+
+const positionDecoders=new Set(['reverse','railfence','columnar','caesar','atbash','keyboardshift']);
+const formatDecoders=new Set(['url','html','unicode','hex','base64','base32','base58','ascii85','base85','base91','binary','octal','decimal','a1z26','bacon','morse','polybius','adfgx','tap']);
+function validatedFormatConfidence(text,context){
+    const cached=context.formatCache?.get(text);
     if(cached!==undefined)return cached;
     let best=0;
-    for(const decoder of lookaheadDecoders){
-        const confidence=decoder.probe(text);
-        if(confidence<.6&&!(decoder.id==='base58'&&confidence>=.5))continue;
-        if(confidence<=best&&decoder.id!=='base58')continue;
-        if(text.length>200&&byteFollowupIds.has(decoder.id)&&decoder.id!=='base58'&&confidence<.85)continue;
-        for(const result of safeDecode(decoder,text)){
-            if(!admissibleText(result.text)||result.text===text||result.text.length<8)continue;
-            if(decoder.id==='base58'&&(morseDecoder.probe(result.text)>=.8||baconDecoder.probe(result.text)>=.8||searchDecoders.get('a1z26').probe(result.text)>=.8||searchDecoders.get('decimal').probe(result.text)>=.8))best=Math.max(best,.95);
-            else best=Math.max(best,confidence);
-        }
+    for(const decoder of context.decoders){
+        if(!formatDecoders.has(decoder.id)||!acceptsInput(decoder,text))continue;
+        const score=broadAlphabets.has(decoder.id)?baseScore(decoder.id,text,context.baseModel):decoder.probe(text);
+        if(score<=best||score<.5)continue;
+        try{if(decoder.decode(text).some(r=>r.text!==text&&r.text.length>=8&&admissibleText(r.text)))best=score;}catch{}
     }
-    if(formatConfidenceCache.size>=4096)formatConfidenceCache.clear();
-    formatConfidenceCache.set(text,best);
+    if(context.formatCache){
+        if(context.formatCache.size>=4096)context.formatCache.delete(context.formatCache.keys().next().value);
+        context.formatCache.set(text,best);
+    }
     return best;
 }
-function actionLookahead(text,decoder,confidence,remaining,parentDecoder){
-    const weakAtbash=decoder.id==='atbash'&&remaining>=3&&text.length<=160;
-    const weakCaesar=decoder.id==='caesar'&&((parentDecoder==='railfence'&&text.length<=500)||(parentDecoder==='base91'&&remaining>=5&&text.length<=160));
-    const verifiedBase64=decoder.id==='base64'&&confidence>.8&&remaining>=2&&text.length<=500&&safeDecode(decoder,text).some(result=>polybiusDecoder.probe(result.text)>=.7);
-    if(remaining<2||text.length>500||(confidence<.2&&!weakAtbash&&!weakCaesar)||(confidence>.8&&!['base32','adfgx'].includes(decoder.id)&&!verifiedBase64))return 0;
-    let best=0;
-    for(const result of safeDecode(decoder,text)){
-        if(!admissibleText(result.text)||result.text===text)continue;
-        best=Math.max(best,validatedFormatConfidence(result.text));
-        if(decoder.id==='adfgx'&&/^[A-Za-z]{10,80}$/.test(result.text))best=Math.max(best,atbashProbe(result.text));
-        if(weakCaesar&&parentDecoder==='base91'&&best<.9){
-            for(const rail of decodeRailFence(result.text)){
-                const reversed=[...rail.text].reverse().join('');
-                if(base85Decoder.probe(reversed)<.75)continue;
-                if(safeDecode(base85Decoder,reversed).some(decoded=>polybiusDecoder.probe(decoded.text)>=.7)){best=.95;break;}
+
+function positionLookahead(text,context,remaining){
+    if(text.length>500)return [];
+    const cacheKey=JSON.stringify([text,remaining>=2]);
+    const cached=context.lookaheadCache?.get(cacheKey);
+    if(cached)return cached;
+    const scores=[];
+    for(const method of analyzeText(text,context).methods){
+        if(!positionDecoders.has(method.decoder))continue;
+        for(const score of method.scores){
+            let future=0;
+            for(const result of method.results){
+                if(result.keyId!==score.keyId||result.text===text)continue;
+                if(remaining>=2)future=Math.max(future,.9*validatedFormatConfidence(result.text,context));
+                let plain=context.plaintextCache.get(result.text);
+                if(!plain){
+                    plain=plaintextResults(result.text,context.englishWords,context.acgWords);
+                    if(context.plaintextCache.size>=4096)context.plaintextCache.delete(context.plaintextCache.keys().next().value);
+                    context.plaintextCache.set(result.text,plain);
+                }
+                for(const candidate of plain)future=Math.max(future,.95*candidate.score/100);
             }
-        }
-        if(decoder.id==='railfence'&&remaining>=4&&best<.9){
-            const reversed=[...result.text].reverse().join('');
-            if(parentDecoder==='caesar'&&result.text.length<=160&&base85Decoder.probe(reversed)>=.75&&safeDecode(base85Decoder,reversed).some(decoded=>polybiusDecoder.probe(decoded.text)>=.7))best=.95;
-            if(parentDecoder==='base85'&&result.text.length<=350&&base58Decoder.probe(reversed)>=.5&&safeDecode(base58Decoder,reversed).some(decoded=>baconDecoder.probe(decoded.text)>=.8))best=.95;
-        }
-        if(remaining>=3&&best<.9){
-            if(decoder.id==='railfence'&&parentDecoder==='reverse'&&/^[A-Za-z0-9+/=]{24,160}$/.test(result.text)){
-                for(const shifted of caesarDecoder.decode(result.text))best=Math.max(best,validatedFormatConfidence(shifted.text));
-            }
-            if(decoder.id==='atbash'&&result.text.length>=20&&result.text.length<=160){
-                for(const shifted of decodeRailFence(result.text))best=Math.max(best,validatedFormatConfidence(shifted.text));
-            }
-            if(decoder.id==='base64'&&parentDecoder==='caesar'&&result.text.length<=160){
-                for(const shifted of decodeKeyboardShift(result.text))best=Math.max(best,validatedFormatConfidence(shifted.text));
-            }
+            // One transform only: verified next format or the actual plaintext
+            // observer. No recursive lookahead and no speculative key reward.
+            if(future)scores.push({...score,base:Math.max(score.base,future)});
         }
     }
-    return Math.min(.9,best*.9);
-}
-
-export function prepareSearchActions(text,parentConfidence,remaining,parentDecoder=null){
-    if(remaining<1)return [];
-    const actions=[];
-    for(const decoder of decoders){
-        const confidence=decoder.probe(text);
-        if(!confidence)continue;
-        const lookahead=actionLookahead(text,decoder,confidence,remaining,parentDecoder);
-        actions.push({decoder:decoder.id,confidence,priority:confidence+parentConfidence*.8+lookahead});
+    if(context.lookaheadCache){
+        if(context.lookaheadCache.size>=4096)context.lookaheadCache.delete(context.lookaheadCache.keys().next().value);
+        context.lookaheadCache.set(cacheKey,scores);
     }
-    return actions.sort((a,b)=>b.priority-a.priority);
+    return scores;
 }
 
-export function expandSearchAction(action,{maxDepth,englishWords=null,acgWords=null}){
-    const decoder=searchDecoders.get(action.decoder);
-    if(!decoder)return {transitions:[],redundantPruned:0};
-    const state=action.state,transitions=[];
-    let redundantPruned=0;
-    for(const result of safeDecode(decoder,state.text)){
-        if(!admissibleText(result.text)||result.text===state.text)continue;
-        if(redundantTransform(state,decoder,result)){redundantPruned++;continue;}
-        const step={decoder:decoder.id,label:result.label,confidence:action.confidence,parameter:result.parameter};
-        const depth=state.depth+1;
-        transitions.push({text:result.text,step,depth,plaintext:plaintextResults(result.text,englishWords,acgWords),actions:prepareSearchActions(result.text,action.confidence,maxDepth-depth,decoder.id)});
+export function evaluateText(text,context=createSearchContext(),remaining=Infinity){
+    if(!admissibleText(text))return 0;
+    let q=0;
+    const scores=context.scoreCache?.get(text)??analyzeText(text,context).methods.flatMap(method=>method.scores);
+    for(const score of scores)q=Math.max(q,score.base);
+    if(context.lookahead!==false&&remaining>=1)for(const score of positionLookahead(text,context,remaining))q=Math.max(q,score.base);
+    return q;
+}
+
+export function expandTextNode(node,{alpha=DEFAULT_ALPHA,maxDepth=Infinity,englishWords=null,acgWords=null,context=createSearchContext()}={}){
+    if(context.englishWords!==englishWords||context.acgWords!==acgWords){
+        context.englishWords=englishWords;context.acgWords=acgWords;
+        context.lookaheadCache?.clear();context.plaintextCache.clear();
     }
-    return {transitions,redundantPruned};
+    const transitions=[],analysis=analyzeText(node.text,context),previousKeys=node.usedKeys??[];
+    for(const method of analysis.methods)for(const result of method.results){
+        // Reward the key actually used by this transition, once per path.
+        // Merely having a compatible unused key never increases a text's score.
+        const keyTier=result.keyId?(!previousKeys.includes(result.keyId)?2:1):0;
+        const keyBonus=keyTier,keySteps=(node.keySteps??0)+(result.keyId?1:0);
+        const usedKeys=result.keyId&&!previousKeys.includes(result.keyId)?[...previousKeys,result.keyId]:previousKeys;
+        const maxQ=evaluateText(result.text,context,maxDepth-node.depth-1),q=maxQ+keyBonus;
+        const confidence=method.scores.find(s=>s.keyId===result.keyId)?.base??method.scores[0].base;
+        const step={decoder:method.decoder,label:result.label,parameter:result.parameter,confidence,...(result.keyId?{keyId:result.keyId,keyBonus}:{})};
+        let plaintext=context.plaintextCache.get(result.text);
+        if(!plaintext){plaintext=plaintextResults(result.text,englishWords,acgWords);if(context.plaintextCache.size>=4096)context.plaintextCache.delete(context.plaintextCache.keys().next().value);context.plaintextCache.set(result.text,plaintext);}
+        transitions.push({text:result.text,step,usedKeys,depth:node.depth+1,maxQ,keyBonus,keyTier,keySteps,q,priority:q+alpha*node.priority,plaintext});
+    }
+    return {transitions,attempted:analysis.attempted};
 }
 
-class ActionHeap{
-    constructor(){this.items=[];}
+class TextHeap{
+    constructor(score='priority'){this.items=[];this.score=score;}
     get size(){return this.items.length;}
-    push(item){
-        const items=this.items;let index=items.length;items.push(item);
-        while(index>0){const parent=(index-1)>>1;if(items[parent].priority>=item.priority)break;items[index]=items[parent];index=parent;}
-        items[index]=item;
+    better(a,b){
+        for(const field of ['keyTier','keySteps'])if((a[field]??0)!==(b[field]??0))return (a[field]??0)>(b[field]??0);
+        return a[this.score]>b[this.score]||(a[this.score]===b[this.score]&&a.order<b.order);
     }
-    pop(){
-        const items=this.items,top=items[0],tail=items.pop();
-        if(items.length){let index=0;while(index*2+1<items.length){let child=index*2+1;if(child+1<items.length&&items[child+1].priority>items[child].priority)child++;if(tail.priority>=items[child].priority)break;items[index]=items[child];index=child;}items[index]=tail;}
-        return top;
-    }
-    trim(limit){
-        if(this.size<=limit)return;
-        const best=this.items.sort((a,b)=>b.priority-a.priority).slice(0,limit);
-        this.items=[];for(const item of best)this.push(item);
-    }
-}
-class ActionFrontier{
-    constructor(){this.groups=new Map();this.size=0;this.selected=new Map();}
-    get items(){return [...this.groups.values()].flatMap(heap=>heap.items);}
-    push(action){
-        let heap=this.groups.get(action.decoder);
-        if(!heap){heap=new ActionHeap();this.groups.set(action.decoder,heap);}
-        heap.push(action);this.size++;
-    }
-    pop(diverse=false){
-        let chosen=null,chosenHeap=null,best=-Infinity;
-        for(const [decoder,heap] of this.groups){
-            if(!heap.size)continue;
-            const score=diverse?-(this.selected.get(decoder)||0):heap.items[0].priority;
-            if(score>best||(score===best&&heap.items[0].priority>(chosenHeap?.items[0].priority??-Infinity))){best=score;chosen=decoder;chosenHeap=heap;}
-        }
-        if(!chosenHeap)return null;
-        this.size--;
-        this.selected.set(chosen,(this.selected.get(chosen)||0)+1);
-        return chosenHeap.pop();
-    }
-    trim(limit){
-        if(this.size<=limit)return;
-        const best=this.items.sort((a,b)=>b.priority-a.priority).slice(0,limit);
-        this.clear();for(const action of best)this.push(action);
-    }
-    clear(){this.groups.clear();this.size=0;}
+    push(item){let i=this.items.length;this.items.push(item);while(i>0){const p=(i-1)>>1;if(!this.better(item,this.items[p]))break;this.items[i]=this.items[p];i=p;}this.items[i]=item;}
+    pop(){const top=this.items[0],tail=this.items.pop();if(this.items.length){let i=0;while(i*2+1<this.items.length){let c=i*2+1;if(c+1<this.items.length&&this.better(this.items[c+1],this.items[c]))c++;if(!this.better(this.items[c],tail))break;this.items[i]=this.items[c];i=c;}this.items[i]=tail;}return top;}
 }
 
-export async function search(input, options={}) {
-    const maxDepth=options.maxDepth??3,maxNodes=options.maxNodes??300,signal=options.signal;
+class TextFrontier{
+    constructor(){this.byPriority=new TextHeap();this.byQ=new TextHeap('q');this.size=0;}
+    push(node){node.enqueued=true;this.byPriority.push(node);this.byQ.push(node);this.size++;}
+    discard(node){if(node.enqueued){this.size--;node.enqueued=false;}node.discarded=true;}
+    pop(byQ=false){
+        const heap=byQ?this.byQ:this.byPriority;
+        while(heap.size){const node=heap.pop();if(!node.enqueued)continue;node.enqueued=false;this.size--;return node;}
+    }
+}
+
+export async function search(input,options={}){
+    const keyMode=options.keyMode===true,maxDepth=keyMode?Math.max(1,Math.min(5,options.maxDepth??5)):options.maxDepth??3;
+    const maxNodes=options.maxNodes??300,alpha=options.alpha??DEFAULT_ALPHA,signal=options.signal;
+    if(!Number.isFinite(alpha)||alpha<0||alpha>=1)throw new RangeError('alpha must be in [0, 1)');
+    const context=createSearchContext(keyMode?options.keys??[]:null,{lookahead:options.lookahead!==false,baseModel:options.baseModel,englishWords:options.englishWords,acgWords:options.acgWords});
     const englishWords=options.englishWords??null,acgWords=options.acgWords??null;
-    if(!admissibleText(input))return {candidates:[],stats:{expanded:0,attempted:0,generated:0,queued:0,redundantPruned:0,aborted:!!signal?.aborted,stoppedOnPlaintext:false}};
-    const root={text:input,path:[],depth:0,parent:null,step:null};
-    const frontiers=Array.from({length:maxDepth},()=>new ActionFrontier()),seen=new Map([[input,[root]]]),results=new Map();
-    for(const descriptor of prepareSearchActions(input,0,maxDepth))frontiers[0].push({...descriptor,state:root});
-    let expanded=0,attempted=0,generated=1,redundantPruned=0,nodeBudget=maxNodes,stoppedOnPlaintext=false;
-    const addResult=(variant,state,step)=>{
-        const path=[...state.path,variant.segmented?{...step,label:step.label+' · 自动分词',segmented:true}:step];
-        const candidate={text:variant.text,path,depth:state.depth+1,score:variant.score,evidence:variant.evidence};
+    let expanded=0,attempted=0,generated=0,order=0,stoppedOnPlaintext=false,frontier=new TextFrontier();
+    const qInterval=options.alternateQ===false?0:options.qInterval??DEFAULT_Q_INTERVAL,minDepth=new Map();
+    if(!Number.isInteger(qInterval)||qInterval<0)throw new RangeError('qInterval must be a nonnegative integer');
+    const stateKey=node=>JSON.stringify([node.text,[...node.usedKeys].sort()]);
+    const results=new Map();
+    const finish=()=>({candidates:[...results.values()].sort((a,b)=>b.score-a.score).slice(0,20),stats:{expanded,attempted,generated,queued:frontier.size,aborted:!!signal?.aborted,stoppedOnPlaintext,alpha,qInterval,lookahead:context.lookahead}});
+    if(signal?.aborted||!admissibleText(input))return finish();
+    const rootQ=evaluateText(input,context,maxDepth);
+    const root={text:input,depth:0,path:[],usedKeys:[],maxQ:rootQ,keyBonus:0,q:rootQ,priority:rootQ,order:order++,parent:null};
+    frontier.push(root);minDepth.set(stateKey(root),0);generated=1;
+    const addResult=(variant,parent,step)=>{
+        const path=[...parent.path,variant.segmented?{...step,label:step.label+' · 自动分词',segmented:true}:step];
+        const candidate={text:variant.text,path,depth:parent.depth+1,score:variant.score,evidence:variant.evidence};
         const previous=results.get(candidate.text);
         if(!previous||candidate.score>previous.score)results.set(candidate.text,candidate);
-        if(results.size>100){
-            const ranked=[...results.values()].sort((a,b)=>b.score-a.score).slice(0,40);
-            results.clear();for(const item of ranked)results.set(item.text,item);
-        }
+        if(results.size>100){const best=[...results.values()].sort((a,b)=>b.score-a.score).slice(0,40);results.clear();for(const r of best)results.set(r.text,r);}
         if(variant.score>=99&&variant.readableCoverage>=.98&&variant.wordCount>=6&&candidate.text.length>=35)stoppedOnPlaintext=true;
     };
-    const consume=(action,expansion)=>{
-        redundantPruned+=expansion.redundantPruned;
-        let productive=false;
-        for(const transition of expansion.transitions){
-            const variants=seen.get(transition.text)||[];
-            const previous=variants.find(state=>state.depth===transition.depth&&state.step?.decoder===transition.step.decoder);
-            if(previous&&previous.step.confidence>=transition.step.confidence)continue;
-            if(previous)previous.discarded=true;
-            const state={text:transition.text,path:[...action.state.path,transition.step],depth:transition.depth,parent:action.state,step:transition.step};
-            if(previous)variants.splice(variants.indexOf(previous),1,state);
-            else variants.push(state);
-            seen.set(state.text,variants);generated++;productive=true;
-            for(const variant of transition.plaintext)addResult(variant,action.state,transition.step);
-            if(state.depth<maxDepth)for(const descriptor of transition.actions)frontiers[state.depth].push({...descriptor,state});
-        }
-        if(productive)expanded++;
-    };
-    const attemptLimit=Math.max(2000,maxNodes*32);
-    for(let level=0;level<maxDepth&&expanded<nodeBudget&&attempted<attemptLimit&&!signal?.aborted&&!stoppedOnPlaintext;level++){
-        const frontier=frontiers[level];
-        if(options.adjustBudget)nodeBudget=Math.max(expanded+1,Math.round(options.adjustBudget({level,frontier:frontier.items,expanded,generated,nodeBudget,attempted})));
-        // Jobs start at depth zero, while successful text results start at
-        // depth one. Unused successful-operation allowance rolls forward.
-        const levelLimit=Math.max(expanded+1,Math.round(nodeBudget*(level+1)*(level+2)/(maxDepth*(maxDepth+1))));
-        while(frontier.size&&expanded<levelLimit&&attempted<attemptLimit&&!signal?.aborted&&!stoppedOnPlaintext){
-            const batch=[];
-            const requested=options.expandBatch?Math.max(1,options.batchSize??8):1;
-            const batchSize=Math.min(requested,levelLimit-expanded);
-            while(batch.length<batchSize&&frontier.size){
-                // Most slots follow global priority. Every fourth slot gives
-                // an underexplored decoder a chance at this depth.
-                const action=frontier.pop((attempted+batch.length)%4===3);
-                if(action.state.discarded)continue;
-                batch.push(action);
-            }
+    const expandBatch=keyMode?null:options.expandBatch;
+    for(let level=0;level<maxDepth&&frontier.size&&expanded<maxNodes&&!signal?.aborted&&!stoppedOnPlaintext;level++){
+        const next=new TextFrontier(),seen=new Map(),limit=Math.max(expanded+1,Math.round(maxNodes*(level+1)/maxDepth));
+        while(frontier.size&&expanded<limit&&!signal?.aborted&&!stoppedOnPlaintext){
+            const batch=[],size=Math.min(expandBatch?Math.max(1,options.batchSize??8):1,limit-expanded);
+            while(frontier.size&&batch.length<size)batch.push(frontier.pop(qInterval>0&&(expanded+batch.length)%(qInterval+1)===qInterval));
             if(!batch.length)break;
-            const expansions=options.expandBatch?await options.expandBatch(batch,{maxDepth}):batch.map(action=>expandSearchAction(action,{maxDepth,englishWords,acgWords}));
-            for(let index=0;index<batch.length;index++){
-                if(signal?.aborted||stoppedOnPlaintext)break;
-                attempted++;
-                options.onAction?.(batch[index],{expanded,attempted,queued:frontier.size});
-                consume(batch[index],expansions[index]);
+            const expansions=expandBatch?await expandBatch(batch,{alpha,maxDepth,lookahead:context.lookahead,baseModel:context.baseModel}):batch.map(node=>expandTextNode(node,{alpha,maxDepth,englishWords,acgWords,context}));
+            for(let i=0;i<batch.length&&!signal?.aborted&&!stoppedOnPlaintext;i++){
+                const parent=batch[i],expansion=expansions[i];expanded++;attempted+=expansion.attempted;
+                options.onNode?.(parent,{expanded,attempted,generated});
+                for(const transition of expansion.transitions){
+                    const key=stateKey(transition),shorter=minDepth.get(key);
+                    if(shorter!==undefined&&shorter<transition.depth)continue;
+                    // A keyed cycle can return to an ancestor with a different
+                    // used-key set; no extra steps are needed to recover its text.
+                    let cycle=false;
+                    if(keyMode)for(let ancestor=parent;ancestor;ancestor=ancestor.parent)if(ancestor.text===transition.text){cycle=true;break;}
+                    if(cycle)continue;
+                    // Plaintext is observed immediately, including the final depth.
+                    for(const variant of transition.plaintext)addResult(variant,parent,transition.step);
+                    const previous=seen.get(key);
+                    if(previous&&!next.byPriority.better({...transition,order:previous.order},previous))continue;
+                    if(previous)next.discard(previous);
+                    minDepth.set(key,transition.depth);
+                    const state={text:transition.text,usedKeys:transition.usedKeys,depth:transition.depth,maxQ:transition.maxQ,keyBonus:transition.keyBonus,keyTier:transition.keyTier,keySteps:transition.keySteps,q:transition.q,priority:transition.priority,path:[...parent.path,transition.step],order:order++,parent:keyMode?parent:null};
+                    seen.set(key,state);generated++;if(state.depth<maxDepth)next.push(state);
+                }
             }
-            const next=frontiers[level+1],cap=Math.max(512,Math.min(20000,nodeBudget*8));
-            if(next&&next.size>cap*1.5)next.trim(cap);
-            if(attempted%20===0||options.expandBatch){options.onProgress?.({expanded,generated,queued:frontiers.reduce((sum,item)=>sum+item.size,0),attempted});await new Promise(resolve=>setTimeout(resolve,0));}
+            if(expanded%10===0||expandBatch){options.onProgress?.({expanded,attempted,generated,queued:frontier.size+next.size});await new Promise(resolve=>setTimeout(resolve,0));}
         }
-        frontier.clear();
-        // Deduplication is local to one generated text layer. Older paths are
-        // reachable through queued states but need not remain indexed here.
-        seen.clear();
+        frontier=next;
     }
-    const candidates=[...results.values()].sort((a,b)=>b.score-a.score).slice(0,20);
-    return {candidates,stats:{expanded,attempted,generated,queued:frontiers.reduce((sum,item)=>sum+item.size,0),redundantPruned,aborted:!!signal?.aborted,stoppedOnPlaintext}};
+    return finish();
 }
 
-export { textQuality, redundantTransform };
+export {textQuality};
