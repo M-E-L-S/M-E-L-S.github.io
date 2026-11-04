@@ -114,10 +114,7 @@
     function init() {
         pickerEl = document.getElementById('game-picker');
         btnEl = document.getElementById('game-picker-btn');
-        itemEls = [];
-        document.querySelectorAll('.game-picker-item').forEach((el) => {
-            if (el.dataset.game) itemEls.push(el);
-        });
+        itemEls = Array.from(pickerEl?.querySelectorAll('.game-picker-item') || []);
         if (!pickerEl || !btnEl || !itemEls.length) return;
 
         let saved = null;
@@ -130,7 +127,8 @@
             setOpen(!opened);
         });
 
-        itemEls.forEach((el) => {
+        // Standalone games keep normal link navigation but participate in keyboard focus.
+        itemEls.filter(el => el.dataset.game).forEach((el) => {
             el.addEventListener('click', (e) => {
                 if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
                 e.preventDefault();

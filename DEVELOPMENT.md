@@ -45,6 +45,8 @@ Worker 执行相同展开函数，协调器按批次顺序消费，支持两种 
 
 ## 路由
 
+斗地主入口 `/minigame/doudizhu/` 直接使用 AlphaDou 的 `web_table/` 静态发布包，打开时占满视口。更新时将新版发布包原样同步到该目录（含 `licenses/`）；个人站构建脚本只生成菜单入口，不改写牌桌。本地 HTTP 预览需将 `.mjs` 作为 JavaScript 提供，Windows 上的 Python 静态服务器可能默认返回 `text/plain`。
+
 小游戏和小功能选择菜单共用 `site.js` 的动画顺序初始化：按 `.game-picker-menu` 下实际菜单项顺序写入 `--picker-index`，`components.css` 自动计算滑入延迟。菜单项新增、删除或重排会自动更新；不要为具体第几项添加 `nth-child` 动画规则。减少动态效果设置仍由共用 CSS 关闭动画。
 
 首页 `/`；关于 `/about/`；小功能 `/tools/`；小游戏 `/minigame/`；鲜蔬杯 `/freshcup/`。

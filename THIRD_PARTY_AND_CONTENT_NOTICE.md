@@ -99,6 +99,10 @@ third-party license continues to apply to the derived portions.
 
 ### Other third-party software
 
+The standalone Dou Dizhu game in `minigame/doudizhu/` uses the AlphaDou Web
+release. Its bundled rules, models, and inference runtime retain their upstream
+license and attribution files in `minigame/doudizhu/licenses/`.
+
 The favicon package generator includes JSZip 3.10.1 by Stuart Knightley and
 contributors. JSZip is used under the MIT License; the bundled license text is
 retained in `vendor/JSZIP-LICENSE.markdown`.

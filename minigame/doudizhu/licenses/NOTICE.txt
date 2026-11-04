@@ -1,0 +1,11 @@
+AlphaDou / MARVEL and the native Dou Dizhu rules
+https://github.com/AtaraxosAI/doudizhu/tree/acdcf199cf422e2b683cb22142b8e7cb33b14460
+
+Original first / second / third bidding model weights by RuBP17, exported to ONNX.
+https://github.com/RuBP17/Douzero_resnet_bid
+
+Original three-output bidding model definition, EdwardPooh et al.
+https://github.com/EdwardPooh/douzero-resnet-2.0/blob/ec55e5e86601d1e0217409cf768bdad91dc6d230/Douzero_Resnet/douzero/dmc/models.py
+
+ONNX Runtime Web 1.23.2
+https://github.com/microsoft/onnxruntime/tree/v1.23.2

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#102321">
+  <title>斗地主</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./table.css">
+  <script type="module" src="./table.mjs"></script>
+</head>
+<body>
+  <main id="table" aria-label="斗地主牌桌">
+    <div class="rim" aria-hidden="true"></div>
+    <header class="top">
+      <h1>斗地主</h1>
+      <div class="top-tools"><div class="score">累计 <output id="total">0</output></div>
+        <button id="sound" type="button" aria-label="静音"></button></div>
+    </header>
+    <div id="kitty" class="kitty" aria-label="底牌"></div>
+    <div id="stake" class="stake" hidden></div>
+    <div class="seats" hidden>
+      <div class="seat left" data-seat="2"><span class="medallion">左</span><span class="role"></span></div>
+      <div class="seat right" data-seat="1"><span class="medallion">右</span><span class="role"></span></div>
+      <div class="seat me" data-seat="0"><span class="medallion">我</span><span class="role"></span></div>
+    </div>
+    <div class="opponent left" aria-hidden="true"></div>
+    <div class="opponent right" aria-hidden="true"></div>
+    <div id="played" class="played" aria-live="polite"></div>
+    <div id="controls" class="controls"></div>
+    <div id="hand" class="hand" role="group" aria-label="我的手牌"></div>
+    <p id="notice" class="notice" role="status"></p>
+    <section id="overlay" class="overlay">
+      <div class="panel">
+        <div id="loading" class="loading" role="status" aria-label="载入中" hidden></div>
+        <div class="emblem" aria-hidden="true">♠</div>
+        <h2 id="result">斗地主</h2>
+        <p id="result-detail" hidden></p>
+        <button id="start" class="primary" type="button">开始</button>
+      </div>
+    </section>
+  </main>
+  <div class="rotate" role="status">
+    <svg viewBox="0 0 56 56" width="56" height="56" fill="none" aria-hidden="true">
+      <rect x="8" y="20" width="40" height="25" rx="5" stroke="currentColor" stroke-width="2"/>
+      <path d="M16 14a16 16 0 0 1 26 0m-7-1 7 1V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>请横屏游戏</span>
+  </div>
+</body>
+</html>
