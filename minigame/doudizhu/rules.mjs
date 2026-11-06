@@ -9,6 +9,10 @@ export async function loadRules() {
   return {
     observe:(info,pending='')=>observe(info,pending,1),
     actions:(info,pending='')=>observe(info,pending,0).actions,
+    special(cards) {
+      const type=m.ccall('combo_type','number',['string'],[cards]);
+      return ({1:'rocket',7:'straight',8:'pairs',9:'plane',10:'plane',11:'plane',14:'bomb'})[type]??null;
+    },
     valid(history) {
       return Boolean(m.ccall('valid','number',['string'],[history]));
     }

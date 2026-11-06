@@ -80,6 +80,9 @@ export class Round {
     return this.phase==='play'&&this.moves.length>0&&
       !(this.moves.at(-1)[1]==='PASS'&&this.moves.at(-2)?.[1]==='PASS');
   }
+  get cannotBeat() {
+    return this.canPass && this.rules.actions(this.historyString()).every(([move])=>move==='PASS');
+  }
   play(cards, selectedIds=null) {
     if (this.phase!=='play'||!cards) return false;
     const action=cards==='PASS'?cards:sorted(cards), seat=this.turn;

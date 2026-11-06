@@ -2,6 +2,7 @@ import {Round,ranks,legalBids,scoreStore} from './game.mjs';
 import {loadRules} from './rules.mjs';
 import {longestLegal} from './selection.mjs';
 import {cue,isMuted,playMusic,preloadMusic,startSound,toggleSound} from './sound.mjs';
+import {specialEffect} from './effects.mjs';
 
 const $=s=>document.querySelector(s);
 const orientation=matchMedia('(orientation: landscape)');
@@ -183,7 +184,7 @@ function render() {
     const legal=legalBids(game.history);
     for(const n of [0,1,2,3]) controls.append(button(n?n+' 分':'不叫',()=>act(n),{disabled:!legal.includes(n),secondary:!n}));
   } else if(human()) {
-    controls.append(button('不出',()=>act('PASS'),{disabled:!game.canPass,secondary:true}),
+    controls.append(button(game.cannotBeat?'要不起':'不出',()=>act('PASS'),{disabled:!game.canPass,secondary:true}),
       button('出牌',()=>act(cards.filter(c=>selected.has(c.id)).map(c=>c.rank).join('')),{disabled:!selected.size,id:'submit'}));
   }
 }
@@ -204,9 +205,9 @@ async function present(kind,seat) {
   animating=true;
   render();
   const animations=[];
+  const pile=$('#played').children[seat];
   if(!reduced.matches&&orientation.matches) {
     const kitty=$('#kitty');
-    const pile=$('#played').children[seat];
     if(kind==='deal') {
       for(const [row,offset] of [[hand,0],[$('.opponent.left'),16],[$('.opponent.right'),32]])
         animations.push(...fly(row.children,center(kitty),{step:27,offset}));
@@ -222,6 +223,11 @@ async function present(kind,seat) {
     }
   }
   cue(kind);
+  if(kind==='play') {
+    const action=game.moves.at(-1)[1];
+    const special=rules.special(action);
+    if(special) animations.push(...specialEffect(pile,special,reduced.matches));
+  }
   await Promise.allSettled(animations.map(animation=>animation.finished));
   animating=false;
   render();
