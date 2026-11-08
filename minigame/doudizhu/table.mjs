@@ -143,6 +143,7 @@ function render() {
   if(!game) return;
   $('.seats').hidden=false;
   const inBid=game.phase==='bid'||game.landlord===null;
+  const revealHands=game.phase==='done'&&game.result.winner!==null;
   const kitty=$('#kitty');
   if(inBid) kitty.replaceChildren(card(),card(),card()); else showCards(kitty,game.bottomFaces);
   const stake=$('#stake');
@@ -160,6 +161,15 @@ function render() {
     const row=$('.opponent.'+side);
     const count=game.hands[seat].length;
     row.style.setProperty('--count',count);
+    row.classList.toggle('revealed',revealHands);
+    if(revealHands) {
+      const faces=[...game.faces[seat]].sort((a,b)=>ranks.indexOf(b.rank)-ranks.indexOf(a.rank)||a.suit-b.suit);
+      showCards(row,faces);
+      row.setAttribute('aria-hidden','false');
+      row.setAttribute('aria-label',`${seat===1?'右家':'左家'}剩余手牌`);
+      continue;
+    }
+    row.setAttribute('aria-hidden','true');
     row.replaceChildren(...Array.from({length:count},()=>card()));
     const lastCard=row.lastElementChild;
     if(lastCard) {
@@ -256,10 +266,12 @@ async function drive() {
   if(busy||animating||failed||!game||!orientation.matches||game.phase==='done'||game.turn===0) return;
   busy=true;
   try {
-    const delay=pause(1000);
+    const started=performance.now();
     const bidding=game.phase==='bid';
     const seat=game.turn;
-    const [action]=await Promise.all([bidding?rpc('bid',game.hands[seat],game.history):rpc('play',game.historyString()),delay]);
+    const action=await (bidding?rpc('bid',game.hands[seat],game.history):rpc('play',game.historyString()));
+    const delay=!bidding&&action==='PASS'?500:1000;
+    await pause(Math.max(0,delay-(performance.now()-started)));
     if(bidding) {
       announcedBid={seat,value:action};
       render();

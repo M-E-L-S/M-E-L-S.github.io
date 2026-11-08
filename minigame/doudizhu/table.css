@@ -36,6 +36,11 @@ h1{margin:0;font-family:"Noto Serif CJK SC","Songti SC",SimSun,serif;letter-spac
 .opponent .card{--w:clamp(19px,7.5cqmin,56px);height:clamp(26px,10cqmin,73px)}
 .opponent .card:not(:first-child){margin-left:min(calc(var(--w)*-.59),calc((32vw - var(--w))/max(1,var(--count) - 1) - var(--w)))}
 .opponent .remaining{z-index:1;display:grid;place-items:center;color:var(--paper);font-size:clamp(12px,4.2cqmin,30px);font-weight:800;font-variant-numeric:tabular-nums;text-shadow:0 1px 3px #000}
+.opponent.revealed{z-index:4;top:13%;display:flex}
+.opponent.revealed.left{left:3%}
+.opponent.revealed.right{right:3%}
+.opponent.revealed .card{--w:min(3.8vw,clamp(27px,9cqmin,68px));--label:calc(var(--w)*.36);height:auto;margin-left:0}
+.opponent.revealed .card:not(:first-child){margin-left:calc(var(--w)*-.46)}
 .played{position:absolute;inset:37% 6% 41%;pointer-events:none}
 .pile{position:absolute;display:flex;justify-content:center;align-items:center;height:40%;min-width:9%;font-size:clamp(18px,4.8cqmin,32px);color:#ddf1e5;font-weight:700}
 .pile:nth-child(1){left:50%;top:37%;transform:translateX(-50%)}
