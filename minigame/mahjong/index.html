@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#102f30">
+  <title>AlphaMah · 麻将</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./style.css?v=motion6">
+  <link rel="stylesheet" href="./table-view.css?v=motion6">
+</head>
+<body>
+<main id="table" aria-label="麻将牌桌">
+  <div class="table-rail" aria-hidden="true"></div>
+  <div id="stage" class="stage">
+    <header class="table-header">
+      <div class="room-mark"><span class="room-seal" aria-hidden="true">雀</span><div><span class="wordmark">ALPHAMAH</span><span id="round">准备开局</span></div></div>
+      <nav aria-label="牌桌操作">
+        <button id="audio-toggle" class="icon-button" aria-label="音乐和音效" aria-pressed="true" title="音乐和音效"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5c3 0 3 5 7 5"/><ellipse cx="6" cy="18" rx="3" ry="2"/><path class="mute-slash" d="M3 3l18 18"/></svg></button>
+        <button id="fullscreen" class="icon-button" aria-label="切换全屏" title="全屏"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></svg></button>
+      </nav>
+    </header>
+
+    <section id="seat-2" class="player north" aria-label="对家"></section>
+    <section id="seat-3" class="player west" aria-label="上家"></section>
+    <section id="seat-1" class="player east" aria-label="下家"></section>
+    <section id="seat-0" class="player south" aria-label="你"></section>
+
+    <div class="table-camera"><div id="table-world" class="table-world">
+    <div class="felt-outline" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="table-divisions" aria-hidden="true"></div><div class="table-sunlight" aria-hidden="true"></div><div class="table-emblem" aria-hidden="true"><span></span></div>
+    <div class="opponent-zone zone-north"><div class="opponent-hand" id="concealed-2" aria-label="对家手牌"></div></div>
+    <div class="opponent-zone zone-west"><div class="opponent-hand" id="concealed-3" aria-label="上家手牌"></div></div>
+    <div class="opponent-zone zone-east"><div class="opponent-hand" id="concealed-1" aria-label="下家手牌"></div></div>
+
+    <div class="table-melds fixed-melds fixed-melds-1" id="melds-1" aria-label="下家副露"></div>
+    <div class="table-melds fixed-melds fixed-melds-2" id="melds-2" aria-label="对家副露"></div>
+    <div class="table-melds fixed-melds fixed-melds-3" id="melds-3" aria-label="上家副露"></div>
+    <div class="river river-north" id="river-2" aria-label="对家牌河"></div>
+    <div class="river river-west" id="river-3" aria-label="上家牌河"></div>
+    <div class="river river-east" id="river-1" aria-label="下家牌河"></div>
+    <div class="river river-south" id="river-0" aria-label="你的牌河"></div>
+
+    <section class="scoreboard" aria-label="牌桌计分盘">
+      <div class="scoreboard-rim" aria-hidden="true"></div>
+      <div class="scoreboard-core"><span id="center-round">第 1 局</span><div class="wall-count"><span>余</span><strong id="wall">—</strong><span>张</span></div></div>
+      <div id="score-2" class="score score-north"></div><div id="score-3" class="score score-west"></div><div id="score-1" class="score score-east"></div><div id="score-0" class="score score-south"></div>
+      <span id="wind-2" class="wind wind-north"></span><span id="wind-3" class="wind wind-west"></span><span id="wind-1" class="wind wind-east"></span><span id="wind-0" class="wind wind-south"></span>
+    </section>
+
+      <div id="own-melds" class="own-melds" aria-label="你的副露"></div>
+    </div></div>
+
+    <div class="turn-prompt" id="turn-prompt"><span class="prompt-line"></span><p id="status" role="status">正在准备牌桌…</p><span class="prompt-line"></span></div>
+    <div class="action-dock" id="action-dock"><div id="offered-tile"></div><div id="options" class="response-options"></div><button id="discard" class="discard-button" disabled>出牌<span aria-hidden="true">↗</span></button></div>
+    <div id="call-effect-0" class="call-effect call-south" aria-hidden="true"></div>
+    <div id="call-effect-1" class="call-effect call-east" aria-hidden="true"></div>
+    <div id="call-effect-2" class="call-effect call-north" aria-hidden="true"></div>
+    <div id="call-effect-3" class="call-effect call-west" aria-hidden="true"></div>
+
+    <nav class="quick-tools" aria-label="对局快捷工具">
+      <button id="tool-sort" aria-label="自动理牌" aria-pressed="true" title="自动理牌"><span class="tool-short">理</span><span class="tool-long">自动理牌</span></button>
+      <button id="tool-win" aria-label="自动和牌" aria-pressed="false" title="自动和牌"><span class="tool-short">和</span><span class="tool-long">自动和牌</span></button>
+      <button id="tool-noCall" aria-label="不鸣牌" aria-pressed="false" title="不鸣牌（跳过吃、碰、明杠）"><span class="tool-short">鸣</span><span class="tool-long">不吃碰杠</span></button>
+      <button id="tool-cut" aria-label="自动摸切" aria-pressed="false" title="自动摸切"><span class="tool-short">切</span><span class="tool-long">自动摸切</span></button>
+      <button id="tools-expand" aria-label="展开快捷选项" aria-expanded="false">▶</button>
+    </nav>
+    <aside id="wait-hint" class="wait-hint" aria-label="听牌提示" hidden></aside>
+
+    <section class="hand-dock" aria-label="你的手牌">
+      <div id="hand" class="hand"></div>
+    </section>
+    <div class="table-footer"><span id="help"></span><span id="hand-count"></span></div>
+  </div>
+</main>
+<div id="error" role="alert" hidden></div>
+<dialog id="result" class="game-dialog result-dialog"><div class="result-heading"><div><span class="dialog-kicker" id="result-round"></span><h2 id="result-title"></h2></div><button id="close-result" class="dialog-close" aria-label="关闭结算">×</button></div><div id="result-content"></div><div class="dialog-actions"><button id="next" class="gold-button">下一局<span aria-hidden="true"> →</span></button></div></dialog>
+<script type="module" src="./app.js?v=motion6"></script>
+</body>
+</html>

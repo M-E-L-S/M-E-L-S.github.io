@@ -345,7 +345,7 @@
     // Gomoku keeps Chinese source strings in the UI and game/network state.
     // Translate complete messages rather than replacing color or player fragments.
     Object.assign(english, {
-        '五子棋': 'Gomoku', '对战模式': 'Game mode', '本地对战': 'Local play', '双人联机': 'Online play',
+        '五子棋': 'Gomoku', '麻将': 'Mahjong', '对战模式': 'Game mode', '本地对战': 'Local play', '双人联机': 'Online play',
         'Cloudflare 联机': 'Cloudflare online', 'Netlify 联机': 'Netlify online',
         'Cloudflare源，需境外使用，更流畅。创建房间后分享邀请链接，好友加入即可开局。': 'Cloudflare service, for use outside mainland China with smoother play. Create a room and share the invitation link with a friend.',
         'Netlify源，境内可尝试使用，可能卡顿。长时间无操作会暂停同步，可点击重新连接继续。': 'Netlify service, available to try in mainland China; delays may occur. Sync pauses after prolonged inactivity; reconnect to continue.',

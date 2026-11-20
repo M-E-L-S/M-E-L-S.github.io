@@ -103,6 +103,11 @@ The standalone Dou Dizhu game in `minigame/doudizhu/` uses the AlphaDou Web
 release. Its bundled rules, models, and inference runtime retain their upstream
 license and attribution files in `minigame/doudizhu/licenses/`.
 
+The standalone Mahjong game in `minigame/mahjong/` uses the AlphaMah WASM
+release. The MeowCaTS engine’s LGPL-2.1 license and corresponding source are
+bundled as `LICENSE-MeowCaTS.txt` and `AlphaMah-source.zip`. Tile and Three.js
+notices are retained in `assets/tiles/` and `vendor/three/` within that directory.
+
 The favicon package generator includes JSZip 3.10.1 by Stuart Knightley and
 contributors. JSZip is used under the MIT License; the bundled license text is
 retained in `vendor/JSZIP-LICENSE.markdown`.
