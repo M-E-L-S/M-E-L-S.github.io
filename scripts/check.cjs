@@ -26,7 +26,7 @@ for(const route of routes) {
  for(const m of html.matchAll(/(?:src|href)="(\/?(?:src|vendor|assets)\/[^"?]+)(?:\?[^" ]*)?"/g)) {
   if(!fs.existsSync(path.join(root,m[1].replace(/^\//,'')))) throw Error(`Missing resource: ${m[1]}`);
  }
- for(const marker of ['id="explore"','id="freshcup-tool"','id="freshcup-tool-theme"','id="freshcup-tool-script"','data-freshcup-tool','freshcup-navigation.js','id="settings-dialog"','id="theme-color"','id="music-player"','particle-title.js']) {
+ for(const marker of ['id="explore"','id="freshcup-tool"','id="freshcup-tool-theme"','id="freshcup-tool-script"','data-freshcup-tool','freshcup-navigation.js','id="settings-dialog"','id="theme-color"','id="music-player"','id="text-status"','particle-title.js']) {
   if(!html.includes(marker)) throw Error(`${route}: missing ${marker}`);
  }
  if(html.indexOf('freshcup-navigation.js') > html.indexOf('</head>')) throw Error(`${route}: F.V. cup navigation listener loads too late`);
