@@ -7,10 +7,30 @@
   <title>AlphaMah · 麻将</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="./style.css?v=motion6">
-  <link rel="stylesheet" href="./table-view.css?v=motion6">
+  <link rel="stylesheet" href="./table-view.css?v=entry1">
 </head>
 <body>
-<main id="table" aria-label="麻将牌桌">
+<section class="entry-screen" id="loading-screen" aria-labelledby="loading-title">
+  <div class="entry-panel">
+    <span class="entry-mark" aria-hidden="true">雀</span>
+    <h1 id="loading-title">AlphaMah</h1>
+    <div class="entry-status">
+      <span id="loading-spinner" class="entry-spinner" aria-hidden="true"></span>
+      <p id="loading-message" role="status">正在加载牌桌…</p>
+    </div>
+    <button id="retry-load" class="gold-button" hidden>重新加载</button>
+  </div>
+</section>
+<section class="entry-screen" id="orientation-screen" aria-labelledby="orientation-title">
+  <div class="entry-panel">
+    <svg class="rotate-device" viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="14" y="26" width="40" height="24" rx="4"/>
+      <path d="M47 36v4M16 20a14 14 0 0 1 21-10m-7 1 7-1-2-7"/>
+    </svg>
+    <h1 id="orientation-title">请横屏游玩</h1>
+  </div>
+</section>
+<main id="table" aria-label="麻将牌桌" inert>
   <div class="table-rail" aria-hidden="true"></div>
   <div id="stage" class="stage">
     <header class="table-header">
@@ -75,6 +95,6 @@
 </main>
 <div id="error" role="alert" hidden></div>
 <dialog id="result" class="game-dialog result-dialog"><div class="result-heading"><div><span class="dialog-kicker" id="result-round"></span><h2 id="result-title"></h2></div><button id="close-result" class="dialog-close" aria-label="关闭结算">×</button></div><div id="result-content"></div><div class="dialog-actions"><button id="next" class="gold-button">下一局<span aria-hidden="true"> →</span></button></div></dialog>
-<script type="module" src="./app.js?v=motion6"></script>
+<script type="module" src="./app.js?v=entry1"></script>
 </body>
 </html>

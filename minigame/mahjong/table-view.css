@@ -287,3 +287,31 @@
 .score-confirm {position:absolute;z-index:3;right:90px;bottom:60px;min-width:150px;padding:12px 35px;border:2px solid #c3a06c;border-radius:5px;background:#202944;color:#f2dfb5;font:26px KaiTi,serif;cursor:pointer;animation:result-enter .25s ease-out}
 .score-confirm:hover {background:#34466b}
 .score-confirm:focus-visible {outline:3px solid #f2dfb5;outline-offset:4px}
+
+.entry-screen {
+  position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:24px;
+  background:radial-gradient(ellipse at 50% 42%,#28456a 0,#141f36 46%,#090d16 82%);
+}
+.entry-panel {display:grid;justify-items:center;gap:18px;text-align:center}
+.entry-panel h1 {margin:0;color:#f0dfb4;font:normal clamp(28px,6vmin,52px) Georgia,KaiTi,serif}
+.entry-mark {
+  display:grid;place-items:center;width:64px;height:76px;border:1px solid #e0c590;border-radius:8px;
+  background:#eae3cf;color:#263853;font:42px KaiTi,STKaiti,serif;
+  box-shadow:0 5px #b88d4f,0 12px 24px #040a14b0;
+}
+.entry-status {display:flex;align-items:center;gap:10px;color:#d8d9da;font-size:15px}
+.entry-status p {margin:0}
+.entry-spinner {
+  width:16px;height:16px;flex-shrink:0;border:2px solid #e0c59050;border-top-color:#e0c590;
+  border-radius:50%;animation:entry-spin .8s linear infinite;
+}
+@keyframes entry-spin {to {transform:rotate(360deg)}}
+.entry-panel button {padding:8px 18px;border:1px solid #e0c590aa;border-radius:6px}
+#table[inert] {visibility:hidden}
+.rotate-device {width:64px;height:64px;fill:none;stroke:#e0c590;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#orientation-screen {display:none}
+@media (orientation:portrait) {
+  #orientation-screen {display:grid}
+  #loading-screen,#result,#result::backdrop {display:none}
+}
+@media (prefers-reduced-motion:reduce) {.entry-spinner {animation:none}}

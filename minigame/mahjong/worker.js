@@ -4,7 +4,14 @@ function invoke(name,types,args){const cap=131072,p=module._malloc(cap);try{cons
 const engine={hints:(h,m,k)=>invoke('alphamah_hints',['string','string','string'],[h,m,k]),evaluate:(h,m,k,r)=>invoke('alphamah_evaluate',['string','string','string','number'],[h,m,k,+r]),search:async(...a)=>{await new Promise(resolve=>setTimeout(resolve,0));return invoke('alphamah_search_timed',['string','string','string','string','string','string','number','number','number','number'],a.map((x,i)=>i===6?+x:x));}};
 let queue=Promise.resolve();
 self.onmessage=({data})=>{queue=queue.then(async()=>{try{
- if(data.kind==='init'){const {default:create}=await import(data.threaded===true?'./engine/mt/alphamah.js':'./engine/st/alphamah.js');module=await create();game=new Game(engine,async()=>{const phase=game.phase;game.phase="resolving";self.postMessage({state:game.view()});await new Promise(resolve=>setTimeout(resolve,1000));game.phase=phase;});if(Array.isArray(data.scores)&&data.scores.length===4&&data.scores.every(Number.isSafeInteger))game.scores=[...data.scores];await game.new();}
+ if(data.kind==='init'){
+  const {default:create}=await import(data.threaded===true?'./engine/mt/alphamah.js':'./engine/st/alphamah.js');
+  module=await create();
+  game=new Game(engine,async()=>{const phase=game.phase;game.phase="resolving";self.postMessage({state:game.view()});await new Promise(resolve=>setTimeout(resolve,1000));game.phase=phase;});
+  if(Array.isArray(data.scores)&&data.scores.length===4&&data.scores.every(Number.isSafeInteger))game.scores=[...data.scores];
+  if(data.deferDeal){self.postMessage({ready:true});return;}
+  await game.new();
+ }
  else if(data.kind==='new')await game.new();
  else await game.action(data);
  if(game.phase!=='over')game.refreshHints();

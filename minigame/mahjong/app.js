@@ -4,6 +4,9 @@ import {playSound, unlockAudio, toggleAudio} from './sound.js';
 import {attachTileRenderer} from './tile-renderer.js';
 
 const $ = id => document.getElementById(id);
+const table = $('table'), loadingScreen = $('loading-screen'), resultDialog = $('result');
+const portrait = matchMedia('(orientation: portrait)');
+let engineReady = false, resourcesReady = false, resultPending = false;
 const winds = ['东', '南', '西', '北'];
 const tileFiles = Array.from({length:34}, (_, t) => t < 27
   ? ['Man', 'Pin', 'Sou'][Math.floor(t/9)] + (t%9+1)
@@ -24,10 +27,14 @@ function savedScores() {
 const audioButton = $('audio-toggle');
 audioButton.onclick = () => audioButton.setAttribute('aria-pressed', String(toggleAudio()));
 function unlockOnGesture(event) {
-  if (!audioButton.contains(event.target)) unlockAudio();
+  if (table.inert || audioButton.contains(event.target)) return;
+  unlockAudio();
+  document.removeEventListener('pointerdown', unlockOnGesture);
+  document.removeEventListener('keydown', unlockOnGesture);
 }
-document.addEventListener('pointerdown', unlockOnGesture, {once:true});
-document.addEventListener('keydown', unlockOnGesture, {once:true});
+document.addEventListener('pointerdown', unlockOnGesture);
+document.addEventListener('keydown', unlockOnGesture);
+$('retry-load').onclick = () => location.reload();
 let lastResult = 0, pendingAction = null, previousState = null, lastDiscard = null;
 let renderedState = null, tileMotion, handRound = null, handDrawKey = null;
 
@@ -43,7 +50,44 @@ function fitScene() {
 }
 addEventListener('resize', fitScene);
 fitScene();
-attachTileRenderer($('stage'), $('table-world')).then(controller => { tileMotion = controller; });
+
+function preloadImage(path) {
+  const image = new Image();
+  image.src = new URL(`./assets/${path}`, import.meta.url);
+  return image.decode().catch(() => {});
+}
+
+async function prepareTable() {
+  [tileMotion] = await Promise.all([
+    attachTileRenderer($('stage'), $('table-world')).catch(() => undefined),
+    ...['table-hub.svg', 'table-divisions.svg', 'sunbeams.svg', 'tiles/Front.svg'].map(preloadImage)
+  ]);
+  if (!tileMotion) await Promise.all(['Back', ...tileFiles].map(name => preloadImage(`tiles/${name}.svg`)));
+  resourcesReady = true;
+  syncEntry();
+}
+
+function syncEntry() {
+  if (portrait.matches) {
+    table.inert = true;
+    clearTimeout(timer);
+    if (resultDialog.open) {
+      resultPending = true;
+      resultDialog.close();
+    }
+    return;
+  }
+  if (!worker) start();
+  if (!engineReady || !resourcesReady) return;
+  table.inert = false;
+  if (!loadingScreen.hidden) {
+    loadingScreen.hidden = true;
+    worker.postMessage({kind:'new'});
+    return;
+  }
+  if (resultPending) showResult();
+  if (state) scheduleTurn(displayedState());
+}
 
 function tile(t, {button = false, index = null, extra = '', disabled = false} = {}) {
   const back = t === null, tag = button ? 'button' : 'span';
@@ -62,7 +106,7 @@ function meld(m, player = 0) {
 }
 
 function send(action) {
-  if (busy) return;
+  if (busy || table.inert || portrait.matches) return;
   busy = true;
   pendingAction = action;
   clearTimeout(timer);
@@ -71,9 +115,15 @@ function send(action) {
 }
 
 function start() {
-  worker = new Worker(new URL('./worker.js', import.meta.url), {type:'module'});
+  try {
+    worker = new Worker(new URL('./worker.js?v=entry1', import.meta.url), {type:'module'});
+  } catch {
+    fail('牌桌加载失败');
+    return;
+  }
   worker.onmessage = ({data}) => {
     if (data.error) { fail(data.error); return; }
+    if (data.ready) { engineReady = true; syncEntry(); return; }
     previousState = state;
     state = data.state;
     if(previousState && previousState.round===state.round && state.wall<previousState.wall)playSound('draw');
@@ -88,12 +138,20 @@ function start() {
     announceCall();
   };
   worker.onerror = () => fail('牌桌加载失败，请刷新重试');
-  worker.postMessage({kind:'init', scores:savedScores()});
+  worker.postMessage({kind:'init', deferDeal:true, scores:savedScores()});
+  prepareTable();
 }
 
 function fail(message) {
   busy = false;
   pendingAction = null;
+  if (!loadingScreen.hidden) {
+    engineReady = false;
+    $('loading-spinner').hidden = true;
+    $('loading-message').textContent = message;
+    $('retry-load').hidden = false;
+    return;
+  }
   $('error').hidden = false;
   $('error').textContent = message;
   if (state) render();
@@ -282,8 +340,12 @@ function render() {
     clearTimeout(resultTimer);
     resultTimer = setTimeout(showResult, 1800);
   }
+  scheduleTurn(s);
+}
+
+function scheduleTurn(s) {
   clearTimeout(timer);
-  if (!busy && !dealing) {
+  if (!busy && !dealing && !table.inert && !portrait.matches) {
     const action = automaticAction(s, tools);
     if (action) timer = setTimeout(() => send(action), 350);
     else if (s.phase === 'turn' && s.turn !== 0) timer = setTimeout(() => send({kind:'step'}), 250);
@@ -375,6 +437,8 @@ function announceCall() {
 
 function showResult() {
   if (state.phase !== 'over') return;
+  resultPending = portrait.matches;
+  if (resultPending) return;
   const r = state.result;
   $('result-round').textContent = `第 ${state.round} 局 · 结算`;
   $('result-title').textContent = r.type === 'draw' ? '流局'
@@ -394,7 +458,7 @@ function showResult() {
   }).join('');
   $('result-content').innerHTML = `<div class="result-hands">${revealed}</div><div class="result-patterns">${patterns}</div>`;
   $('next').textContent='确认';
-  if (!$('result').open) $('result').showModal();
+  if (!resultDialog.open) resultDialog.showModal();
 }
 
 $('tools-expand').onclick = () => {
@@ -406,7 +470,7 @@ $('tools-expand').onclick = () => {
 };
 $('discard').onclick = () => selected !== null && send({kind:'discard', tile:state.players[0].hand[selected]});
 function showScoreAnimation() {
-  if (state?.phase !== 'over' || document.getElementById('score-overlay')) return;
+  if (portrait.matches || state?.phase !== 'over' || document.getElementById('score-overlay')) return;
   $('result').close();
   const overlay=document.createElement('div');overlay.id='score-overlay';
   const end=[...state.scores],delta=state.result.delta,start=end.map((n,p)=>n-delta[p]);
@@ -449,6 +513,7 @@ function showScoreAnimation() {
   scoreFrame=requestAnimationFrame(tick);
 }
 function newRound() {
+  if (portrait.matches) return;
   cancelAnimationFrame(scoreFrame);clearTimeout(scoreTimer);document.getElementById('score-overlay')?.remove();
   clearTimeout(resultTimer);
   for (const [p, timeout] of effectTimers) { clearTimeout(timeout); $('call-effect-' + p).classList.remove('show'); }
@@ -460,4 +525,5 @@ $('result').addEventListener('cancel', event=>{event.preventDefault();showScoreA
 $('fullscreen').onclick = async () => {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch {}
 };
-start();
+portrait.addEventListener('change', syncEntry);
+syncEntry();
